@@ -357,6 +357,7 @@ function setRole(r){
 }
 
 function populateStudentSelect(){
+  loadStudents();
   const sel=document.getElementById('s-name-select');
   sel.innerHTML='<option value="">— Choose your name —</option>';
   const noMsg=document.getElementById('no-students-msg');
@@ -407,6 +408,16 @@ function studentPinLogin(){
   startChatSession(student);
 }
 
+function saveStudents(){
+  try{localStorage.setItem('metanoia_students',JSON.stringify(appState.students));}
+  catch(e){console.warn('Could not save students:',e);}
+}
+function loadStudents(){
+  try{
+    const saved=localStorage.getItem('metanoia_students');
+    if(saved){const parsed=JSON.parse(saved);if(Array.isArray(parsed))appState.students=parsed;}
+  }catch(e){console.warn('Could not load students:',e);}
+}
 function doLogin(){
   const err=document.getElementById('login-error');err.style.display='none';
   const key=document.getElementById('api-key').value.trim();
@@ -416,6 +427,7 @@ function doLogin(){
   if(!key.startsWith('sk-ant')){err.textContent='Invalid API key. Should start with sk-ant...';err.style.display='block';return;}
   if(!name){err.textContent='Please enter your name.';err.style.display='block';return;}
   appState.apiKey=key;appState.tutorName=name;appState.center=center;
+  loadStudents();
   document.getElementById('tutor-badge-name').textContent=name;
   document.getElementById('dash-subtitle').textContent='Metanoia Academy · '+center;
   renderDashboard();show('dashboard-screen');
@@ -608,6 +620,7 @@ function addStudent(){
     color:getColor(name)
   };
   appState.students.push(s);
+  saveStudents();
   logActivity('gold','➕',name+' added to roster','gold');
   closeAddModal();renderDashboard();
 }
@@ -618,6 +631,7 @@ function removeStudent(id){
   appState.students=appState.students.filter(x=>x.id!==id);
   if(appState.activeSessions[id]){delete appState.activeSessions[id];if(appState.sessionTimers[id]){clearInterval(appState.sessionTimers[id]);delete appState.sessionTimers[id];}}
   if(s)logActivity('gold','🗑️',s.name+' removed from roster','gold');
+  saveStudents();
   renderDashboard();
 }
 </script>
