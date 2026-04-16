@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Metanoia AI Tutor</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0f14;--surface:#161920;--surface2:#1e2230;
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.13);
+  --accent:#7B6EF6;--accent2:#4ecdc4;--accent3:#f7b731;--danger:#ff6b6b;
+  --text:#eef0f7;--muted:#8b90a8;--muted2:#5a5f75;
+  --user-bubble:#2a2d3e;--ai-bubble:#1a2035;
+  --radius:16px;--font:'Sora',sans-serif;--mono:'Space Mono',monospace;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px}
+.screen{display:none;min-height:100vh}.screen.active{display:flex}
+#login-screen{flex-direction:column;align-items:center;justify-content:center;padding:2rem 1.5rem;position:relative;overflow:hidden}
+#login-screen::before{content:'';position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(123,110,246,0.12) 0%,transparent 70%);top:-200px;left:-150px;pointer-events:none}
+#login-screen::after{content:'';position:absolute;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(78,205,196,0.08) 0%,transparent 70%);bottom:-100px;right:-100px;pointer-events:none}
+.logo-block{text-align:center;margin-bottom:2rem;position:relative;z-index:1}
+.logo-icon{width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 1rem;box-shadow:0 0 40px rgba(123,110,246,0.3)}
+.logo-block h1{font-size:26px;font-weight:600;letter-spacing:-0.5px}
+.logo-block h1 span{color:var(--accent)}
+.logo-block p{font-size:12px;color:var(--muted);margin-top:4px;font-family:var(--mono);letter-spacing:0.5px}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:2rem;width:100%;max-width:420px;position:relative;z-index:1}
+.login-card h2{font-size:12px;font-family:var(--mono);color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:1.5rem}
+.role-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1.5rem}
+.role-tab{padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:13px;font-family:var(--font);cursor:pointer;text-align:center;transition:all 0.2s}
+.role-tab.active{border-color:var(--accent);color:var(--text);background:rgba(123,110,246,0.12)}
+.field{margin-bottom:1rem}
+.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+.field input,.field select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-family:var(--font);font-size:14px;outline:none;transition:border-color 0.2s;appearance:none}
+.field input:focus,.field select:focus{border-color:var(--accent)}
+.api-field{margin-bottom:1.25rem}
+.api-field label{display:block;font-size:12px;color:var(--accent3);margin-bottom:6px}
+.api-field input{width:100%;background:rgba(247,183,49,0.06);border:1px solid rgba(247,183,49,0.25);border-radius:10px;padding:10px 14px;color:var(--text);font-family:var(--mono);font-size:13px;outline:none;transition:border-color 0.2s}
+.api-field input:focus{border-color:var(--accent3)}
+.primary-btn{width:100%;background:linear-gradient(135deg,var(--accent),#5a4fd4);border:none;border-radius:12px;padding:13px;color:#fff;font-family:var(--font);font-size:15px;font-weight:500;cursor:pointer;transition:opacity 0.2s,transform 0.15s;margin-top:0.5rem}
+.primary-btn:hover{opacity:0.9;transform:translateY(-1px)}
+.error-msg{background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.25);border-radius:10px;padding:10px 14px;font-size:13px;color:#ff8080;margin-top:10px;display:none}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+#dashboard-screen{flex-direction:column;height:100vh;overflow:hidden}
+.dash-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+.dash-header-left{display:flex;align-items:center;gap:12px}
+.dash-logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:16px}
+.dash-header-left h2{font-size:15px;font-weight:500}
+.dash-header-left p{font-size:12px;color:var(--muted);margin-top:1px}
+.dash-header-right{display:flex;align-items:center;gap:10px}
+.tutor-badge{background:rgba(123,110,246,0.15);color:var(--accent);border:1px solid rgba(123,110,246,0.3);border-radius:20px;padding:4px 14px;font-size:12px;font-weight:500}
+.logout-btn{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;color:var(--muted);font-size:12px;font-family:var(--mono);cursor:pointer}
+.logout-btn:hover{color:var(--text)}
+.dash-body{flex:1;overflow-y:auto;padding:1.5rem}
+.dash-body::-webkit-scrollbar{width:4px}
+.dash-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:1.5rem}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1rem 1.25rem}
+.stat-card .stat-label{font-size:11px;color:var(--muted);font-family:var(--mono);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:8px}
+.stat-card .stat-value{font-size:26px;font-weight:600;color:var(--text)}
+.stat-card .stat-sub{font-size:11px;color:var(--muted2);margin-top:4px}
+.stat-card.accent .stat-value{color:var(--accent)}
+.stat-card.teal .stat-value{color:var(--accent2)}
+.stat-card.gold .stat-value{color:var(--accent3)}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.section-header h3{font-size:13px;font-family:var(--mono);color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+.add-student-btn{background:var(--accent);border:none;border-radius:8px;padding:7px 14px;color:#fff;font-size:12px;font-family:var(--font);font-weight:500;cursor:pointer}
+.add-student-btn:hover{opacity:0.85}
+.students-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-bottom:2rem}
+.student-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.25rem;position:relative;overflow:hidden;transition:border-color 0.2s}
+.student-card:hover{border-color:var(--border2)}
+.student-card.active-session{border-color:rgba(78,205,196,0.4)}
+.student-card.active-session::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent2),var(--accent))}
+.student-card-top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.student-avatar{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;flex-shrink:0;color:#fff}
+.student-card-info h4{font-size:14px;font-weight:500}
+.student-card-info p{font-size:12px;color:var(--muted);margin-top:2px}
+.status-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500;margin-bottom:10px}
+.status-badge.online{background:rgba(78,205,196,0.12);color:var(--accent2);border:1px solid rgba(78,205,196,0.25)}
+.status-badge.offline{background:var(--surface2);color:var(--muted);border:1px solid var(--border)}
+.status-badge .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.nd-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px}
+.nd-tag{font-size:10px;padding:2px 8px;border-radius:6px;background:rgba(123,110,246,0.1);color:var(--accent);border:1px solid rgba(123,110,246,0.2)}
+.student-card-actions{display:flex;gap:8px}
+.card-btn{flex:1;padding:8px;border-radius:8px;font-size:12px;font-family:var(--font);cursor:pointer;text-align:center;transition:all 0.2s}
+.card-btn.primary{background:var(--accent);border:none;color:#fff}
+.card-btn.primary:hover{opacity:0.85}
+.card-btn.danger{background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.2);color:var(--danger)}
+.card-btn.danger:hover{background:rgba(255,107,107,0.2)}
+.session-timer{font-family:var(--mono);font-size:11px;color:var(--accent2);margin-bottom:8px}
+.activity-log{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.25rem}
+.log-item{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.log-item:last-child{border-bottom:none;padding-bottom:0}
+.log-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.log-icon.green{background:rgba(78,205,196,0.12)}
+.log-icon.purple{background:rgba(123,110,246,0.12)}
+.log-icon.gold{background:rgba(247,183,49,0.12)}
+.log-text p{font-size:13px;color:var(--text);line-height:1.4}
+.log-text span{font-size:11px;color:var(--muted);font-family:var(--mono)}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;z-index:100;padding:1rem}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:2rem;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
+.modal h3{font-size:16px;font-weight:500;margin-bottom:1.5rem}
+.modal-footer{display:flex;gap:10px;margin-top:1.5rem}
+.modal-footer button{flex:1;padding:11px;border-radius:10px;font-family:var(--font);font-size:14px;cursor:pointer}
+.modal-footer .cancel{background:var(--surface2);border:1px solid var(--border);color:var(--muted)}
+.modal-footer .confirm{background:var(--accent);border:none;color:#fff}
+.nd-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+.nd-chip{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;cursor:pointer;color:var(--muted);user-select:none;transition:all 0.2s}
+.nd-chip input{display:none}
+.nd-chip.selected{border-color:var(--accent);color:var(--text);background:rgba(123,110,246,0.1)}
+.nd-chip .dot2{width:8px;height:8px;border-radius:50%;background:var(--border);flex-shrink:0;transition:background 0.2s}
+.nd-chip.selected .dot2{background:var(--accent)}
+#chat-screen{flex-direction:column;height:100vh}
+.chat-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+.chat-header-left{display:flex;align-items:center;gap:12px}
+.chat-avatar{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.chat-header-info h3{font-size:14px;font-weight:500}
+.chat-header-info p{font-size:12px;color:var(--muted);margin-top:1px}
+.status-dot-live{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent2);margin-right:4px}
+.header-actions{display:flex;gap:8px}
+.subject-pill{background:rgba(123,110,246,0.15);color:var(--accent);border:1px solid rgba(123,110,246,0.3);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:500}
+.icon-btn{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--muted);font-size:12px;font-family:var(--mono);cursor:pointer}
+.icon-btn:hover{color:var(--text)}
+.messages{flex:1;overflow-y:auto;padding:1.5rem 1.25rem;display:flex;flex-direction:column;gap:1rem;scroll-behavior:smooth}
+.messages::-webkit-scrollbar{width:4px}
+.messages::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.msg{display:flex;gap:10px;max-width:85%;animation:fadeUp 0.3s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.msg.user{align-self:flex-end;flex-direction:row-reverse}
+.msg.ai{align-self:flex-start}
+.msg-avatar{width:32px;height:32px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px}
+.msg.ai .msg-avatar{background:linear-gradient(135deg,var(--accent),var(--accent2))}
+.msg.user .msg-avatar{background:var(--surface2);border:1px solid var(--border)}
+.msg-bubble{padding:12px 16px;border-radius:14px;font-size:14px;line-height:1.7}
+.msg.ai .msg-bubble{background:var(--ai-bubble);border:1px solid var(--border);border-top-left-radius:4px}
+.msg.user .msg-bubble{background:var(--user-bubble);border-top-right-radius:4px}
+.msg-bubble p{margin-bottom:0.5rem}
+.msg-bubble p:last-child{margin-bottom:0}
+.msg-bubble strong{color:var(--accent2);font-weight:500}
+.msg-bubble em{color:var(--accent3);font-style:normal;font-weight:500}
+.typing{display:flex;align-items:center;gap:5px;padding:14px 16px}
+.typing span{width:7px;height:7px;border-radius:50%;background:var(--muted);animation:bounce 1.2s infinite}
+.typing span:nth-child(2){animation-delay:0.2s}
+.typing span:nth-child(3){animation-delay:0.4s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:0.5}30%{transform:translateY(-6px);opacity:1}}
+.input-area{padding:1rem 1.25rem;background:var(--surface);border-top:1px solid var(--border);flex-shrink:0}
+.input-row{display:flex;gap:10px;align-items:flex-end}
+#user-input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px 16px;color:var(--text);font-family:var(--font);font-size:14px;outline:none;resize:none;min-height:48px;max-height:140px;line-height:1.5;transition:border-color 0.2s}
+#user-input:focus{border-color:var(--accent)}
+#user-input::placeholder{color:var(--muted)}
+.send-btn{width:48px;height:48px;border-radius:12px;flex-shrink:0;background:linear-gradient(135deg,var(--accent),#5a4fd4);border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity 0.2s,transform 0.15s}
+.send-btn:hover{opacity:0.9;transform:scale(1.05)}
+.send-btn:disabled{opacity:0.4;cursor:default;transform:none}
+.input-hint{font-size:11px;color:var(--muted);margin-top:8px;text-align:center;font-family:var(--mono)}
+.session-summary-card{background:rgba(123,110,246,0.08);border:1px solid rgba(123,110,246,0.2);border-radius:12px;padding:1rem 1.25rem;margin-top:0.5rem}
+.session-summary-card h4{font-size:12px;color:var(--accent);font-family:var(--mono);letter-spacing:0.5px;margin-bottom:8px}
+.nd-badge{display:inline-block;font-size:11px;background:rgba(78,205,196,0.1);color:var(--accent2);border:1px solid rgba(78,205,196,0.25);border-radius:6px;padding:2px 8px;margin:0 3px 3px 0}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen" class="screen active">
+  <div class="logo-block">
+    <div class="logo-icon">🧠</div>
+    <h1>Metanoia <span>AI Tutor</span></h1>
+    <p>METANOIA ACADEMY · NAMIBIA</p>
+  </div>
+  <div class="login-card">
+    <h2>// Select access mode</h2>
+    <div class="role-tabs">
+      <div class="role-tab active" id="tab-tutor" onclick="setRole('tutor')">👩‍🏫 Tutor / Staff</div>
+      <div class="role-tab" id="tab-student" onclick="setRole('student')">🎒 Student</div>
+    </div>
+    <div id="tutor-fields">
+      <div class="api-field">
+        <label>Anthropic API Key</label>
+        <input type="password" id="api-key" placeholder="sk-ant-api03-..."/>
+      </div>
+      <div class="field"><label>Tutor name</label><input type="text" id="tutor-name" placeholder="e.g. Ms. Jacobs"/></div>
+      <div class="field"><label>Center</label>
+        <select id="tutor-center"><option>Windhoek</option><option>Rehoboth</option></select>
+      </div>
+    </div>
+    <div id="student-fields" style="display:none">
+      <div class="api-field">
+        <label>Anthropic API Key</label>
+        <input type="password" id="api-key-s" placeholder="sk-ant-api03-..."/>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Your name</label><input type="text" id="s-name-login" placeholder="e.g. Amara"/></div>
+        <div class="field"><label>Grade</label>
+          <select id="s-grade-login">
+            <option>Grade R</option><option>Grade 1</option><option>Grade 2</option><option>Grade 3</option><option>Grade 4</option><option>Grade 5</option><option>Grade 6</option><option selected>Grade 7</option><option>Grade 8</option><option>Grade 9</option><option>Grade 10</option><option>Grade 11</option><option>Grade 12</option><option>GED Preparation</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Subject</label>
+          <select id="s-subject-login">
+            <option>Mathematics</option><option>English / Language Arts</option><option>Science</option><option>Social Studies</option><option>Reading & Comprehension</option><option>Writing</option><option>Mathematical Reasoning (GED)</option><option>Reasoning Through Language Arts (GED)</option><option>Science (GED)</option><option>Social Studies (GED)</option>
+          </select>
+        </div>
+        <div class="field"><label>Platform</label>
+          <select id="s-platform-login">
+            <option>MobyMax</option><option>Cambrilearn</option><option>Essential Education (GED)</option><option>Independent study</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>Topic needing help (optional)</label><input type="text" id="s-topic-login" placeholder="e.g. fractions"/></div>
+    </div>
+    <div id="login-error" class="error-msg"></div>
+    <button class="primary-btn" onclick="doLogin()">Continue →</button>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard-screen" class="screen">
+  <div class="dash-header">
+    <div class="dash-header-left">
+      <div class="dash-logo">🧠</div>
+      <div><h2>Tutor Dashboard</h2><p id="dash-subtitle">Metanoia Academy · Windhoek</p></div>
+    </div>
+    <div class="dash-header-right">
+      <span class="tutor-badge" id="tutor-badge-name">Tutor</span>
+      <button class="logout-btn" onclick="doLogout()">logout</button>
+    </div>
+  </div>
+  <div class="dash-body">
+    <div class="stats-row">
+      <div class="stat-card accent"><div class="stat-label">Active sessions</div><div class="stat-value" id="stat-active">0</div><div class="stat-sub">Right now</div></div>
+      <div class="stat-card teal"><div class="stat-label">Students enrolled</div><div class="stat-value" id="stat-total">0</div><div class="stat-sub">This center</div></div>
+      <div class="stat-card gold"><div class="stat-label">Sessions today</div><div class="stat-value" id="stat-today">0</div><div class="stat-sub">Completed + active</div></div>
+      <div class="stat-card"><div class="stat-label">Neurodiverse</div><div class="stat-value" id="stat-nd">0</div><div class="stat-sub">Support learners</div></div>
+    </div>
+    <div class="section-header">
+      <h3>// Student roster</h3>
+      <button class="add-student-btn" onclick="openAddModal()">+ Add student</button>
+    </div>
+    <div class="students-grid" id="students-grid"></div>
+    <div class="section-header"><h3>// Activity log</h3></div>
+    <div class="activity-log" id="activity-log">
+      <div style="font-size:13px;color:var(--muted);padding:1rem 0;text-align:center;font-family:var(--mono)">No activity yet today.</div>
+    </div>
+  </div>
+</div>
+
+<!-- CHAT -->
+<div id="chat-screen" class="screen">
+  <div class="chat-header">
+    <div class="chat-header-left">
+      <div class="chat-avatar">🧠</div>
+      <div class="chat-header-info">
+        <h3 id="chat-title">AI Tutor</h3>
+        <p><span class="status-dot-live"></span><span id="chat-sub">Active session</span></p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <span id="subject-pill" class="subject-pill">Subject</span>
+      <button class="icon-btn" onclick="endSession()">end session</button>
+    </div>
+  </div>
+  <div class="messages" id="messages"></div>
+  <div class="input-area">
+    <div class="input-row">
+      <textarea id="user-input" placeholder="Type your question here..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+      <button class="send-btn" id="send-btn" onclick="sendMessage()">↑</button>
+    </div>
+    <div class="input-hint">Enter to send · Shift+Enter for new line</div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="add-modal">
+  <div class="modal">
+    <h3>Add new student</h3>
+    <div class="field-row">
+      <div class="field"><label>Full name</label><input type="text" id="m-name" placeholder="Student name"/></div>
+      <div class="field"><label>Grade / Level</label>
+        <select id="m-grade">
+          <option>Grade R</option><option>Grade 1</option><option>Grade 2</option><option>Grade 3</option><option>Grade 4</option><option>Grade 5</option><option>Grade 6</option><option selected>Grade 7</option><option>Grade 8</option><option>Grade 9</option><option>Grade 10</option><option>Grade 11</option><option>Grade 12</option><option>GED Preparation</option>
+        </select>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Subject</label>
+        <select id="m-subject">
+          <option>Mathematics</option><option>English / Language Arts</option><option>Science</option><option>Social Studies</option><option>Reading & Comprehension</option><option>Writing</option><option>Mathematical Reasoning (GED)</option><option>Reasoning Through Language Arts (GED)</option><option>Science (GED)</option><option>Social Studies (GED)</option>
+        </select>
+      </div>
+      <div class="field"><label>Platform</label>
+        <select id="m-platform">
+          <option>MobyMax</option><option>Cambrilearn</option><option>Essential Education (GED)</option><option>Independent study</option>
+        </select>
+      </div>
+    </div>
+    <div class="field"><label>Learning support needs</label>
+      <div class="nd-grid">
+        <label class="nd-chip" onclick="toggleChip(this)"><input type="checkbox" value="ADHD"/><span class="dot2"></span>ADHD / Focus</label>
+        <label class="nd-chip" onclick="toggleChip(this)"><input type="checkbox" value="Dyslexia"/><span class="dot2"></span>Dyslexia</label>
+        <label class="nd-chip" onclick="toggleChip(this)"><input type="checkbox" value="Autism"/><span class="dot2"></span>Autism spectrum</label>
+        <label class="nd-chip" onclick="toggleChip(this)"><input type="checkbox" value="Dyscalculia"/><span class="dot2"></span>Dyscalculia</label>
+        <label class="nd-chip" onclick="toggleChip(this)"><input type="checkbox" value="Anxiety"/><span class="dot2"></span>Anxiety / Low confidence</label>
+        <label class="nd-chip" onclick="toggleChip(this)"><input type="checkbox" value="None"/><span class="dot2"></span>No specific needs</label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="cancel" onclick="closeAddModal()">Cancel</button>
+      <button class="confirm" onclick="addStudent()">Add student</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let appState={role:'tutor',apiKey:'',tutorName:'',center:'Windhoek',students:[],activeSessions:{},sessionTimers:{},todayCount:0,activityLog:[],currentStudent:null,conversationHistory:[],isLoading:false};
+const avatarColors=['#7B6EF6','#4ecdc4','#f7b731','#ff6b6b','#a29bfe','#fd79a8','#00b894','#e17055'];
+function getColor(n){let h=0;for(let c of n)h=c.charCodeAt(0)+((h<<5)-h);return avatarColors[Math.abs(h)%avatarColors.length];}
+function getInitials(n){return n.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);}
+function setRole(r){appState.role=r;document.getElementById('tab-tutor').classList.toggle('active',r==='tutor');document.getElementById('tab-student').classList.toggle('active',r==='student');document.getElementById('tutor-fields').style.display=r==='tutor'?'block':'none';document.getElementById('student-fields').style.display=r==='student'?'block':'none';}
+function toggleChip(el){el.classList.toggle('selected');el.querySelector('input').checked=el.classList.contains('selected');}
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function doLogin(){
+  const err=document.getElementById('login-error');err.style.display='none';
+  if(appState.role==='tutor'){
+    const key=document.getElementById('api-key').value.trim();
+    const name=document.getElementById('tutor-name').value.trim();
+    const center=document.getElementById('tutor-center').value;
+    if(!key){err.textContent='Please enter your Anthropic API key.';err.style.display='block';return;}
+    if(!key.startsWith('sk-ant')){err.textContent='Invalid API key. Should start with sk-ant...';err.style.display='block';return;}
+    if(!name){err.textContent='Please enter your name.';err.style.display='block';return;}
+    appState.apiKey=key;appState.tutorName=name;appState.center=center;
+    document.getElementById('tutor-badge-name').textContent=name;
+    document.getElementById('dash-subtitle').textContent='Metanoia Academy · '+center;
+    renderDashboard();show('dashboard-screen');
+  } else {
+    const key=document.getElementById('api-key-s').value.trim();
+    const name=document.getElementById('s-name-login').value.trim();
+    if(!key){err.textContent='Please enter the API key.';err.style.display='block';return;}
+    if(!key.startsWith('sk-ant')){err.textContent='Invalid API key format.';err.style.display='block';return;}
+    if(!name){err.textContent='Please enter your name.';err.style.display='block';return;}
+    appState.apiKey=key;
+    const student={id:'self_'+Date.now(),name,grade:document.getElementById('s-grade-login').value,subject:document.getElementById('s-subject-login').value,platform:document.getElementById('s-platform-login').value,topic:document.getElementById('s-topic-login').value.trim(),nd:[],color:getColor(name)};
+    appState.currentStudent=student;startChatSession(student);
+  }
+}
+function renderDashboard(){
+  const active=Object.keys(appState.activeSessions).length;
+  const nd=appState.students.filter(s=>s.nd&&s.nd.length>0&&!s.nd.includes('None')).length;
+  document.getElementById('stat-active').textContent=active;
+  document.getElementById('stat-total').textContent=appState.students.length;
+  document.getElementById('stat-today').textContent=appState.todayCount+active;
+  document.getElementById('stat-nd').textContent=nd;
+  const grid=document.getElementById('students-grid');grid.innerHTML='';
+  if(!appState.students.length){grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--muted);font-size:13px;font-family:var(--mono)">No students yet. Click "+ Add student" to begin.</div>';return;}
+  appState.students.forEach(s=>{
+    const isActive=!!appState.activeSessions[s.id];
+    const card=document.createElement('div');card.className='student-card'+(isActive?' active-session':'');
+    const ndTags=(s.nd&&s.nd.length&&!s.nd.includes('None'))?s.nd.map(t=>'<span class="nd-tag">'+t+'</span>').join(''):'';
+    const timerHtml=isActive?'<div class="session-timer" id="timer-'+s.id+'">⏱ Session active</div>':'';
+    card.innerHTML='<div class="student-card-top"><div class="student-avatar" style="background:'+s.color+'">'+getInitials(s.name)+'</div><div class="student-card-info"><h4>'+s.name+'</h4><p>'+s.grade+' · '+s.subject+'</p></div></div><div class="status-badge '+(isActive?'online':'offline')+'"><span class="dot"></span>'+(isActive?'In session':'Available')+'</div>'+(ndTags?'<div class="nd-tags">'+ndTags+'</div>':'')+timerHtml+'<div class="student-card-actions"><button class="card-btn primary" onclick="launchSession(\''+s.id+'\')">Start session</button><button class="card-btn danger" onclick="removeStudent(\''+s.id+'\')">Remove</button></div>';
+    grid.appendChild(card);
+  });
+  const log=document.getElementById('activity-log');
+  if(appState.activityLog.length){log.innerHTML=appState.activityLog.slice().reverse().slice(0,8).map(a=>'<div class="log-item"><div class="log-icon '+a.cls+'">'+a.icon+'</div><div class="log-text"><p>'+a.text+'</p><span>'+a.time+'</span></div></div>').join('');}
+}
+function launchSession(id){
+  const s=appState.students.find(x=>x.id===id);if(!s)return;
+  appState.currentStudent=s;appState.conversationHistory=[];
+  if(!appState.activeSessions[id]){
+    appState.activeSessions[id]={start:Date.now()};
+    logActivity('green','🟢','Session started for '+s.name,'green');
+    if(appState.sessionTimers[id])clearInterval(appState.sessionTimers[id]);
+    appState.sessionTimers[id]=setInterval(()=>{const el=document.getElementById('timer-'+id);if(el){const mins=Math.floor((Date.now()-appState.activeSessions[id].start)/60000);el.textContent='⏱ '+mins+'m active';}},30000);
+  }
+  startChatSession(s);
+}
+function logActivity(type,icon,text,cls){const now=new Date();const time=now.toLocaleTimeString('en-ZA',{hour:'2-digit',minute:'2-digit'});appState.activityLog.push({type,icon,text,cls,time});}
+function startChatSession(s){
+  document.getElementById('chat-title').textContent='Tutoring '+s.name;
+  document.getElementById('chat-sub').textContent=s.grade+' · '+s.subject;
+  document.getElementById('subject-pill').textContent=s.subject;
+  document.getElementById('messages').innerHTML='';
+  const msgs=document.getElementById('messages');
+  const welcome=document.createElement('div');welcome.className='msg ai';
+  const ndHtml=(s.nd&&s.nd.length&&!s.nd.includes('None'))?'<div style="margin-top:10px">'+s.nd.map(f=>'<span class="nd-badge">'+f+'</span>').join('')+'</div>':'';
+  welcome.innerHTML='<div class="msg-avatar">🧠</div><div class="msg-bubble"><div class="session-summary-card"><h4>// SESSION STARTED</h4><p>Student: <strong>'+s.name+'</strong> · '+s.grade+' · '+s.subject+'</p><p style="font-size:12px;color:var(--muted);margin-top:4px">Platform: '+s.platform+'</p>'+ndHtml+'</div></div>';
+  msgs.appendChild(welcome);show('chat-screen');
+  sendAI('Hello! Please greet the student warmly and begin the tutoring session.',true);
+}
+function buildSystemPrompt(s){
+  let nd='';
+  if(s.nd&&s.nd.length&&!s.nd.includes('None')){
+    nd='\n\nSPECIAL LEARNER SUPPORT INSTRUCTIONS:\n';
+    if(s.nd.includes('ADHD'))nd+='- Keep responses SHORT. One idea at a time. Numbered steps. Ask if ready before continuing.\n';
+    if(s.nd.includes('Dyslexia'))nd+='- Simple words. Short paragraphs. No walls of text.\n';
+    if(s.nd.includes('Autism'))nd+='- Literal and predictable. No sarcasm or idioms. Clear expectations each step.\n';
+    if(s.nd.includes('Dyscalculia'))nd+='- Real-world examples for numbers. Go slowly. Visual descriptions.\n';
+    if(s.nd.includes('Anxiety'))nd+='- Acknowledge effort before correcting. Never say wrong without encouragement.\n';
+  }
+  const topicLine=s.topic?'\nSpecific topic: '+s.topic+'.':'';
+  const platLine=s.platform!=='Independent study'?'\nStudent uses '+s.platform+'. Help them understand it — do not replace it.':'';
+  return 'You are a warm, patient AI tutor for Metanoia Academy, Namibia.\n\nStudent: '+s.name+', '+s.grade+'. Subject: '+s.subject+'.'+topicLine+platLine+nd+'\n\nRULES:\n- Never give answers directly — guide with hints and questions.\n- After 2 failed attempts give a small hint then try again together.\n- Check understanding after every explanation.\n- Encourage, celebrate small wins, use age-appropriate language.\n- Gently redirect if off-topic.\n- Use short paragraphs and numbered steps.\n- At natural pauses summarise what was covered and suggest one thing to practise.';
+}
+function formatMsg(t){return t.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\*(.*?)\*/g,'<em>$1</em>').replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br/>');}
+function addMessage(role,content){const msgs=document.getElementById('messages');const div=document.createElement('div');div.className='msg '+role;div.innerHTML='<div class="msg-avatar">'+(role==='ai'?'🧠':'👤')+'</div><div class="msg-bubble"><p>'+formatMsg(content)+'</p></div>';msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;}
+function showTyping(){const msgs=document.getElementById('messages');const div=document.createElement('div');div.className='msg ai';div.id='typing-ind';div.innerHTML='<div class="msg-avatar">🧠</div><div class="msg-bubble"><div class="typing"><span></span><span></span><span></span></div></div>';msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;}
+function removeTyping(){const el=document.getElementById('typing-ind');if(el)el.remove();}
+async function sendAI(userMsg,isGreeting=false){
+  if(!isGreeting)appState.conversationHistory.push({role:'user',content:userMsg});
+  appState.isLoading=true;const btn=document.getElementById('send-btn');if(btn)btn.disabled=true;showTyping();
+  const s=appState.currentStudent;
+  const messages=isGreeting?[{role:'user',content:userMsg}]:[...appState.conversationHistory];
+  try{
+    const res=await fetch('/.netlify/functions/chat',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({messages,system:buildSystemPrompt(s),apiKey:appState.apiKey})
+    });
+    const data=await res.json();removeTyping();
+    if(!res.ok){addMessage('ai','Sorry, there was an issue: '+(data.error?.message||'Unknown error'));}
+    else{
+      const reply=data.content[0].text;
+      appState.conversationHistory.push({role:'assistant',content:reply});
+      addMessage('ai',reply);
+      if(s&&appState.activeSessions[s.id])logActivity('purple','💬',s.name+' — AI responded','purple');
+    }
+  }catch(e){removeTyping();addMessage('ai','Connection error: '+e.message);}
+  appState.isLoading=false;if(btn)btn.disabled=false;
+}
+function sendMessage(){if(appState.isLoading)return;const input=document.getElementById('user-input');const text=input.value.trim();if(!text)return;input.value='';input.style.height='auto';addMessage('user',text);sendAI(text);}
+function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}
+function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,140)+'px';}
+function endSession(){
+  const s=appState.currentStudent;
+  if(s&&appState.activeSessions[s.id]){
+    const mins=Math.floor((Date.now()-appState.activeSessions[s.id].start)/60000);
+    delete appState.activeSessions[s.id];
+    if(appState.sessionTimers[s.id]){clearInterval(appState.sessionTimers[s.id]);delete appState.sessionTimers[s.id];}
+    logActivity('green','✅',s.name+' session ended · '+mins+'m','green');appState.todayCount++;
+  }
+  appState.currentStudent=null;appState.conversationHistory=[];
+  if(appState.role==='tutor'){renderDashboard();show('dashboard-screen');}else{show('login-screen');}
+}
+function doLogout(){appState={role:'tutor',apiKey:'',tutorName:'',center:'Windhoek',students:[],activeSessions:{},sessionTimers:{},todayCount:0,activityLog:[],currentStudent:null,conversationHistory:[],isLoading:false};show('login-screen');}
+function openAddModal(){document.getElementById('add-modal').classList.add('open');}
+function closeAddModal(){document.getElementById('add-modal').classList.remove('open');document.querySelectorAll('#add-modal .nd-chip').forEach(c=>{c.classList.remove('selected');c.querySelector('input').checked=false;});}
+function addStudent(){
+  const name=document.getElementById('m-name').value.trim();if(!name){alert('Please enter a student name.');return;}
+  const chips=document.querySelectorAll('#add-modal .nd-chip.selected');
+  const nd=Array.from(chips).map(c=>c.querySelector('input').value);
+  const s={id:'s'+Date.now(),name,grade:document.getElementById('m-grade').value,subject:document.getElementById('m-subject').value,platform:document.getElementById('m-platform').value,nd:nd.length?nd:['None'],color:getColor(name)};
+  appState.students.push(s);logActivity('gold','➕',name+' added to roster','gold');closeAddModal();renderDashboard();
+}
+function removeStudent(id){
+  if(!confirm('Remove this student from the roster?'))return;
+  const s=appState.students.find(x=>x.id===id);
+  appState.students=appState.students.filter(x=>x.id!==id);
+  if(appState.activeSessions[id]){delete appState.activeSessions[id];if(appState.sessionTimers[id]){clearInterval(appState.sessionTimers[id]);delete appState.sessionTimers[id];}}
+  if(s)logActivity('gold','🗑️',s.name+' removed from roster','gold');
+  renderDashboard();
+}
+</script>
+</body>
+</html>
