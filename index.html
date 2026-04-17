@@ -179,6 +179,14 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .session-summary-card{background:rgba(123,110,246,0.08);border:1px solid rgba(123,110,246,0.2);border-radius:12px;padding:1rem 1.25rem;margin-top:0.5rem}
 .session-summary-card h4{font-size:12px;color:var(--accent);font-family:var(--mono);letter-spacing:0.5px;margin-bottom:8px}
 .nd-badge{display:inline-block;font-size:11px;background:rgba(78,205,196,0.1);color:var(--accent2);border:1px solid rgba(78,205,196,0.25);border-radius:6px;padding:2px 8px;margin:0 3px 3px 0}
+.traffic-light{width:12px;height:12px;border-radius:50%;flex-shrink:0;display:inline-block;margin-right:6px}
+.traffic-light.green{background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,0.5)}
+.traffic-light.yellow{background:#f59e0b;box-shadow:0 0 6px rgba(245,158,11,0.5)}
+.traffic-light.red{background:#ef4444;box-shadow:0 0 6px rgba(239,68,68,0.5);animation:pulse-red 1.5s infinite}
+@keyframes pulse-red{0%,100%{box-shadow:0 0 6px rgba(239,68,68,0.5)}50%{box-shadow:0 0 14px rgba(239,68,68,0.8)}}
+.stat-mini{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.stat-mini-item{font-size:11px;font-family:var(--mono);color:var(--muted);display:flex;flex-direction:column;gap:2px}
+.stat-mini-item strong{font-size:13px;color:var(--text);font-family:var(--font)}
 .shake{animation:shake 0.4s ease}
 @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
 .notes-modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:2rem;width:100%;max-width:560px;max-height:85vh;overflow-y:auto;position:relative}
@@ -389,6 +397,77 @@ let appState={
   todayCount:0,activityLog:[],
   currentStudent:null,conversationHistory:[],isLoading:false
 };
+
+function getWeekKey(){
+  const now=new Date();
+  const day=now.getDay();
+  const monday=new Date(now);
+  monday.setDate(now.getDate()-(day===0?6:day-1));
+  return monday.toISOString().slice(0,10);
+}
+
+function saveSessionStat(studentId, durationMins, subject){
+  try{
+    const key='metanoia_stats_'+studentId;
+    const weekKey=getWeekKey();
+    const existing=JSON.parse(localStorage.getItem(key)||'{}');
+    if(!existing[weekKey])existing[weekKey]={sessions:[],parentReportSent:false};
+    existing[weekKey].sessions.push({date:new Date().toISOString(),duration:durationMins,subject});
+    // Keep only last 4 weeks
+    const weeks=Object.keys(existing).sort().slice(-4);
+    const trimmed={};weeks.forEach(w=>trimmed[w]=existing[w]);
+    localStorage.setItem(key,JSON.stringify(trimmed));
+  }catch(e){}
+}
+
+function markParentReportSent(studentId){
+  try{
+    const key='metanoia_stats_'+studentId;
+    const weekKey=getWeekKey();
+    const existing=JSON.parse(localStorage.getItem(key)||'{}');
+    if(!existing[weekKey])existing[weekKey]={sessions:[],parentReportSent:false};
+    existing[weekKey].parentReportSent=true;
+    localStorage.setItem(key,JSON.stringify(existing));
+  }catch(e){}
+}
+
+function getStudentStats(studentId){
+  try{
+    const key='metanoia_stats_'+studentId;
+    const weekKey=getWeekKey();
+    const data=JSON.parse(localStorage.getItem(key)||'{}');
+    const week=data[weekKey]||{sessions:[],parentReportSent:false};
+    const sessions=week.sessions||[];
+    const avgDuration=sessions.length?Math.round(sessions.reduce((a,s)=>a+s.duration,0)/sessions.length):0;
+    const subjects=[...new Set(sessions.map(s=>s.subject))];
+    // Get mood trend from ND Hub
+    let moodTrend='—';
+    try{
+      const ndNotes=JSON.parse(localStorage.getItem('metanoia_nd_notes')||'[]');
+      const weekStart=new Date();weekStart.setDate(weekStart.getDate()-7);
+      const studentMoods=ndNotes.filter(n=>n.student.toLowerCase().trim()===
+        (appState.students.find(s=>s.id===studentId)||{name:''}).name.toLowerCase().trim());
+      if(studentMoods.length){
+        const moods=studentMoods.slice(0,5).map(n=>n.text||'');
+        const hasLow=moods.some(m=>m.includes('anxious')||m.includes('distressed')||m.includes('worried'));
+        const hasTags=ndNotes.filter(n=>n.student.toLowerCase().trim()===
+          (appState.students.find(s=>s.id===studentId)||{name:''}).name.toLowerCase().trim())
+          .flatMap(n=>n.tags||[]);
+        const lowTags=['Anxious/distressed','Refused tasks','Sensory overload signs'];
+        const goodTags=['Focused well','Great progress','Very engaged','Breakthrough moment'];
+        const lowCount=hasTags.filter(t=>lowTags.includes(t)).length;
+        const goodCount=hasTags.filter(t=>goodTags.includes(t)).length;
+        moodTrend=goodCount>lowCount?'😊 Positive':lowCount>goodCount?'😟 Low':'😐 Mixed';
+      }
+    }catch(e){}
+    // Calculate traffic light
+    let status='green';
+    if(sessions.length===0) status='red';
+    else if(sessions.length<2) status='yellow';
+    if(moodTrend.includes('Low')) status=status==='green'?'yellow':'red';
+    return {sessions:sessions.length,avgDuration,subjects,parentReportSent:week.parentReportSent,moodTrend,status};
+  }catch(e){return {sessions:0,avgDuration:0,subjects:[],parentReportSent:false,moodTrend:'—',status:'red'};}
+}
 let pinEntry='';
 
 const avatarColors=['#7B6EF6','#4ecdc4','#f7b731','#ff6b6b','#a29bfe','#fd79a8','#00b894','#e17055'];
@@ -511,40 +590,60 @@ function renderDashboard(){
     grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--muted);font-size:13px;font-family:var(--mono)">No students yet. Click "+ Add student" to begin.</div>';
     return;
   }
-  appState.students.forEach(s=>{
+  appState.students.forEach(function(s){
     const isActive=!!appState.activeSessions[s.id];
+    const stats=getStudentStats(s.id);
     const card=document.createElement('div');
     card.className='student-card'+(isActive?' active-session':'');
-    const ndTags=(s.nd&&s.nd.length&&!s.nd.includes('None'))?s.nd.map(t=>'<span class="nd-tag">'+t+'</span>').join(''):'';
-    const timerHtml=isActive?'<div class="session-timer" id="timer-'+s.id+'">⏱ Session active</div>':'';
-    card.innerHTML=`
-      <div class="student-card-top">
-        <div class="student-avatar" style="background:${s.color}">${getInitials(s.name)}</div>
-        <div class="student-card-info"><h4>${s.name}</h4><p>${s.grade} · ${s.subject}</p></div>
-      </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
-        <div class="status-badge ${isActive?'online':'offline'}"><span class="dot"></span>${isActive?'In session':'Available'}</div>
-        <div class="pin-badge">PIN: ${s.pin||'----'}</div>
-      </div>
-      ${ndTags?'<div class="nd-tags">'+ndTags+'</div>':''}
-      ${timerHtml}
-      <div class="student-card-actions">
-        <button class="card-btn primary" onclick="launchSession('${s.id}')">Start session</button>
-        <button class="card-btn secondary" onclick="openParentReport('${s.id}')">Parent report</button>
-        <button class="card-btn danger" onclick="removeStudent('${s.id}')">Remove</button>
-      </div>`;
+    const ndTags=(s.nd&&s.nd.length&&!s.nd.includes('None'))?s.nd.map(function(t){return '<span class="nd-tag">'+t+'</span>';}).join(''):'';
+    const timerHtml=isActive?'<div class="session-timer" id="timer-'+s.id+'">&#9203; Session active</div>':'';
+    card.innerHTML=
+      '<div class="student-card-top">'
+      +'<div class="student-avatar" style="background:'+s.color+'">'+getInitials(s.name)+'</div>'
+      +'<div class="student-card-info"><h4>'
+      +'<span class="traffic-light '+stats.status+'"></span>'
+      +s.name+'</h4><p>'+s.grade+' &middot; '+s.subject+'</p></div>'
+      +'</div>'
+      +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">'
+      +'<div class="status-badge '+(isActive?'online':'offline')+'"><span class="dot"></span>'+(isActive?'In session':'Available')+'</div>'
+      +'<div class="pin-badge">PIN: '+(s.pin||'----')+'</div>'
+      +(stats.parentReportSent?'<div class="pin-badge" style="background:rgba(16,185,129,0.1);color:var(--accent2);border-color:rgba(16,185,129,0.25)">&#10003; Report sent</div>':'')
+      +'</div>'
+      +'<div class="stat-mini">'
+      +'<div class="stat-mini-item"><span>Sessions</span><strong>'+stats.sessions+'</strong></div>'
+      +'<div class="stat-mini-item"><span>Avg length</span><strong>'+(stats.avgDuration?stats.avgDuration+'m':'—')+'</strong></div>'
+      +'<div class="stat-mini-item"><span>Mood</span><strong>'+stats.moodTrend+'</strong></div>'
+      +(stats.subjects.length?'<div class="stat-mini-item"><span>Subjects</span><strong>'+stats.subjects.slice(0,2).join(', ')+'</strong></div>':'')
+      +'</div>'
+      +(ndTags?'<div class="nd-tags">'+ndTags+'</div>':'')
+      +timerHtml
+      +'<div class="student-card-actions"></div>';
+    const actions=card.querySelector('.student-card-actions');
+    const sid=s.id;
+    const startBtn=document.createElement('button');
+    startBtn.className='card-btn primary';
+    startBtn.textContent='Start session';
+    startBtn.onclick=function(){launchSession(sid);};
+    const reportBtn=document.createElement('button');
+    reportBtn.className='card-btn secondary';
+    reportBtn.textContent='Parent report';
+    reportBtn.onclick=function(){openParentReport(sid);};
+    const removeBtn=document.createElement('button');
+    removeBtn.className='card-btn danger';
+    removeBtn.textContent='Remove';
+    removeBtn.onclick=function(){removeStudent(sid);};
+    actions.appendChild(startBtn);
+    actions.appendChild(reportBtn);
+    actions.appendChild(removeBtn);
     grid.appendChild(card);
   });
   const log=document.getElementById('activity-log');
   if(appState.activityLog.length){
-    log.innerHTML=appState.activityLog.slice().reverse().slice(0,8).map(a=>`
-      <div class="log-item">
-        <div class="log-icon ${a.cls}">${a.icon}</div>
-        <div class="log-text"><p>${a.text}</p><span>${a.time}</span></div>
-      </div>`).join('');
+    log.innerHTML=appState.activityLog.slice().reverse().slice(0,8).map(function(a){
+      return '<div class="log-item"><div class="log-icon '+a.cls+'">'+a.icon+'</div><div class="log-text"><p>'+a.text+'</p><span>'+a.time+'</span></div></div>';
+    }).join('');
   }
 }
-
 function launchSession(id){
   const s=appState.students.find(x=>x.id===id);if(!s)return;
   appState.currentStudent=s;appState.conversationHistory=[];
@@ -690,6 +789,8 @@ function openParentReport(studentId){
     if(!data.content){document.getElementById('parent-body').innerHTML='<div class="notes-content">Error: '+(data.error?.message||'Unknown error')+'</div>';return;}
     currentParentReport=data.content[0].text;
     document.getElementById('parent-body').innerHTML='<div class="notes-content">'+currentParentReport.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>';
+    if(s&&s.id) markParentReportSent(s.id);
+    renderDashboard();
   }).catch(e=>{document.getElementById('parent-body').innerHTML='<div class="notes-content">Error: '+e.message+'</div>';});
 }
 function downloadParentReport(){
@@ -717,6 +818,7 @@ function endSession(){
     logActivity('green','✅',s.name+' session ended · '+mins+'m','green');
     appState.todayCount++;
   }
+  if(s) saveSessionStat(s.id, mins, s.subject);
   appState.currentStudent=null;appState.conversationHistory=[];
   if(appState.role==='tutor'){renderDashboard();show('dashboard-screen');}
   else{pinEntry='';updatePinDots();show('login-screen');}
