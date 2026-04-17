@@ -102,6 +102,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .card-btn{flex:1;padding:8px;border-radius:8px;font-size:12px;font-family:var(--font);cursor:pointer;text-align:center;transition:all 0.2s}
 .card-btn.primary{background:var(--accent);border:none;color:#fff}
 .card-btn.primary:hover{opacity:0.85}
+.card-btn.secondary{background:var(--surface2);border:1px solid var(--border);color:var(--muted)}
+.card-btn.secondary:hover{color:var(--text);border-color:var(--border2)}
 .card-btn.danger{background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.2);color:var(--danger)}
 .card-btn.danger:hover{background:rgba(255,107,107,0.2)}
 .session-timer{font-family:var(--mono);font-size:11px;color:var(--accent2);margin-bottom:8px}
@@ -346,6 +348,22 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
   </div>
 </div>
 
+<!-- PARENT REPORT MODAL -->
+<div class="modal-overlay" id="parent-modal-overlay">
+  <div class="notes-modal" id="parent-modal">
+    <h3>Parent Report</h3>
+    <p class="notes-meta" id="parent-meta">Weekly progress report</p>
+    <div id="parent-body">
+      <div class="generating"><span>Generating parent report</span><span class="gen-dots"><span>.</span><span>.</span><span>.</span></span></div>
+    </div>
+    <div class="notes-actions">
+      <button class="dl-btn" onclick="downloadParentReport()">Download .txt</button>
+      <button class="dl-btn" style="background:var(--accent2)" onclick="copyParentReport()">Copy to clipboard</button>
+      <button class="close-btn" onclick="closeParentModal()">Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- SESSION NOTES MODAL -->
 <div class="modal-overlay" id="notes-modal-overlay">
   <div class="notes-modal" id="notes-modal">
@@ -445,6 +463,24 @@ function saveStudents(){
   try{localStorage.setItem('metanoia_students',JSON.stringify(appState.students));}
   catch(e){console.warn('Could not save students:',e);}
 }
+function saveSessionNote(studentId, note){
+  try{
+    const key='metanoia_notes_'+studentId;
+    const existing=JSON.parse(localStorage.getItem(key)||'[]');
+    existing.push({date:new Date().toISOString(),note});
+    // Keep last 10 sessions only
+    if(existing.length>10)existing.splice(0,existing.length-10);
+    localStorage.setItem(key,JSON.stringify(existing));
+  }catch(e){console.warn('Could not save note:',e);}
+}
+function loadSessionNotes(studentId){
+  try{return JSON.parse(localStorage.getItem('metanoia_notes_'+studentId)||'[]');}
+  catch(e){return [];}
+}
+function clearSessionNotes(studentId){
+  try{localStorage.removeItem('metanoia_notes_'+studentId);}
+  catch(e){}
+}
 function loadStudents(){
   try{
     const saved=localStorage.getItem('metanoia_students');
@@ -494,6 +530,7 @@ function renderDashboard(){
       ${timerHtml}
       <div class="student-card-actions">
         <button class="card-btn primary" onclick="launchSession('${s.id}')">Start session</button>
+        <button class="card-btn secondary" onclick="openParentReport(\''+s.id+'\')">Parent report</button>
         <button class="card-btn danger" onclick="removeStudent('${s.id}')">Remove</button>
       </div>`;
     grid.appendChild(card);
@@ -607,6 +644,53 @@ function sendMessage(){
 function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}
 function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,140)+'px';}
 
+let currentParentReport='';
+function openParentReport(studentId){
+  const s=appState.students.find(x=>x.id===studentId);
+  if(!s){alert('Student not found.');return;}
+  const notes=loadSessionNotes(studentId);
+  if(!notes.length){
+    alert('No session notes found for '+s.name+' yet. Complete at least one tutoring session first.');
+    return;
+  }
+  const combinedNotes=notes.map((n,i)=>'SESSION '+(i+1)+' ('+new Date(n.date).toLocaleDateString('en-ZA')+')
+'+n.note).join('
+
+---
+
+');
+  document.getElementById('parent-modal-overlay').classList.add('open');
+  document.getElementById('parent-meta').textContent=s.name+' · '+s.grade+' · Week ending '+new Date().toLocaleDateString('en-ZA');
+  document.getElementById('parent-body').innerHTML='<div class="generating"><span>Generating parent report</span><span class="gen-dots"><span>.</span><span>.</span><span>.</span></span></div>';
+  currentParentReport='';
+  fetch('/.netlify/functions/parentreport',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      studentName:s.name,grade:s.grade,subject:s.subject,
+      platform:s.platform,sessionNotes:combinedNotes,
+      centerName:appState.center,tutorName:appState.tutorName
+    })
+  }).then(r=>r.json()).then(data=>{
+    if(!data.content){document.getElementById('parent-body').innerHTML='<div class="notes-content">Error: '+(data.error?.message||'Unknown error')+'</div>';return;}
+    currentParentReport=data.content[0].text;
+    document.getElementById('parent-body').innerHTML='<div class="notes-content">'+currentParentReport.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>';
+  }).catch(e=>{document.getElementById('parent-body').innerHTML='<div class="notes-content">Error: '+e.message+'</div>';});
+}
+function downloadParentReport(){
+  if(!currentParentReport){alert('Report not ready yet.');return;}
+  const blob=new Blob([currentParentReport],{type:'text/plain'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='parent-report-'+new Date().toISOString().slice(0,10)+'.txt';
+  a.click();
+}
+function copyParentReport(){
+  if(!currentParentReport){alert('Report not ready yet.');return;}
+  navigator.clipboard.writeText(currentParentReport).then(()=>alert('Copied! You can now paste it into WhatsApp or email.')).catch(()=>alert('Could not copy. Please use Download instead.'));
+}
+function closeParentModal(){document.getElementById('parent-modal-overlay').classList.remove('open');currentParentReport='';}
+
 function endSession(){
   const s=appState.currentStudent;
   const history=[...appState.conversationHistory];
@@ -646,6 +730,7 @@ async function generateSessionNotes(s,mins,history){
     }
     currentNotes=data.content[0].text;
     document.getElementById('notes-body').innerHTML='<div class="notes-content">'+currentNotes.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>';
+    if(s&&s.id) saveSessionNote(s.id, currentNotes);
   }catch(e){
     document.getElementById('notes-body').innerHTML='<div class="notes-content">Error generating notes: '+e.message+'</div>';
   }
