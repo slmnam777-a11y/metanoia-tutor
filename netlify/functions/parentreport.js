@@ -34,9 +34,13 @@ exports.handler = async function(event) {
     weekStart.setDate(weekStart.getDate() - 7);
     const weekStartStr = weekStart.toLocaleDateString('en-ZA', { day: 'numeric', month: 'long' });
 
+    const hasNdNotes = sessionNotes.includes('ND HUB OBSERVATIONS:');
+
     const prompt = `You are writing a warm, professional weekly progress report for a parent from Metanoia Academy, an education centre in Namibia.
 
 Write in a friendly, encouraging tone — parents are not educators, so avoid jargon. Be specific about what their child worked on and how they are doing. Always end on a positive, motivating note.
+
+${hasNdNotes ? 'This student has neurodivergent support needs. The session notes include both AI tutoring session data AND tutor observations from the ND Hub. Weave these together naturally. When mentioning challenges, frame them as growth areas and mention the specific support strategies being used.' : ''}
 
 Student: ${studentName}
 Grade: ${grade}
@@ -46,7 +50,7 @@ Tutor: ${tutorName}
 Center: ${centerName}
 Report period: ${weekStartStr} – ${today}
 
-SESSION NOTES FROM THIS WEEK:
+SESSION NOTES AND OBSERVATIONS FROM THIS WEEK:
 ${sessionNotes}
 
 Write the parent report in this exact format:
@@ -59,15 +63,18 @@ WHAT WE WORKED ON THIS WEEK
 [2-3 sentences describing the topics and activities in simple, parent-friendly language]
 
 HOW ${studentName.toUpperCase()} IS DOING
-[Honest but encouraging assessment of progress, effort, and attitude]
+[Honest but encouraging assessment of progress, effort, and attitude. If ND observations are present, mention emotional state and engagement naturally.]
 
 HIGHLIGHTS FROM THIS WEEK
 [1-2 specific positive moments or breakthroughs worth celebrating]
 
 AREAS WE ARE FOCUSING ON
-[What needs more practice — framed positively as growth areas, not weaknesses]
+[What needs more practice — framed positively as growth areas]
 
-HOW YOU CAN HELP AT HOME
+${hasNdNotes ? `SUPPORT STRATEGIES IN USE
+[Briefly describe the specific support strategies being used for this learner — e.g. focus timers, task cards, check-ins — in parent-friendly language]
+
+` : ''}HOW YOU CAN HELP AT HOME
 [2-3 simple, practical suggestions for parents to support learning at home]
 
 LOOKING AHEAD
@@ -81,7 +88,7 @@ Metanoia Academy — ${centerName}`;
 
     const payload = JSON.stringify({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1200,
+      max_tokens: 1400,
       messages: [{ role: 'user', content: prompt }]
     });
 
