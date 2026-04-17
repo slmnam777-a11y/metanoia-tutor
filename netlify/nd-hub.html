@@ -396,6 +396,24 @@ const tips=[
   'Take a deep breath. You are safe and you can do this.',
 ];
 
+// ── READ ALOUD ──
+function ndSpeak(text, btnEl){
+  if(!window.speechSynthesis){alert('Read-aloud is not supported in this browser.');return;}
+  window.speechSynthesis.cancel();
+  document.querySelectorAll('.nd-speak-btn').forEach(b=>{b.textContent='🔊';b.style.opacity='1';});
+  const utter=new SpeechSynthesisUtterance(text);
+  utter.rate=0.85;utter.pitch=1;utter.volume=1;
+  const voices=window.speechSynthesis.getVoices();
+  const v=voices.find(v=>v.lang.startsWith('en'))||voices[0];
+  if(v)utter.voice=v;
+  if(btnEl){
+    btnEl.textContent='⏹';btnEl.style.opacity='0.7';
+    utter.onend=function(){btnEl.textContent='🔊';btnEl.style.opacity='1';};
+    utter.onerror=function(){btnEl.textContent='🔊';btnEl.style.opacity='1';};
+  }
+  window.speechSynthesis.speak(utter);
+}
+
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -451,7 +469,10 @@ function buildSchedule(){
   scheduleItems.forEach((item,i)=>{
     const div=document.createElement('div');
     div.className='slot';div.id='slot-'+i;
-    div.innerHTML='<div class="slot-time">'+item.time+'</div><div class="slot-icon">'+item.icon+'</div><div class="slot-info"><h4>'+item.title+'</h4><p>'+item.desc+'</p></div><div class="slot-check" onclick="toggleSlot('+i+')"></div>';
+    const slotText=item.title+'. '+item.desc;
+    div.innerHTML='<div class="slot-time">'+item.time+'</div><div class="slot-icon">'+item.icon+'</div><div class="slot-info"><h4>'+item.title+'</h4><p>'+item.desc+'</p></div>'
+      +'<button class="nd-speak-btn" title="Read aloud" style="background:none;border:none;font-size:16px;cursor:pointer;padding:4px;margin-right:6px;flex-shrink:0" onclick="ndSpeak(''+slotText.replace(/'/g,\'\\\'\')+'',this)">🔊</button>'
+      +'<div class="slot-check" onclick="toggleSlot('+i+')"></div>';
     grid.appendChild(div);
   });
   updateProgress();
