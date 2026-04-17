@@ -658,12 +658,24 @@ function openParentReport(studentId){
   document.getElementById('parent-meta').textContent=s.name+' · '+s.grade+' · Week ending '+new Date().toLocaleDateString('en-ZA');
   document.getElementById('parent-body').innerHTML='<div class="generating"><span>Generating parent report</span><span class="gen-dots"><span>.</span><span>.</span><span>.</span></span></div>';
   currentParentReport='';
+  // Pull ND hub observations for this student from localStorage
+  let ndSection='';
+  try{
+    const ndNotes=JSON.parse(localStorage.getItem('metanoia_nd_notes')||'[]');
+    const studentNdNotes=ndNotes.filter(n=>n.student.toLowerCase().trim()===s.name.toLowerCase().trim());
+    if(studentNdNotes.length){
+      ndSection='\n\nND HUB OBSERVATIONS:\n'+studentNdNotes.slice(0,5).map(n=>
+        n.date+' '+n.time+': '+n.text+(n.tags.length?' ['+n.tags.join(', ')+']':'')
+      ).join('\n');
+    }
+  }catch(e){}
+
   fetch('/.netlify/functions/parentreport',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({
       studentName:s.name,grade:s.grade,subject:s.subject,
-      platform:s.platform,sessionNotes:combinedNotes,
+      platform:s.platform,sessionNotes:combinedNotes+ndSection,
       centerName:appState.center,tutorName:appState.tutorName
     })
   }).then(r=>r.json()).then(data=>{
