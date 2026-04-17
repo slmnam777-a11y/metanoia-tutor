@@ -352,6 +352,9 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
     <div class="field"><label>Primary subject</label>
       <select id="m-subject"><option>Mathematics</option><option>English / Language Arts</option><option>Science</option><option>Social Studies</option><option>Reading & Comprehension</option><option>Writing</option><option>Mathematical Reasoning (GED)</option><option>Reasoning Through Language Arts (GED)</option><option>Science (GED)</option><option>Social Studies (GED)</option></select>
     </div>
+    <div class="field"><label>Current topic / unit (optional)</label>
+      <input type="text" id="m-topic" placeholder="e.g. Fractions, Chapter 3, GED Unit 2 — Algebra"/>
+    </div>
     <div class="field"><label>Learning support needs</label>
       <div class="nd-grid">
         <label class="nd-chip" onclick="toggleChip(this)"><input type="checkbox" value="ADHD"/><span class="dot2"></span>ADHD / Focus</label>
@@ -628,6 +631,7 @@ function renderDashboard(){
       +'<div class="stat-mini-item"><span>Mood</span><strong>'+stats.moodTrend+'</strong></div>'
       +(stats.subjects.length?'<div class="stat-mini-item"><span>Subjects</span><strong>'+stats.subjects.slice(0,2).join(', ')+'</strong></div>':'')
       +'</div>'
+      +(s.topic?'<div style="font-size:11px;color:var(--accent2);font-family:var(--mono);margin-bottom:8px;padding:4px 8px;background:rgba(78,205,196,0.08);border-radius:6px;border:1px solid rgba(78,205,196,0.2)">📌 '+s.topic+'</div>':'')
       +(ndTags?'<div class="nd-tags">'+ndTags+'</div>':'')
       +timerHtml
       +'<div class="student-card-actions"></div>';
@@ -691,19 +695,167 @@ function startChatSession(s){
   sendAI('Hello! Please greet the student warmly and begin the tutoring session.',true);
 }
 
+function getCurriculumContext(grade, subject, platform){
+  const gradeNum=parseInt((grade.match(/\d+/)||['0'])[0]);
+  const isGED=grade.includes('GED')||platform.includes('GED')||platform.includes('Essential');
+  const isMoby=platform.includes('MobyMax');
+  const isCambri=platform.includes('Cambri');
+  let ctx='';
+
+  // ── ESSENTIAL EDUCATION / GED ──
+  if(isGED||subject.includes('GED')){
+    // Full Essential Education curriculum embedded from student ILPs
+    const eeCurriculum = `
+ESSENTIAL EDUCATION — GED CURRICULUM (All Units and Lessons):
+
+MATHEMATICAL REASONING:
+Pre-GED: Whole Numbers and Operations (Adding, Subtracting, Multiplying, Dividing Whole Numbers, Number Lines, Patterns, Properties) | Factors and Multiples (GCF, LCM, Prime Factorization, Comparison Equations) | Fractions Rates and Ratios (Multiplying/Dividing/Adding/Subtracting Fractions, Ratios, Mixed Numbers) | Decimals (Introduction, Comparing, Adding/Subtracting, Multiplying/Dividing) | Exponents and Roots (Order of Operations, Calculator Use, Simplifying Exponents, Scientific Notation, Square Roots) | Measurement (American and Metric Units) | Percents (Working with Percents, Solving Percent Problems, Applications) | Graphs and Charts (Tables, Circle Graphs, Bar Graphs, Line Graphs, Scatter Plots)
+GED Prep: Expressions Equations and Inequalities (Integers, Linear Equations I, Inequalities, Rational Numbers) | Solving Linear Equations and Inequalities (Algebraic Expressions, Linear Equations II, Graphing Inequalities) | Two-Dimensional Geometry (Angle Pairs, Areas, Circles, Pythagorean Theorem, Congruence, Similarity, Scale Factor) | Three-Dimensional Geometry (Units, Volumes of Prisms/Cylinders/Pyramids/Cones, Rearranging Formulas, Density) | The Equation of a Line (Coordinate Plane, Slope-Intercept Form) | Basic Statistics (Measures of Center, Analyzing Relationships) | Probability (Basic and Compound Probability) | Understanding Functions (Function Basics, Properties of Functions)
+Advanced GED: Quadratic Equations (Square Roots, Factoring, Quadratic Formula) | Data Displays and Distributions (Histograms, Box Plots, Two-Way Tables, Scatter Plots, Linear Models) | Systems of Equations | Functions (Notation, Graphs, Rate of Change, Polynomials)
+
+REASONING THROUGH LANGUAGE ARTS — READING:
+Pre-GED: Intermediate Vocabulary (Linking Opinions, Precise Language, Context, Word Structure: Prefixes/Roots/Suffixes, Building Vocabulary) | Gaining Meaning from Text (Word Attack Skills, Main Ideas and Details, Summarizing and Paraphrasing) | Analysis and Application (Quoting from a Text, Applying Information, Structure and Meaning, Checking Reasoning, Analyzing Events and Ideas, Comparing Accounts, Graphics in Text) | Literary Works (Figurative Language, Themes and Details, Character Traits, Comparing Literary Works)
+GED Prep: Advanced Vocabulary (Complex Word Context, Advanced Affixes and Roots, Using Reference Materials) | Gaining Meaning from Words (Determining Word Meanings, Impact of a Word, Transitional Words) | Sequence and Development (Procedures and Processes, Central Ideas, Evaluating a Claim) | Analysis and Synthesis (Point of View, Conclusions and Generalizations, Synthesizing Data, Relationships in Text, Science and Technical Texts, Theme, Text Structure)
+Advanced GED: Inferences (Making Inferences, Inferences about Main Ideas, Evidence for Inferences) | Comparing Texts (Similar Topics, Different Genres and Formats) | Authors Perspective (Purpose and Point of View, Rhetorical Techniques, Comparing Authors Positions, Primary and Secondary Sources) | The Development of a Text (Central Idea, Theme, Events, Claim, Argument Structure, Evaluating Support, Following a Procedure)
+
+REASONING THROUGH LANGUAGE ARTS — WRITING:
+Pre-GED: Organization (Paragraph Organization, Organizing Written Works, Essay Prompts) | Writing Basics (Opinions and Reasons, Topics and Development, Linking Words, Conclusions, Essay Prompts)
+GED Prep: Writing for a Purpose (Style and Tone, Language and Purpose, Planning and Drafting History and Science Writing) | Arguments (Elements of Persuasion, Building an Argument, Fallacies, Evaluating Arguments, Comparing Arguments) | Writing Arguments (Claims and Counterclaims, Developing Arguments, Cohesion and Clarity, Conclusions)
+Advanced GED: GED Extended Response (Understanding the Prompt, Writing Process and Timing, Practice Essay) | Evaluating Written Responses (Multiple Essay Prompts on: Internet, Eye for an Eye, Obesity, Value of Education, Heroes, Important Inventions, Favorite Place, Free Time, Future Dreams)
+
+REASONING THROUGH LANGUAGE ARTS — LANGUAGE:
+Pre-GED: Basic Spelling (Spelling Patterns, Strategies, Possessives, Contractions) | Capitalization (Proper Nouns, First Words and Titles) | Basic Sentences (Subjects and Verbs, Sentence Structure, Punctuation, Verb Forms) | Building Sentences (Fragments and Run-ons, Joining Sentences)
+GED Prep: Commas (Beginning/Ending/Inessential Phrases, Series, Joining Sentences, Unneeded Commas) | Spelling (i before e Rule, Adding Endings) | Clear Language (Avoiding Shifts in Person, Using Pronouns, Misplaced Modifiers) | Issues with Verbs (Choosing Verb Tenses, Verbs in Special Cases) | Common Spelling Errors (Words That Sound Alike/Similar, Often Misspelled Words)
+Advanced GED: Effective Language (Parallelism, Cliches, Wordiness and Awkward Language) | Advanced Punctuation (Quotes and Titles, Colons and Semicolons, Dashes and Hyphens, Ellipses) | Constructing Sentences for Meaning (Using Phrases, Using Clauses, Advanced Colons and Semicolons)
+
+SCIENCE:
+Pre-GED: Science Basics (Language of Scientific Investigation, Science Tables and Diagrams, Science Graphs) | The Scientific Method (Introduction to Scientific Investigation, Recognizing and Evaluating Evidence, Working with Evidence, Reading Investigations)
+GED Prep: Scientific Information (Working with Textual Data, Drawing Conclusions from Scientific Text, Predicting and Inferring from Visual Data, Relationships in Data, Using Scientific Formulas) | Designing an Experiment (Elements of Experimental Design, Understanding Experimental Design, Forming and Refining a Hypothesis, Verifying Accuracy, Designing or Modifying an Experiment) | Evaluating Scientific Investigations (Evaluating Scientific Conclusions, Working Backward from Results, Evaluating an Investigation, Judging the Relevance of Data)
+
+SOCIAL STUDIES:
+GED Prep: Reading in Social Studies (Identifying Supporting Details, Conclusions and Inferences, Understanding Words in Context) | Understanding Context and Point of View (Historical Context and Point of View, Identifying Propaganda, Identifying Bias, Evaluating Credibility of an Author)
+Advanced GED: Analyzing Social Studies Events and Ideas (Analyzing Cause and Effect, Analyzing Events Processes and Ideas) | Working with Social Studies Data (Text and Visual Data, Communicating Data, Predicting Trends, Analyzing Relationships Between Variables, Calculating Central Tendency) | Reasoning in Social Studies (Recognizing Unsupported Claims, Telling Fact from Opinion, Comparing Opinions and Accounts)`;
+    if(subject.includes('Mathematical')||subject.includes('Math')){
+      ctx=`CURRICULUM CONTEXT — GED Mathematical Reasoning (Essential Education platform):
+${eeCurriculum}
+FOCUS FOR THIS SUBJECT: Mathematical Reasoning. Units progress from Pre-GED (Whole Numbers through Graphs) to GED Prep (Algebra, Geometry, Statistics, Functions) to Advanced GED (Quadratics, Systems, Functions).
+Exam: 45 questions, 115 minutes, calculator allowed Part 2.
+Tutoring approach: Ask which specific unit and lesson the student is on in Essential Education. Use the exact lesson names above. Break problems into numbered steps. Connect to real-world Namibian examples.`;
+    } else if(subject.includes('Language')||subject.includes('RLA')||subject.includes('Reasoning Through')||subject.includes('Writing')||subject.includes('Reading')){
+      ctx=`CURRICULUM CONTEXT — GED Reasoning Through Language Arts (Essential Education platform):
+${eeCurriculum}
+FOCUS FOR THIS SUBJECT: RLA covers three strands — Reading, Writing, and Language. Ask the student which strand and unit they are working on.
+Exam: 150 minutes. Reading comprehension, 45-minute Extended Response essay, grammar/language editing.
+Tutoring approach: For Writing — teach claim-evidence-reasoning structure. For Reading — help find evidence in texts. For Language — focus on grammar rules and sentence construction. Always use the exact lesson names from Essential Education above.`;
+    } else if(subject.includes('Science')){
+      ctx=`CURRICULUM CONTEXT — GED Science (Essential Education platform):
+${eeCurriculum}
+FOCUS FOR THIS SUBJECT: Science. Progresses from Science Basics and Scientific Method to Scientific Information, Designing Experiments, and Evaluating Investigations.
+Exam: 90 minutes, 34 questions. Heavy focus on reading scientific data, graphs, and experimental reasoning.
+Tutoring approach: Ask which specific Science unit and lesson the student is on. Teach scientific reasoning and data interpretation. Use Namibian ecosystem and environmental examples.`;
+    } else if(subject.includes('Social Studies')){
+      ctx=`CURRICULUM CONTEXT — GED Social Studies (Essential Education platform):
+${eeCurriculum}
+FOCUS FOR THIS SUBJECT: Social Studies. Covers reading comprehension in social studies, context and point of view, analyzing events, working with data, and reasoning.
+Exam: 70 minutes, 35 questions. Tests document analysis, cause-and-effect reasoning, data interpretation.
+Tutoring approach: Ask which Social Studies unit the student is working on. Teach document analysis. Connect US/world history concepts to Namibian history and government where possible.`;
+    }
+  }
+
+  // ── MOBYMAX ──
+  else if(isMoby){
+    if(subject.includes('Math')){
+      const topics={
+        0:'Counting to 20, number recognition, basic shapes, patterns',
+        1:'Addition and subtraction to 20, place value to 100, measurement basics, 2D shapes',
+        2:'Addition/subtraction to 1000, place value, introduction to multiplication, fractions as equal parts',
+        3:'Multiplication and division facts, fractions on number lines, area and perimeter, telling time',
+        4:'Multi-digit multiplication, long division, equivalent fractions, decimals to hundredths, angles',
+        5:'Fractions (add/subtract/multiply), decimals, volume, coordinate planes, algebraic patterns',
+        6:'Ratios and proportional relationships, negative numbers, expressions and equations, statistics',
+        7:'Proportional relationships, linear equations, geometry (scale drawings, circles), probability',
+        8:'Linear functions, systems of equations, Pythagorean theorem, transformations, statistics',
+        9:'Algebra 1: linear/quadratic functions, systems, exponents',
+        10:'Geometry: proofs, similarity, trigonometry basics',
+        11:'Algebra 2: polynomials, rational functions, logarithms',
+        12:'Pre-calculus and statistics'
+      };
+      const topicList=topics[Math.min(gradeNum,12)]||topics[7];
+      ctx=`CURRICULUM CONTEXT — MobyMax Mathematics (Grade ${gradeNum}):
+Key topics at this level: ${topicList}.
+MobyMax approach: Adaptive — students work at their own pace through skill-based modules. Each skill has a placement test, instruction videos, and practice problems. Students earn points and move through levels.
+Tutoring focus: When a student is stuck, ask which specific MobyMax skill or module they are on. Use the same step-by-step approach MobyMax uses. Celebrate module completions.`;
+    } else if(subject.includes('English')||subject.includes('Language')||subject.includes('Reading')){
+      const topics={
+        0:'Phonics (letter sounds), sight words, print concepts',
+        1:'Phonics, sight words (Dolch list), simple sentences, reading fluency',
+        2:'Phonics patterns, fluency, main idea, story elements, basic grammar',
+        3:'Reading comprehension strategies, vocabulary, grammar (nouns/verbs/adjectives), writing sentences',
+        4:'Inferencing, summarising, figurative language, paragraph writing, grammar conventions',
+        5:'Text structure, author purpose, theme, multi-paragraph essays, grammar (clauses, punctuation)',
+        6:'Analysing arguments, citing evidence, informational writing, grammar (complex sentences)',
+        7:'Literary analysis, research writing, grammar (verb tenses, modifiers)',
+        8:'Rhetorical analysis, argumentative writing, advanced grammar',
+        9:'Literary and informational analysis, persuasive writing',
+        10:'Advanced analysis, research essays, academic vocabulary',
+        11:'Critical analysis, college-level writing',
+        12:'Advanced rhetoric, synthesis writing'
+      };
+      const topicList=topics[Math.min(gradeNum,12)]||topics[7];
+      ctx=`CURRICULUM CONTEXT — MobyMax English/Language Arts (Grade ${gradeNum}):
+Key topics at this level: ${topicList}.
+MobyMax approach: Adaptive reading and writing modules. Students read passages and answer comprehension questions. Writing modules guide through the writing process step by step.
+Tutoring focus: Ask the student what passage or writing task they are working on. Help them find evidence in the text. Guide writing structure — don't write for them.`;
+    }
+  }
+
+  // ── CAMBRILEARN ──
+  else if(isCambri){
+    ctx=`CURRICULUM CONTEXT — Cambrilearn (Cambridge International Curriculum):
+Cambrilearn follows the Cambridge International curriculum (IGCSE and A-Level). Students watch video lessons, complete assignments, and take assessments online.
+Grade 8-9 typically: Cambridge Lower Secondary — core subjects with Cambridge-style assessments.
+Grade 10-11 typically: IGCSE subjects — each subject has a syllabus with specific topics, coursework, and exam preparation.
+Grade 12: Cambridge A-Level or equivalent.
+Tutoring focus: Ask the student which Cambridge subject and which specific syllabus topic they are working on in Cambrilearn today. Use Cambridge command words (describe, explain, analyse, evaluate, assess) when guiding answers. Help students understand mark schemes and how Cambridge examiners award marks.`;
+  }
+
+  // ── GENERAL K-12 ──
+  else {
+    ctx=`CURRICULUM CONTEXT — Grade ${gradeNum} ${subject}:
+Tutoring approach: Follow the Namibian curriculum scope for this grade. Ask the student what chapter, unit, or topic they are currently studying. Use their textbook language and terminology.`;
+  }
+
+  return ctx;
+}
+
 function buildSystemPrompt(s){
   let nd='';
   if(s.nd&&s.nd.length&&!s.nd.includes('None')){
     nd='\n\nSPECIAL LEARNER SUPPORT INSTRUCTIONS:\n';
-    if(s.nd.includes('ADHD'))nd+='- Keep responses SHORT. One idea at a time. Numbered steps.\n';
-    if(s.nd.includes('Dyslexia'))nd+='- Simple words. Short paragraphs. No walls of text.\n';
-    if(s.nd.includes('Autism'))nd+='- Literal and predictable. No sarcasm or idioms.\n';
-    if(s.nd.includes('Dyscalculia'))nd+='- Real-world examples for numbers. Go slowly.\n';
-    if(s.nd.includes('Anxiety'))nd+='- Acknowledge effort before correcting. Always encourage.\n';
+    if(s.nd.includes('ADHD'))nd+='- Keep responses SHORT. One idea at a time. Numbered steps. Ask if ready before continuing.\n';
+    if(s.nd.includes('Dyslexia'))nd+='- Simple words. Short paragraphs. No walls of text. Use bullet points.\n';
+    if(s.nd.includes('Autism'))nd+='- Literal and predictable. No sarcasm or idioms. Clear expectations each step.\n';
+    if(s.nd.includes('Dyscalculia'))nd+='- Real-world examples for numbers. Go slowly. Visual descriptions.\n';
+    if(s.nd.includes('Anxiety'))nd+='- Acknowledge effort before correcting. Never say wrong without encouragement.\n';
   }
-  const topicLine=s.topic?'\nSpecific topic: '+s.topic+'.':'';
-  const platLine=s.platform!=='Independent study'?'\nStudent uses '+s.platform+'. Help them understand it.':'';
-  return 'You are a warm, patient AI tutor for Metanoia Academy, Namibia.\nStudent: '+s.name+', '+s.grade+'. Subject: '+s.subject+'.'+topicLine+platLine+nd+'\nRULES: Never give answers directly. Guide with hints and questions. Check understanding after every explanation. Encourage always. Keep responses clear and age-appropriate.';
+  const topicLine=s.topic?'\n\nCURRENT TOPIC/UNIT: '+s.topic+'. Focus your tutoring specifically on this topic today.':'';
+  const curriculumCtx=getCurriculumContext(s.grade,s.subject,s.platform);
+  return `You are a warm, patient, expert AI tutor for Metanoia Academy, Namibia.
+
+STUDENT PROFILE:
+Name: ${s.name} | Grade: ${s.grade} | Subject: ${s.subject} | Platform: ${s.platform}${topicLine}
+
+${curriculumCtx}${nd}
+
+TUTORING RULES:
+- Never give the answer directly. Always guide the student to find it through questions and hints.
+- After 2 failed attempts, give a small targeted hint then try again together.
+- After every explanation, check understanding with a simple question.
+- Use encouraging, age-appropriate language. Celebrate small wins.
+- Gently redirect if the student goes off-topic.
+- Keep responses concise — short paragraphs, numbered steps when helpful.
+- At natural pause points, summarise what was covered and suggest one specific thing to practise next.
+- Always ask the student what they are working on today if they haven't told you yet.`;
 }
 
 function formatMsg(t){return t.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\*(.*?)\*/g,'<em>$1</em>').replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br/>');}
@@ -763,9 +915,9 @@ async function sendAI(userMsg,isGreeting=false){
   appState.isLoading=false;if(btn)btn.disabled=false;
 }
 
-// ── TEXT TO SPEECH ──
+// ── TEXT TO SPEECH (ElevenLabs) ──
 let ttsEnabled=true;
-let currentUtterance=null;
+let currentAudio=null;
 let recognition=null;
 let isListening=false;
 
@@ -776,9 +928,8 @@ function toggleMute(){
     btn.textContent=ttsEnabled?'🔊 Audio on':'🔇 Audio off';
     btn.classList.toggle('muted',!ttsEnabled);
   }
-  if(!ttsEnabled&&currentUtterance){
-    window.speechSynthesis.cancel();
-    currentUtterance=null;
+  if(!ttsEnabled&&currentAudio){
+    currentAudio.pause();currentAudio=null;
     document.querySelectorAll('.speak-btn').forEach(b=>{b.classList.remove('speaking');b.textContent='🔊';});
   }
 }
@@ -793,29 +944,47 @@ function stripMarkdown(text){
     .trim();
 }
 
-function speakText(text, btnEl){
-  if(!window.speechSynthesis){return;}
-  window.speechSynthesis.cancel();
+async function speakText(text, btnEl){
+  // Stop any current audio
+  if(currentAudio){currentAudio.pause();currentAudio=null;}
   document.querySelectorAll('.speak-btn').forEach(b=>{b.classList.remove('speaking');b.textContent='🔊';});
-  const clean=stripMarkdown(text);
-  const utter=new SpeechSynthesisUtterance(clean);
-  utter.rate=0.9;utter.pitch=1;utter.volume=1;
-  // Try to find a good voice
+  if(btnEl){btnEl.classList.add('speaking');btnEl.textContent='⏳';}
+  const clean=stripMarkdown(text).slice(0,500);
+  try{
+    const res=await fetch('/.netlify/functions/tts',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({text:clean})
+    });
+    if(!res.ok){throw new Error('TTS failed: '+res.status);}
+    const blob=await res.blob();
+    const url=URL.createObjectURL(blob);
+    const audio=new Audio(url);
+    currentAudio=audio;
+    if(btnEl){btnEl.textContent='⏹';}
+    audio.onended=function(){currentAudio=null;if(btnEl){btnEl.classList.remove('speaking');btnEl.textContent='🔊';}URL.revokeObjectURL(url);};
+    audio.onerror=function(){currentAudio=null;if(btnEl){btnEl.classList.remove('speaking');btnEl.textContent='🔊';}fallbackSpeak(clean,btnEl);};
+    audio.play();
+  }catch(e){
+    if(btnEl){btnEl.classList.remove('speaking');btnEl.textContent='🔊';}
+    fallbackSpeak(clean,btnEl);
+  }
+}
+
+function fallbackSpeak(text,btnEl){
+  if(!window.speechSynthesis)return;
+  const utter=new SpeechSynthesisUtterance(text);
+  utter.rate=0.9;utter.pitch=1;
   const voices=window.speechSynthesis.getVoices();
-  const preferred=voices.find(v=>v.lang.startsWith('en')&&v.name.toLowerCase().includes('female'))
-    ||voices.find(v=>v.lang.startsWith('en'))
-    ||voices[0];
-  if(preferred)utter.voice=preferred;
-  utter.onstart=function(){currentUtterance=utter;if(btnEl){btnEl.classList.add('speaking');btnEl.textContent='⏹';};};
-  utter.onend=function(){currentUtterance=null;if(btnEl){btnEl.classList.remove('speaking');btnEl.textContent='🔊';};};
-  utter.onerror=function(){currentUtterance=null;if(btnEl){btnEl.classList.remove('speaking');btnEl.textContent='🔊';};};
+  const v=voices.find(v=>v.lang.startsWith('en')&&v.name.toLowerCase().includes('female'))||voices.find(v=>v.lang.startsWith('en'))||voices[0];
+  if(v)utter.voice=v;
+  if(btnEl){utter.onend=function(){btnEl.classList.remove('speaking');btnEl.textContent='🔊';};}
   window.speechSynthesis.speak(utter);
 }
 
 function autoSpeak(text){
-  if(!ttsEnabled||!window.speechSynthesis)return;
-  // Small delay to let voices load
-  setTimeout(function(){speakText(text,null);},100);
+  if(!ttsEnabled)return;
+  setTimeout(function(){speakText(text,null);},300);
 }
 
 // ── VOICE INPUT ──
@@ -1011,6 +1180,7 @@ function closeAddModal(){
   document.querySelectorAll('#add-modal .nd-chip').forEach(c=>{c.classList.remove('selected');c.querySelector('input').checked=false;});
   document.getElementById('m-name').value='';
   document.getElementById('m-pin').value='';
+  document.getElementById('m-topic').value='';
 }
 
 function addStudent(){
@@ -1025,6 +1195,7 @@ function addStudent(){
     grade:document.getElementById('m-grade').value,
     subject:document.getElementById('m-subject').value,
     platform:document.getElementById('m-platform').value,
+    topic:document.getElementById('m-topic').value.trim(),
     nd:nd.length?nd:['None'],
     color:getColor(name)
   };
