@@ -189,6 +189,17 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .stat-mini-item strong{font-size:13px;color:var(--text);font-family:var(--font)}
 .shake{animation:shake 0.4s ease}
 @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.speak-btn{background:none;border:none;cursor:pointer;font-size:14px;padding:4px 6px;border-radius:6px;color:var(--muted);transition:all 0.2s;line-height:1;margin-top:4px;display:inline-flex;align-items:center;gap:4px}
+.speak-btn:hover{background:var(--surface2);color:var(--text)}
+.speak-btn.speaking{color:var(--accent2);animation:pulse-speak 1s infinite}
+@keyframes pulse-speak{0%,100%{opacity:1}50%{opacity:0.5}}
+.mic-btn{width:48px;height:48px;border-radius:12px;flex-shrink:0;background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s}
+.mic-btn:hover{border-color:var(--accent);color:var(--accent)}
+.mic-btn.listening{background:rgba(239,68,68,0.15);border-color:var(--danger);color:var(--danger);animation:pulse-mic 1s infinite}
+@keyframes pulse-mic{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.4)}70%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}
+.mute-btn{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--muted);font-size:12px;font-family:var(--mono);cursor:pointer;transition:all 0.2s}
+.mute-btn:hover{color:var(--text)}
+.mute-btn.muted{background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.3);color:var(--danger)}
 .notes-modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:2rem;width:100%;max-width:560px;max-height:85vh;overflow-y:auto;position:relative}
 .notes-modal h3{font-size:16px;font-weight:500;margin-bottom:0.5rem}
 .notes-modal .notes-meta{font-size:12px;color:var(--muted);font-family:var(--mono);margin-bottom:1.25rem}
@@ -307,13 +318,15 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
     </div>
     <div class="header-actions">
       <span id="subject-pill" class="subject-pill">Subject</span>
+      <button class="mute-btn" id="mute-btn" onclick="toggleMute()">🔊 Audio on</button>
       <button class="icon-btn" onclick="endSession()">end session</button>
     </div>
   </div>
   <div class="messages" id="messages"></div>
   <div class="input-area">
     <div class="input-row">
-      <textarea id="user-input" placeholder="Type your question here..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+      <button class="mic-btn" id="mic-btn" onclick="toggleVoice()" title="Speak your question">🎤</button>
+      <textarea id="user-input" placeholder="Type or speak your question..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
       <button class="send-btn" id="send-btn" onclick="sendMessage()">↑</button>
     </div>
     <div class="input-hint">Enter to send · Shift+Enter for new line</div>
@@ -694,10 +707,27 @@ function buildSystemPrompt(s){
 }
 
 function formatMsg(t){return t.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\*(.*?)\*/g,'<em>$1</em>').replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br/>');}
-function addMessage(role,content){
+function addMessage(role,rawContent){
   const msgs=document.getElementById('messages');
   const div=document.createElement('div');div.className='msg '+role;
-  div.innerHTML='<div class="msg-avatar">'+(role==='ai'?'🧠':'👤')+'</div><div class="msg-bubble"><p>'+formatMsg(content)+'</p></div>';
+  div.innerHTML='<div class="msg-avatar">'+(role==='ai'?'🧠':'👤')+'</div><div class="msg-bubble"><p>'+formatMsg(rawContent)+'</p></div>';
+  if(role==='ai'){
+    const bubble=div.querySelector('.msg-bubble');
+    const speakBtn=document.createElement('button');
+    speakBtn.className='speak-btn';
+    speakBtn.textContent='🔊';
+    speakBtn.title='Read aloud';
+    const captured=rawContent;
+    speakBtn.onclick=function(){
+      if(speakBtn.classList.contains('speaking')){
+        window.speechSynthesis.cancel();
+      } else {
+        speakText(captured,speakBtn);
+      }
+    };
+    bubble.appendChild(speakBtn);
+    autoSpeak(rawContent);
+  }
   msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
 }
 function showTyping(){
@@ -731,6 +761,109 @@ async function sendAI(userMsg,isGreeting=false){
     }
   }catch(e){removeTyping();addMessage('ai','Connection error: '+e.message);}
   appState.isLoading=false;if(btn)btn.disabled=false;
+}
+
+// ── TEXT TO SPEECH ──
+let ttsEnabled=true;
+let currentUtterance=null;
+let recognition=null;
+let isListening=false;
+
+function toggleMute(){
+  ttsEnabled=!ttsEnabled;
+  const btn=document.getElementById('mute-btn');
+  if(btn){
+    btn.textContent=ttsEnabled?'🔊 Audio on':'🔇 Audio off';
+    btn.classList.toggle('muted',!ttsEnabled);
+  }
+  if(!ttsEnabled&&currentUtterance){
+    window.speechSynthesis.cancel();
+    currentUtterance=null;
+    document.querySelectorAll('.speak-btn').forEach(b=>{b.classList.remove('speaking');b.textContent='🔊';});
+  }
+}
+
+function stripMarkdown(text){
+  return text
+    .replace(/\*\*(.*?)\*\*/g,'$1')
+    .replace(/\*(.*?)\*/g,'$1')
+    .replace(/#{1,6}\s/g,'')
+    .replace(/`(.*?)`/g,'$1')
+    .replace(/<[^>]+>/g,'')
+    .trim();
+}
+
+function speakText(text, btnEl){
+  if(!window.speechSynthesis){return;}
+  window.speechSynthesis.cancel();
+  document.querySelectorAll('.speak-btn').forEach(b=>{b.classList.remove('speaking');b.textContent='🔊';});
+  const clean=stripMarkdown(text);
+  const utter=new SpeechSynthesisUtterance(clean);
+  utter.rate=0.9;utter.pitch=1;utter.volume=1;
+  // Try to find a good voice
+  const voices=window.speechSynthesis.getVoices();
+  const preferred=voices.find(v=>v.lang.startsWith('en')&&v.name.toLowerCase().includes('female'))
+    ||voices.find(v=>v.lang.startsWith('en'))
+    ||voices[0];
+  if(preferred)utter.voice=preferred;
+  utter.onstart=function(){currentUtterance=utter;if(btnEl){btnEl.classList.add('speaking');btnEl.textContent='⏹';};};
+  utter.onend=function(){currentUtterance=null;if(btnEl){btnEl.classList.remove('speaking');btnEl.textContent='🔊';};};
+  utter.onerror=function(){currentUtterance=null;if(btnEl){btnEl.classList.remove('speaking');btnEl.textContent='🔊';};};
+  window.speechSynthesis.speak(utter);
+}
+
+function autoSpeak(text){
+  if(!ttsEnabled||!window.speechSynthesis)return;
+  // Small delay to let voices load
+  setTimeout(function(){speakText(text,null);},100);
+}
+
+// ── VOICE INPUT ──
+function toggleVoice(){
+  if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){
+    alert('Voice input is not supported in this browser. Please use Chrome.');
+    return;
+  }
+  if(isListening){stopVoice();return;}
+  const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+  recognition=new SpeechRecognition();
+  recognition.continuous=false;
+  recognition.interimResults=true;
+  recognition.lang='en-ZA';
+  const micBtn=document.getElementById('mic-btn');
+  const input=document.getElementById('user-input');
+  recognition.onstart=function(){
+    isListening=true;
+    if(micBtn){micBtn.classList.add('listening');micBtn.textContent='⏹';}
+    if(input)input.placeholder='Listening... speak now';
+  };
+  recognition.onresult=function(e){
+    let transcript='';
+    for(let i=e.resultIndex;i<e.results.length;i++){transcript+=e.results[i][0].transcript;}
+    if(input){input.value=transcript;autoResize(input);}
+  };
+  recognition.onend=function(){
+    isListening=false;
+    if(micBtn){micBtn.classList.remove('listening');micBtn.textContent='🎤';}
+    if(input)input.placeholder='Type or speak your question...';
+    // Auto-send if we got something
+    const text=input?input.value.trim():'';
+    if(text){setTimeout(function(){sendMessage();},300);}
+  };
+  recognition.onerror=function(e){
+    isListening=false;
+    if(micBtn){micBtn.classList.remove('listening');micBtn.textContent='🎤';}
+    if(input)input.placeholder='Type or speak your question...';
+    if(e.error==='not-allowed')alert('Microphone access was denied. Please allow microphone access in your browser settings.');
+  };
+  recognition.start();
+}
+
+function stopVoice(){
+  if(recognition)recognition.stop();
+  isListening=false;
+  const micBtn=document.getElementById('mic-btn');
+  if(micBtn){micBtn.classList.remove('listening');micBtn.textContent='🎤';}
 }
 
 function sendMessage(){
