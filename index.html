@@ -530,7 +530,7 @@ function renderDashboard(){
       ${timerHtml}
       <div class="student-card-actions">
         <button class="card-btn primary" onclick="launchSession('${s.id}')">Start session</button>
-        <button class="card-btn secondary" onclick="openParentReport(\''+s.id+'\')">Parent report</button>
+        <button class="card-btn secondary" onclick="openParentReport('${s.id}')">Parent report</button>
         <button class="card-btn danger" onclick="removeStudent('${s.id}')">Remove</button>
       </div>`;
     grid.appendChild(card);
