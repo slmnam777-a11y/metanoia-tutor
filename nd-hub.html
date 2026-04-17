@@ -466,18 +466,35 @@ function buildSchedule(){
   scheduleItems.forEach(s=>s.done=false);
   const grid=document.getElementById('schedule-grid');
   grid.innerHTML='';
-  scheduleItems.forEach((item,i)=>{
+  scheduleItems.forEach(function(item,i){
     const div=document.createElement('div');
     div.className='slot';div.id='slot-'+i;
+
+    const timeEl=document.createElement('div');timeEl.className='slot-time';timeEl.textContent=item.time;
+    const iconEl=document.createElement('div');iconEl.className='slot-icon';iconEl.textContent=item.icon;
+    const infoEl=document.createElement('div');infoEl.className='slot-info';
+    const h4=document.createElement('h4');h4.textContent=item.title;
+    const p=document.createElement('p');p.textContent=item.desc;
+    infoEl.appendChild(h4);infoEl.appendChild(p);
+
+    const speakBtn=document.createElement('button');
+    speakBtn.className='nd-speak-btn';
+    speakBtn.title='Read aloud';
+    speakBtn.style.cssText='background:none;border:none;font-size:16px;cursor:pointer;padding:4px;margin-right:6px;flex-shrink:0';
+    speakBtn.textContent='🔊';
     const slotText=item.title+'. '+item.desc;
-    div.innerHTML='<div class="slot-time">'+item.time+'</div><div class="slot-icon">'+item.icon+'</div><div class="slot-info"><h4>'+item.title+'</h4><p>'+item.desc+'</p></div>'
-      +'<button class="nd-speak-btn" title="Read aloud" style="background:none;border:none;font-size:16px;cursor:pointer;padding:4px;margin-right:6px;flex-shrink:0" onclick="ndSpeak(''+slotText.replace(/'/g,\'\\\'\')+'',this)">🔊</button>'
-      +'<div class="slot-check" onclick="toggleSlot('+i+')"></div>';
+    speakBtn.onclick=function(){ndSpeak(slotText,speakBtn);};
+
+    const checkEl=document.createElement('div');
+    checkEl.className='slot-check';
+    checkEl.onclick=function(){toggleSlot(i);};
+
+    div.appendChild(timeEl);div.appendChild(iconEl);div.appendChild(infoEl);
+    div.appendChild(speakBtn);div.appendChild(checkEl);
     grid.appendChild(div);
   });
   updateProgress();
 }
-
 function toggleSlot(i){
   scheduleItems[i].done=!scheduleItems[i].done;
   const slot=document.getElementById('slot-'+i);
@@ -578,15 +595,37 @@ function buildSubjectTabs(){
 function buildTasks(subj){
   const cards=document.getElementById('task-cards');
   cards.innerHTML='';
-  (taskLibrary[subj]||[]).forEach((task,i)=>{
+  (taskLibrary[subj]||[]).forEach(function(task,i){
     const key=subj+'_'+i;
     const div=document.createElement('div');
-    div.className='task-card'+(taskDone[key]?' done-task':'');div.id='task-'+key;
-    div.innerHTML='<div class="task-num">'+(i+1)+'</div><div class="task-body"><h4>'+task.title+'</h4><p>'+task.desc+'</p><span class="task-tip">💡 '+task.tip+'</span></div><div class="task-check" onclick="toggleTask(\''+key+'\',\''+subj+'\')">'+( taskDone[key]?'✓':'')+'</div>';
+    div.className='task-card'+(taskDone[key]?' done-task':'');
+    div.id='task-'+key;
+
+    const numEl=document.createElement('div');numEl.className='task-num';numEl.textContent=i+1;
+
+    const bodyEl=document.createElement('div');bodyEl.className='task-body';
+    const h4=document.createElement('h4');h4.textContent=task.title;
+    const p=document.createElement('p');p.textContent=task.desc;
+    const tip=document.createElement('span');tip.className='task-tip';tip.textContent='💡 '+task.tip;
+
+    const speakBtn=document.createElement('button');
+    speakBtn.className='nd-speak-btn';
+    speakBtn.style.cssText='background:none;border:1.5px solid #e2e8f8;border-radius:8px;font-size:13px;cursor:pointer;padding:4px 10px;margin-top:8px;color:#6b7280;display:block';
+    speakBtn.textContent='🔊 Read aloud';
+    const taskText=task.title+'. '+task.desc+'. Tip: '+task.tip;
+    speakBtn.onclick=function(){ndSpeak(taskText,speakBtn);};
+
+    bodyEl.appendChild(h4);bodyEl.appendChild(p);bodyEl.appendChild(tip);bodyEl.appendChild(speakBtn);
+
+    const checkEl=document.createElement('div');
+    checkEl.className='task-check';
+    checkEl.textContent=taskDone[key]?'✓':'';
+    checkEl.onclick=function(){toggleTask(key,subj);};
+
+    div.appendChild(numEl);div.appendChild(bodyEl);div.appendChild(checkEl);
     cards.appendChild(div);
   });
 }
-
 function toggleTask(key,subj){
   taskDone[key]=!taskDone[key];
   buildTasks(subj);
