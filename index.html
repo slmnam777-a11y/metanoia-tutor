@@ -653,12 +653,7 @@ function openParentReport(studentId){
     alert('No session notes found for '+s.name+' yet. Complete at least one tutoring session first.');
     return;
   }
-  const combinedNotes=notes.map((n,i)=>'SESSION '+(i+1)+' ('+new Date(n.date).toLocaleDateString('en-ZA')+')
-'+n.note).join('
-
----
-
-');
+  const combinedNotes=notes.map((n,i)=>'SESSION '+(i+1)+' ('+new Date(n.date).toLocaleDateString('en-ZA')+')\n'+n.note).join('\n\n---\n\n');
   document.getElementById('parent-modal-overlay').classList.add('open');
   document.getElementById('parent-meta').textContent=s.name+' · '+s.grade+' · Week ending '+new Date().toLocaleDateString('en-ZA');
   document.getElementById('parent-body').innerHTML='<div class="generating"><span>Generating parent report</span><span class="gen-dots"><span>.</span><span>.</span><span>.</span></span></div>';
