@@ -661,14 +661,22 @@ function openParentReport(studentId){
   // Pull ND hub observations for this student from localStorage
   let ndSection='';
   try{
-    const ndNotes=JSON.parse(localStorage.getItem('metanoia_nd_notes')||'[]');
-    const studentNdNotes=ndNotes.filter(n=>n.student.toLowerCase().trim()===s.name.toLowerCase().trim());
+    const ndRaw=localStorage.getItem('metanoia_nd_notes');
+    console.log('ND notes raw:', ndRaw);
+    const ndNotes=JSON.parse(ndRaw||'[]');
+    console.log('ND notes parsed:', ndNotes.length, 'entries');
+    console.log('Looking for student:', s.name.toLowerCase().trim());
+    const studentNdNotes=ndNotes.filter(n=>{
+      console.log('Comparing:', JSON.stringify(n.student.toLowerCase().trim()), 'vs', JSON.stringify(s.name.toLowerCase().trim()));
+      return n.student.toLowerCase().trim()===s.name.toLowerCase().trim();
+    });
+    console.log('Matched ND notes:', studentNdNotes.length);
     if(studentNdNotes.length){
       ndSection='\n\nND HUB OBSERVATIONS:\n'+studentNdNotes.slice(0,5).map(n=>
         n.date+' '+n.time+': '+n.text+(n.tags.length?' ['+n.tags.join(', ')+']':'')
       ).join('\n');
     }
-  }catch(e){}
+  }catch(e){console.error('ND notes error:',e);}
 
   fetch('/.netlify/functions/parentreport',{
     method:'POST',
