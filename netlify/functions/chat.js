@@ -18,7 +18,18 @@ exports.handler = async function(event) {
   }
 
   try {
-    const { messages, system, apiKey } = JSON.parse(event.body);
+    const { messages, system } = JSON.parse(event.body);
+
+    // Always use server-side environment variable — never trust client-supplied key
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+
+    if (!apiKey) {
+      return {
+        statusCode: 500,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        body: JSON.stringify({ error: { message: 'API key not configured. Please set ANTHROPIC_API_KEY in Netlify environment variables.' } })
+      };
+    }
 
     const payload = JSON.stringify({
       model: 'claude-haiku-4-5-20251001',
@@ -50,20 +61,14 @@ exports.handler = async function(event) {
 
     return {
       statusCode: result.status,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      },
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
       body: result.body
     };
 
   } catch (err) {
     return {
       statusCode: 500,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      },
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
       body: JSON.stringify({ error: { message: 'Function error: ' + err.message } })
     };
   }
