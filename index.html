@@ -179,6 +179,22 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .nd-badge{display:inline-block;font-size:11px;background:rgba(78,205,196,0.1);color:var(--accent2);border:1px solid rgba(78,205,196,0.25);border-radius:6px;padding:2px 8px;margin:0 3px 3px 0}
 .shake{animation:shake 0.4s ease}
 @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.notes-modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:2rem;width:100%;max-width:560px;max-height:85vh;overflow-y:auto;position:relative}
+.notes-modal h3{font-size:16px;font-weight:500;margin-bottom:0.5rem}
+.notes-modal .notes-meta{font-size:12px;color:var(--muted);font-family:var(--mono);margin-bottom:1.25rem}
+.notes-content{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1.25rem;font-size:13px;line-height:1.8;color:var(--text);white-space:pre-wrap;font-family:var(--mono);max-height:360px;overflow-y:auto}
+.notes-content::-webkit-scrollbar{width:4px}
+.notes-content::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.notes-actions{display:flex;gap:10px;margin-top:1.25rem}
+.notes-actions button{flex:1;padding:11px;border-radius:10px;font-family:var(--font);font-size:14px;cursor:pointer;transition:all 0.2s}
+.notes-actions .dl-btn{background:var(--accent);border:none;color:#fff}
+.notes-actions .dl-btn:hover{opacity:0.85}
+.notes-actions .close-btn{background:var(--surface2);border:1px solid var(--border);color:var(--muted)}
+.notes-actions .close-btn:hover{color:var(--text)}
+.generating{display:flex;align-items:center;gap:10px;padding:2rem;justify-content:center;color:var(--muted);font-size:13px;font-family:var(--mono)}
+.gen-dots span{animation:bounce 1.2s infinite;display:inline-block}
+.gen-dots span:nth-child(2){animation-delay:0.2s}
+.gen-dots span:nth-child(3){animation-delay:0.4s}
 </style>
 </head>
 <body>
@@ -326,6 +342,24 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
     <div class="modal-footer">
       <button class="cancel" onclick="closeAddModal()">Cancel</button>
       <button class="confirm" onclick="addStudent()">Add student</button>
+    </div>
+  </div>
+</div>
+
+<!-- SESSION NOTES MODAL -->
+<div class="modal-overlay" id="notes-modal-overlay">
+  <div class="notes-modal" id="notes-modal">
+    <h3>Session Notes</h3>
+    <p class="notes-meta" id="notes-meta">Generating...</p>
+    <div id="notes-body">
+      <div class="generating">
+        <span>Generating session notes</span>
+        <span class="gen-dots"><span>.</span><span>.</span><span>.</span></span>
+      </div>
+    </div>
+    <div class="notes-actions">
+      <button class="dl-btn" onclick="downloadNotes()">Download .txt</button>
+      <button class="close-btn" onclick="closeNotesModal()">Close</button>
     </div>
   </div>
 </div>
@@ -575,8 +609,10 @@ function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrol
 
 function endSession(){
   const s=appState.currentStudent;
+  const history=[...appState.conversationHistory];
+  let mins=0;
   if(s&&appState.activeSessions[s.id]){
-    const mins=Math.floor((Date.now()-appState.activeSessions[s.id].start)/60000);
+    mins=Math.floor((Date.now()-appState.activeSessions[s.id].start)/60000);
     delete appState.activeSessions[s.id];
     if(appState.sessionTimers[s.id]){clearInterval(appState.sessionTimers[s.id]);delete appState.sessionTimers[s.id];}
     logActivity('green','✅',s.name+' session ended · '+mins+'m','green');
@@ -585,6 +621,48 @@ function endSession(){
   appState.currentStudent=null;appState.conversationHistory=[];
   if(appState.role==='tutor'){renderDashboard();show('dashboard-screen');}
   else{pinEntry='';updatePinDots();show('login-screen');}
+  if(s&&history.length>1) generateSessionNotes(s,mins,history);
+}
+
+let currentNotes='';
+async function generateSessionNotes(s,mins,history){
+  document.getElementById('notes-modal-overlay').classList.add('open');
+  document.getElementById('notes-meta').textContent=s.name+' · '+s.grade+' · '+s.subject;
+  document.getElementById('notes-body').innerHTML='<div class="generating"><span>Generating session notes</span><span class="gen-dots"><span>.</span><span>.</span><span>.</span></span></div>';
+  currentNotes='';
+  try{
+    const res=await fetch('/.netlify/functions/summary',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        studentName:s.name,grade:s.grade,subject:s.subject,
+        platform:s.platform,duration:mins,conversation:history
+      })
+    });
+    const data=await res.json();
+    if(!res.ok||!data.content){
+      document.getElementById('notes-body').innerHTML='<div class="notes-content">Could not generate notes: '+(data.error?.message||'Unknown error')+'</div>';
+      return;
+    }
+    currentNotes=data.content[0].text;
+    document.getElementById('notes-body').innerHTML='<div class="notes-content">'+currentNotes.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>';
+  }catch(e){
+    document.getElementById('notes-body').innerHTML='<div class="notes-content">Error generating notes: '+e.message+'</div>';
+  }
+}
+
+function downloadNotes(){
+  if(!currentNotes){alert('Notes not ready yet.');return;}
+  const blob=new Blob([currentNotes],{type:'text/plain'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='session-notes-'+new Date().toISOString().slice(0,10)+'.txt';
+  a.click();
+}
+
+function closeNotesModal(){
+  document.getElementById('notes-modal-overlay').classList.remove('open');
+  currentNotes='';
 }
 
 function doLogout(){
