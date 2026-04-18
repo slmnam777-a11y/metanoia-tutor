@@ -61,7 +61,7 @@ exports.handler = async function(event) {
     }
 
     const payload = JSON.stringify({
-      text: text.slice(0, 500),
+      text: text.slice(0, 1000),
       model_id: 'eleven_turbo_v2_5',
       voice_settings: {
         stability: 0.5,
