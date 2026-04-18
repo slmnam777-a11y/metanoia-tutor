@@ -1300,7 +1300,9 @@ async function speakText(text, btnEl){
   if(currentAudio){currentAudio.pause();currentAudio=null;}
   document.querySelectorAll('.speak-btn').forEach(b=>{b.classList.remove('speaking');b.textContent='🔊';});
   if(btnEl){btnEl.classList.add('speaking');btnEl.textContent='⏳';}
-  const clean=stripMarkdown(text).slice(0,500);
+  // Split long text at sentence boundaries, speak first 1000 chars
+  const stripped=stripMarkdown(text);
+  const clean=stripped.length>1000 ? stripped.slice(0,stripped.lastIndexOf('.',1000)+1)||stripped.slice(0,1000) : stripped;
   console.log('[TTS] Calling ElevenLabs for:', clean.slice(0,50));
   try{
     const res=await fetch('/.netlify/functions/tts',{
