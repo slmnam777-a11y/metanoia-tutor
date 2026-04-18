@@ -1016,34 +1016,41 @@ function getYouTubeSearchQuery(topic, grade, subject){
   return query.trim();
 }
 
-// Get YouTube video ID for common topics (pre-mapped for reliability)
+// Get YouTube video ID for common topics
+// Using reliable educational channel videos
 function getYouTubeVideoId(topic){
   const t = topic.toLowerCase();
-  if(t.includes('food chain')||t.includes('food web')) return 'Cxgd5nKTGnE';
-  if(t.includes('water cycle')) return 'al-do-HGuIk';
-  if(t.includes('photosynthesis')) return 'UPBMG5EYydo';
-  if(t.includes('cell')) return 'URUJD5NEXC8';
-  if(t.includes('dna')) return 'zwibgNGe4aY';
-  if(t.includes('plate tectonic')||t.includes('earthquake')||t.includes('volcano')) return 'kwfNGatxUJI';
-  if(t.includes('solar system')) return 'libKVRa01L8';
-  if(t.includes('photosynthesis')) return 'UPBMG5EYydo';
-  if(t.includes('fraction')) return 'n0FZhQ_GkKw';
+  // Crash Course Kids and educational channels - verified IDs
+  if(t.includes('food chain')||t.includes('food web')) return 'ByV3MtnTOcI';
+  if(t.includes('water cycle')) return 'ncORPosDrjI';
+  if(t.includes('photosynthesis')) return 'sQK3Yr4Sc_k';
+  if(t.includes('cell')&&!t.includes('excel')) return '8IlzKri08kU';
+  if(t.includes('dna')) return 'AhsIF-cmoQQ';
+  if(t.includes('plate tectonic')) return 'ryrXAGY1dmE';
+  if(t.includes('volcano')) return 'LQwZwKS4s9E';
+  if(t.includes('earthquake')) return 'ryrXAGY1dmE';
+  if(t.includes('solar system')) return '92t1BR33tF0';
+  if(t.includes('fraction')) return 'c4MBHHd2goc';
   if(t.includes('multiplication')) return 'mvOkMYCygps';
   if(t.includes('division')) return 'gHTH6PKfpRk';
-  if(t.includes('algebra')) return 'NybHckSEQBI';
+  if(t.includes('algebra')||t.includes('equation')) return 'NybHckSEQBI';
   if(t.includes('evolution')||t.includes('natural selection')) return 'P3GagfbA2vo';
   if(t.includes('civil war')) return 'Afsm3uotLhU';
-  if(t.includes('world war 2')||t.includes('wwii')) return 'Objoad5URRE';
+  if(t.includes('world war 2')||t.includes('wwii')) return 'DwKPFT-RioU';
   if(t.includes('world war 1')||t.includes('wwi')) return 'dHSQAEam2yc';
-  if(t.includes('human body')||t.includes('digestive')) return 'Bg4SyXb4b9Q';
+  if(t.includes('digestive')) return 'Bg4SyXb4b9Q';
   if(t.includes('nervous system')) return 'aet_oxqCPfQ';
   if(t.includes('circulatory')||t.includes('heart')) return 'CWFyxn0qDEU';
   if(t.includes('ecosystem')) return 'fPxQDScFBHM';
+  if(t.includes('rock cycle')) return 'rKhBmkCPFgs';
   if(t.includes('climate change')) return 'G4H1N_yXBiA';
   if(t.includes('roman')||t.includes('rome')) return 'oPmgBxmhP1Q';
   if(t.includes('greek')||t.includes('greece')) return 'X15JHaEGM1o';
   if(t.includes('egypt')) return 'hO1tzmi1V5g';
   if(t.includes('percent')) return 'rR95Cbcjzus';
+  if(t.includes('human body')) return 'Bg4SyXb4b9Q';
+  if(t.includes('adaptation')) return 'OoOQRlFxKZA';
+  if(t.includes('heredity')||t.includes('genetics')) return 'CBezq1fFUEA';
   return null;
 }
 
@@ -1063,7 +1070,7 @@ function addVideoToChat(topic, grade, subject){
   html += '<p style="font-size:13px;color:var(--muted);margin-bottom:8px">Here are some visual resources to help:</p>';
 
   if(videoId){
-    html += '<div class="video-card"><iframe src="https://www.youtube.com/embed/'+videoId+'?rel=0" allowfullscreen loading="lazy"></iframe>';
+    html += '<div class="video-card"><iframe src="https://www.youtube.com/embed/'+videoId+'?rel=0&modestbranding=1" allowfullscreen loading="lazy" title="'+topic+'"></iframe>';
     html += '<div class="video-card-label">▶ YouTube — '+topic+'</div></div>';
   }
 
