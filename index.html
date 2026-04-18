@@ -1301,22 +1301,38 @@ async function speakText(text, btnEl){
   document.querySelectorAll('.speak-btn').forEach(b=>{b.classList.remove('speaking');b.textContent='🔊';});
   if(btnEl){btnEl.classList.add('speaking');btnEl.textContent='⏳';}
   const clean=stripMarkdown(text).slice(0,500);
+  console.log('[TTS] Calling ElevenLabs for:', clean.slice(0,50));
   try{
     const res=await fetch('/.netlify/functions/tts',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({text:clean})
     });
-    if(!res.ok){throw new Error('TTS failed: '+res.status);}
+    console.log('[TTS] Response status:', res.status, 'Content-Type:', res.headers.get('content-type'));
+    if(!res.ok){
+      const errText=await res.text();
+      console.error('[TTS] Error response:', errText);
+      throw new Error('TTS failed: '+res.status+' '+errText);
+    }
     const blob=await res.blob();
+    console.log('[TTS] Got audio blob, size:', blob.size, 'type:', blob.type);
+    if(blob.size < 100){
+      console.error('[TTS] Blob too small, likely not audio');
+      throw new Error('Invalid audio response');
+    }
     const url=URL.createObjectURL(blob);
     const audio=new Audio(url);
     currentAudio=audio;
     if(btnEl){btnEl.textContent='⏹';}
     audio.onended=function(){currentAudio=null;if(btnEl){btnEl.classList.remove('speaking');btnEl.textContent='🔊';}URL.revokeObjectURL(url);};
-    audio.onerror=function(){currentAudio=null;if(btnEl){btnEl.classList.remove('speaking');btnEl.textContent='🔊';}fallbackSpeak(clean,btnEl);};
-    audio.play();
+    audio.onerror=function(e){
+      console.error('[TTS] Audio playback error:', e);
+      currentAudio=null;if(btnEl){btnEl.classList.remove('speaking');btnEl.textContent='🔊';}
+      fallbackSpeak(clean,btnEl);
+    };
+    audio.play().then(()=>console.log('[TTS] Playing!')).catch(e=>{console.error('[TTS] Play error:',e);fallbackSpeak(clean,btnEl);});
   }catch(e){
+    console.error('[TTS] Exception:', e.message);
     if(btnEl){btnEl.classList.remove('speaking');btnEl.textContent='🔊';}
     fallbackSpeak(clean,btnEl);
   }
