@@ -407,6 +407,80 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 </div>
 
 <script>
+// ── SUPABASE CLIENT ──
+const SUPA_URL='https://ptvfbmuqgefncwkzrvxt.supabase.co';
+const SUPA_KEY='sb_publishable_eb-wpepxwtA1yyOyQ0bMCA_WimPKTZH';
+
+async function supaFetch(path, method='GET', body=null){
+  const opts={method,headers:{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':'return=representation'}};
+  if(body) opts.body=JSON.stringify(body);
+  const res=await fetch(SUPA_URL+'/rest/v1/'+path,opts);
+  if(!res.ok){const err=await res.text();throw new Error('Supabase error: '+err);}
+  const text=await res.text();
+  return text?JSON.parse(text):[];
+}
+
+async function dbGetStudents(center){
+  try{
+    const rows=await supaFetch('students?center=eq.'+encodeURIComponent(center)+'&order=name.asc');
+    return rows.map(r=>({...r,nd:r.nd||[]}));
+  }catch(e){console.error('dbGetStudents:',e);return[];}
+}
+
+async function dbSaveStudent(s,center){
+  try{
+    await supaFetch('students','POST',{...s,center,nd:s.nd||[]});
+  }catch(e){
+    // Try update if already exists
+    try{await supaFetch('students?id=eq.'+s.id,'PATCH',{...s,center,nd:s.nd||[]});}
+    catch(e2){console.error('dbSaveStudent:',e2);}
+  }
+}
+
+async function dbDeleteStudent(id){
+  try{await supaFetch('students?id=eq.'+id,'DELETE');}
+  catch(e){console.error('dbDeleteStudent:',e);}
+}
+
+async function dbSaveSessionStat(studentId,durationMins,subject,center){
+  try{await supaFetch('session_stats','POST',{student_id:studentId,duration_mins:durationMins,subject,center});}
+  catch(e){console.error('dbSaveSessionStat:',e);}
+}
+
+async function dbGetSessionStats(studentId){
+  try{
+    const weekAgo=new Date();weekAgo.setDate(weekAgo.getDate()-7);
+    const rows=await supaFetch('session_stats?student_id=eq.'+studentId+'&created_at=gte.'+weekAgo.toISOString()+'&order=created_at.desc');
+    return rows;
+  }catch(e){console.error('dbGetSessionStats:',e);return[];}
+}
+
+async function dbSaveNote(studentId,note,center){
+  try{await supaFetch('session_notes','POST',{student_id:studentId,note,center});}
+  catch(e){console.error('dbSaveNote:',e);}
+}
+
+async function dbGetNotes(studentId){
+  try{
+    const weekAgo=new Date();weekAgo.setDate(weekAgo.getDate()-7);
+    const rows=await supaFetch('session_notes?student_id=eq.'+studentId+'&created_at=gte.'+weekAgo.toISOString()+'&order=created_at.desc');
+    return rows;
+  }catch(e){console.error('dbGetNotes:',e);return[];}
+}
+
+async function dbSaveNdObservation(studentName,note,tags,center){
+  try{await supaFetch('nd_observations','POST',{student_name:studentName,note,tags,center});}
+  catch(e){console.error('dbSaveNdObservation:',e);}
+}
+
+async function dbGetNdObservations(studentName){
+  try{
+    const weekAgo=new Date();weekAgo.setDate(weekAgo.getDate()-7);
+    const rows=await supaFetch('nd_observations?student_name=eq.'+encodeURIComponent(studentName)+'&created_at=gte.'+weekAgo.toISOString()+'&order=created_at.desc');
+    return rows;
+  }catch(e){console.error('dbGetNdObservations:',e);return[];}
+}
+
 let appState={
   role:'tutor',apiKey:'',tutorName:'',center:'Windhoek',
   students:[],activeSessions:{},sessionTimers:{},
@@ -423,13 +497,14 @@ function getWeekKey(){
 }
 
 function saveSessionStat(studentId, durationMins, subject){
+  dbSaveSessionStat(studentId,durationMins,subject,appState.center);
+  // also keep local copy for immediate stats display
   try{
     const key='metanoia_stats_'+studentId;
     const weekKey=getWeekKey();
     const existing=JSON.parse(localStorage.getItem(key)||'{}');
     if(!existing[weekKey])existing[weekKey]={sessions:[],parentReportSent:false};
     existing[weekKey].sessions.push({date:new Date().toISOString(),duration:durationMins,subject});
-    // Keep only last 4 weeks
     const weeks=Object.keys(existing).sort().slice(-4);
     const trimmed={};weeks.forEach(w=>trimmed[w]=existing[w]);
     localStorage.setItem(key,JSON.stringify(trimmed));
@@ -503,7 +578,20 @@ function setRole(r){
 }
 
 function populateStudentSelect(){
-  loadStudents();
+  const sel=document.getElementById('s-name-select');
+  sel.innerHTML='<option value="">— Loading students... —</option>';
+  // Load from Supabase using last known center or default
+  const center=appState.center||'Windhoek';
+  dbGetStudents(center).then(function(rows){
+    appState.students=rows;
+    buildStudentDropdown();
+  }).catch(function(){
+    // fallback
+    buildStudentDropdown();
+  });
+}
+
+function buildStudentDropdown(){
   const sel=document.getElementById('s-name-select');
   sel.innerHTML='<option value="">— Choose your name —</option>';
   const noMsg=document.getElementById('no-students-msg');
@@ -555,8 +643,7 @@ function studentPinLogin(){
 }
 
 function saveStudents(){
-  try{localStorage.setItem('metanoia_students',JSON.stringify(appState.students));}
-  catch(e){console.warn('Could not save students:',e);}
+  // kept for compatibility — actual saving happens per-student in addStudent/removeStudent
 }
 function saveSessionNote(studentId, note){
   try{
@@ -576,10 +663,23 @@ function clearSessionNotes(studentId){
   try{localStorage.removeItem('metanoia_notes_'+studentId);}
   catch(e){}
 }
-function loadStudents(){
+async function loadStudents(){
   try{
-    const saved=localStorage.getItem('metanoia_students');
-    if(saved){const parsed=JSON.parse(saved);if(Array.isArray(parsed))appState.students=parsed;}
+    const rows=await dbGetStudents(appState.center);
+    if(rows.length) appState.students=rows;
+    else {
+      // fallback to localStorage for migration
+      const saved=localStorage.getItem('metanoia_students');
+      if(saved){
+        const parsed=JSON.parse(saved);
+        if(Array.isArray(parsed)&&parsed.length){
+          appState.students=parsed;
+          // migrate to Supabase
+          for(const s of parsed) await dbSaveStudent(s,appState.center);
+          localStorage.removeItem('metanoia_students');
+        }
+      }
+    }
   }catch(e){console.warn('Could not load students:',e);}
 }
 function doLogin(){
@@ -588,10 +688,10 @@ function doLogin(){
   const center=document.getElementById('tutor-center').value;
   if(!name){err.textContent='Please enter your name.';err.style.display='block';return;}
   appState.tutorName=name;appState.center=center;
-  loadStudents();
   document.getElementById('tutor-badge-name').textContent=name;
   document.getElementById('dash-subtitle').textContent='Metanoia Academy · '+center;
   renderDashboard();show('dashboard-screen');
+  loadStudents().then(function(){renderDashboard();});
 }
 
 function renderDashboard(){
@@ -1149,7 +1249,7 @@ async function generateSessionNotes(s,mins,history){
     }
     currentNotes=data.content[0].text;
     document.getElementById('notes-body').innerHTML='<div class="notes-content">'+currentNotes.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>';
-    if(s&&s.id) saveSessionNote(s.id, currentNotes);
+    if(s&&s.id){saveSessionNote(s.id,currentNotes);dbSaveNote(s.id,currentNotes,appState.center);}
   }catch(e){
     document.getElementById('notes-body').innerHTML='<div class="notes-content">Error generating notes: '+e.message+'</div>';
   }
@@ -1200,7 +1300,7 @@ function addStudent(){
     color:getColor(name)
   };
   appState.students.push(s);
-  saveStudents();
+  dbSaveStudent(s,appState.center).then(()=>console.log('Student saved to cloud'));
   logActivity('gold','➕',name+' added to roster','gold');
   closeAddModal();renderDashboard();
 }
@@ -1210,8 +1310,7 @@ function removeStudent(id){
   const s=appState.students.find(x=>x.id===id);
   appState.students=appState.students.filter(x=>x.id!==id);
   if(appState.activeSessions[id]){delete appState.activeSessions[id];if(appState.sessionTimers[id]){clearInterval(appState.sessionTimers[id]);delete appState.sessionTimers[id];}}
-  if(s)logActivity('gold','🗑️',s.name+' removed from roster','gold');
-  saveStudents();
+  if(s){logActivity('gold','🗑️',s.name+' removed from roster','gold');dbDeleteStudent(id);}
   renderDashboard();
 }
 </script>
