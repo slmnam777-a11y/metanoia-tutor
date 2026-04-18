@@ -189,6 +189,15 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .stat-mini-item strong{font-size:13px;color:var(--text);font-family:var(--font)}
 .shake{animation:shake 0.4s ease}
 @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.video-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-top:10px;max-width:480px}
+.video-card iframe{width:100%;height:220px;border:none;display:block}
+.video-card-label{font-size:11px;color:var(--muted);padding:6px 12px;font-family:var(--mono)}
+.khan-link{display:inline-flex;align-items:center;gap:8px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);border-radius:10px;padding:8px 14px;font-size:13px;color:var(--accent2);text-decoration:none;margin-top:8px;transition:all 0.2s;font-weight:600}
+.khan-link:hover{background:rgba(16,185,129,0.2)}
+.diagram-box{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-top:10px;font-family:var(--mono);font-size:12px;line-height:1.8;color:var(--text)}
+.visual-btn{background:rgba(123,110,246,0.12);border:1px solid rgba(123,110,246,0.3);border-radius:10px;padding:8px 16px;font-size:13px;color:var(--accent);cursor:pointer;font-family:var(--font);font-weight:600;transition:all 0.2s;margin-top:8px}
+.visual-btn:hover{background:rgba(123,110,246,0.2)}
+.visual-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .speak-btn{background:none;border:none;cursor:pointer;font-size:14px;padding:4px 6px;border-radius:6px;color:var(--muted);transition:all 0.2s;line-height:1;margin-top:4px;display:inline-flex;align-items:center;gap:4px}
 .speak-btn:hover{background:var(--surface2);color:var(--text)}
 .speak-btn.speaking{color:var(--accent2);animation:pulse-speak 1s infinite}
@@ -329,7 +338,10 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
       <textarea id="user-input" placeholder="Type or speak your question..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
       <button class="send-btn" id="send-btn" onclick="sendMessage()">↑</button>
     </div>
-    <div class="input-hint">Enter to send · Shift+Enter for new line</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
+      <div class="input-hint">Enter to send · Shift+Enter for new line</div>
+      <button class="visual-btn" onclick="requestVisual()" id="visual-btn">🎬 Show me a video</button>
+    </div>
   </div>
 </div>
 
@@ -926,7 +938,7 @@ TUTORING RULES:
 - Gently redirect if the student goes off-topic.
 - Keep responses concise — short paragraphs, numbered steps when helpful.
 - At natural pause points, summarise what was covered and suggest one specific thing to practise next.
-- Always ask the student what they are working on today if they haven't told you yet.`;
+- Always ask the student what they are working on today if they haven't told you yet.\n- VISUAL SUPPORT: When a student struggles with a visual concept (cycles, systems, diagrams, processes, anatomy), add [SUGGEST_VISUAL] at the end of your response to trigger automatic visual help.`;
 }
 
 function formatMsg(t){return t.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\*(.*?)\*/g,'<em>$1</em>').replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br/>');}
@@ -961,6 +973,252 @@ function showTyping(){
 }
 function removeTyping(){const el=document.getElementById('typing-ind');if(el)el.remove();}
 
+// ── VISUAL AND VIDEO SUPPORT ──
+
+// Khan Academy URL mapping by topic keywords
+function getKhanUrl(topic, grade){
+  const t = topic.toLowerCase();
+  const g = parseInt((grade||'').match(/\d+/)||[5]) || 5;
+  if(t.includes('food chain')||t.includes('food web')) return 'https://www.khanacademy.org/science/ms-biology/x17d61cc3b56c56e4:matter-and-energy-in-ecosystems/x17d61cc3b56c56e4:food-chains-and-food-webs/v/food-chains-and-food-webs';
+  if(t.includes('water cycle')) return 'https://www.khanacademy.org/science/ms-biology/x17d61cc3b56c56e4:biotic-and-abiotic-factors/x17d61cc3b56c56e4:the-water-cycle/v/the-water-cycle';
+  if(t.includes('photosynthesis')) return 'https://www.khanacademy.org/science/ms-biology/x17d61cc3b56c56e4:matter-and-energy-in-ecosystems/x17d61cc3b56c56e4:photosynthesis/v/photosynthesis';
+  if(t.includes('cell')||t.includes('cells')) return 'https://www.khanacademy.org/science/ms-biology/x17d61cc3b56c56e4:cells/x17d61cc3b56c56e4:intro-to-cells/v/introduction-to-cells';
+  if(t.includes('dna')) return 'https://www.khanacademy.org/science/ms-biology/x17d61cc3b56c56e4:heredity-genetics/x17d61cc3b56c56e4:dna/v/dna';
+  if(t.includes('fraction')) return 'https://www.khanacademy.org/math/cc-'+g+'th-grade-math/x2256d1d8f1b38a9b:fractions/cc-'+g+'th-fractions-intro/v/fraction-basics';
+  if(t.includes('algebra')||t.includes('equation')) return 'https://www.khanacademy.org/math/algebra/x2f8bb11595b61c86:foundation-algebra/x2f8bb11595b61c86:intro-equations/v/variables-expressions-and-equations';
+  if(t.includes('geometry')||t.includes('area')||t.includes('perimeter')) return 'https://www.khanacademy.org/math/geometry';
+  if(t.includes('volcano')||t.includes('earthquake')) return 'https://www.khanacademy.org/science/ms-earth-space-science/x0f02f37fd0d5cf3b:earth-materials-and-systems/x0f02f37fd0d5cf3b:plate-tectonics/v/plates-and-their-movement';
+  if(t.includes('solar system')||t.includes('planet')) return 'https://www.khanacademy.org/science/ms-earth-space-science/x0f02f37fd0d5cf3b:earth-in-space/x0f02f37fd0d5cf3b:our-solar-system/v/the-solar-system';
+  if(t.includes('evolution')||t.includes('adaptation')) return 'https://www.khanacademy.org/science/ms-biology/x17d61cc3b56c56e4:natural-selection/x17d61cc3b56c56e4:natural-selection-and-evolution/v/natural-selection-and-the-rock-pocket-mouse';
+  if(t.includes('civil war')) return 'https://www.khanacademy.org/humanities/us-history/civil-war-era';
+  if(t.includes('world war')||t.includes('wwi')||t.includes('wwii')) return 'https://www.khanacademy.org/humanities/world-history/euro-hist';
+  if(t.includes('percent')||t.includes('percentage')) return 'https://www.khanacademy.org/math/pre-algebra/pre-algebra-ratios-rates/pre-algebra-percent-word-problems/v/solving-percent-problems';
+  if(t.includes('multiplication')) return 'https://www.khanacademy.org/math/cc-third-grade-math/intro-to-multiplication/v/multiplication-as-equal-groups';
+  if(t.includes('division')) return 'https://www.khanacademy.org/math/cc-third-grade-math/intro-to-division/v/introduction-to-division';
+  if(t.includes('reading')||t.includes('comprehension')) return 'https://www.khanacademy.org/ela/cc-'+g+'th-grade-reading-vocab';
+  if(t.includes('essay')||t.includes('writing')) return 'https://www.khanacademy.org/ela/cc-'+g+'th-grade-reading-vocab/x3a585dd2:informational-reading-foundations';
+  if(t.includes('roman')||t.includes('rome')) return 'https://www.khanacademy.org/humanities/world-history/ancient-medieval/roman/v/roman-history-overview';
+  if(t.includes('greek')||t.includes('greece')) return 'https://www.khanacademy.org/humanities/world-history/ancient-medieval/ancient-greece/v/ancient-greece';
+  if(t.includes('egypt')) return 'https://www.khanacademy.org/humanities/world-history/ancient-medieval/ancient-egypt-hittites/v/ancient-egypt';
+  if(t.includes('islam')||t.includes('muslim')) return 'https://www.khanacademy.org/humanities/world-history/medieval-times/islamv/v/origin-of-islam';
+  // Default - Khan Academy search
+  return 'https://www.khanacademy.org/search?search_again=1&page_search_query='+encodeURIComponent(topic);
+}
+
+// YouTube search query builder
+function getYouTubeSearchQuery(topic, grade, subject){
+  const g = grade||'';
+  const gradeStr = g.includes('GED') ? 'GED' : g;
+  let query = topic + ' ' + gradeStr + ' ' + (subject||'');
+  // Add educational qualifiers
+  if(parseInt((g.match(/\d+/)||[0])[0]) <= 6) query += ' for kids explained';
+  else query += ' lesson explained';
+  return query.trim();
+}
+
+// Get YouTube video ID for common topics (pre-mapped for reliability)
+function getYouTubeVideoId(topic){
+  const t = topic.toLowerCase();
+  if(t.includes('food chain')||t.includes('food web')) return 'Cxgd5nKTGnE';
+  if(t.includes('water cycle')) return 'al-do-HGuIk';
+  if(t.includes('photosynthesis')) return 'UPBMG5EYydo';
+  if(t.includes('cell')) return 'URUJD5NEXC8';
+  if(t.includes('dna')) return 'zwibgNGe4aY';
+  if(t.includes('plate tectonic')||t.includes('earthquake')||t.includes('volcano')) return 'kwfNGatxUJI';
+  if(t.includes('solar system')) return 'libKVRa01L8';
+  if(t.includes('photosynthesis')) return 'UPBMG5EYydo';
+  if(t.includes('fraction')) return 'n0FZhQ_GkKw';
+  if(t.includes('multiplication')) return 'mvOkMYCygps';
+  if(t.includes('division')) return 'gHTH6PKfpRk';
+  if(t.includes('algebra')) return 'NybHckSEQBI';
+  if(t.includes('evolution')||t.includes('natural selection')) return 'P3GagfbA2vo';
+  if(t.includes('civil war')) return 'Afsm3uotLhU';
+  if(t.includes('world war 2')||t.includes('wwii')) return 'Objoad5URRE';
+  if(t.includes('world war 1')||t.includes('wwi')) return 'dHSQAEam2yc';
+  if(t.includes('human body')||t.includes('digestive')) return 'Bg4SyXb4b9Q';
+  if(t.includes('nervous system')) return 'aet_oxqCPfQ';
+  if(t.includes('circulatory')||t.includes('heart')) return 'CWFyxn0qDEU';
+  if(t.includes('ecosystem')) return 'fPxQDScFBHM';
+  if(t.includes('climate change')) return 'G4H1N_yXBiA';
+  if(t.includes('roman')||t.includes('rome')) return 'oPmgBxmhP1Q';
+  if(t.includes('greek')||t.includes('greece')) return 'X15JHaEGM1o';
+  if(t.includes('egypt')) return 'hO1tzmi1V5g';
+  if(t.includes('percent')) return 'rR95Cbcjzus';
+  return null;
+}
+
+// Add a video card to the chat
+function addVideoToChat(topic, grade, subject){
+  const msgs = document.getElementById('messages');
+  const videoId = getYouTubeVideoId(topic);
+  const khanUrl = getKhanUrl(topic, grade);
+  const searchQuery = getYouTubeSearchQuery(topic, grade, subject);
+  const youtubeSearchUrl = 'https://www.youtube.com/results?search_query='+encodeURIComponent(searchQuery);
+
+  const div = document.createElement('div');
+  div.className = 'msg ai';
+  div.style.animation = 'fadeUp 0.3s ease';
+
+  let html = '<div class="msg-avatar">🎬</div><div class="msg-bubble">';
+  html += '<p style="font-size:13px;color:var(--muted);margin-bottom:8px">Here are some visual resources to help:</p>';
+
+  if(videoId){
+    html += '<div class="video-card"><iframe src="https://www.youtube.com/embed/'+videoId+'?rel=0" allowfullscreen loading="lazy"></iframe>';
+    html += '<div class="video-card-label">▶ YouTube — '+topic+'</div></div>';
+  }
+
+  html += '<div class="visual-row">';
+  if(!videoId){
+    html += '<a href="'+youtubeSearchUrl+'" target="_blank" class="khan-link">▶ Search YouTube for: '+topic+'</a>';
+  }
+  html += '<a href="'+khanUrl+'" target="_blank" class="khan-link">📚 Khan Academy — '+topic+'</a>';
+  html += '</div>';
+  html += '</div>';
+
+  div.innerHTML = html;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+// Generate ASCII/text diagram for common concepts
+function getDiagram(topic){
+  const t = topic.toLowerCase();
+  if(t.includes('food chain')||t.includes('food web')){
+    return `FOOD CHAIN DIAGRAM:
+☀️ Sun (Energy Source)
+    ↓
+🌿 Producers (Plants) — make their own food
+    ↓
+🐛 Primary Consumers (Herbivores) — eat plants
+    ↓
+🐸 Secondary Consumers (Carnivores) — eat herbivores
+    ↓
+🦅 Tertiary Consumers (Top Predators)
+    ↓
+🍄 Decomposers (Fungi/Bacteria) — break down dead matter`;
+  }
+  if(t.includes('water cycle')){
+    return `WATER CYCLE DIAGRAM:
+☁️ Cloud Formation (Condensation)
+↙ ↓ ↘
+🌧️ Precipitation    ❄️ Snow
+↓                      ↓
+💧 Runoff ————→ 🏞️ Collection (Lakes/Oceans)
+                        ↓
+              🌡️ Evaporation ↑
+              🌿 Transpiration ↑
+                        ↑
+              ——— back to clouds ———`;
+  }
+  if(t.includes('cell')){
+    return `ANIMAL CELL DIAGRAM:
+┌─────────────────────────┐
+│   🔵 Cell Membrane      │
+│  ┌──────────────────┐   │
+│  │  🧠 Nucleus      │   │
+│  │  (DNA/Genes)     │   │
+│  └──────────────────┘   │
+│  ⚡ Mitochondria         │
+│  (Energy production)    │
+│  🔬 Ribosomes           │
+│  (Protein making)       │
+└─────────────────────────┘`;
+  }
+  if(t.includes('solar system')||t.includes('planet')){
+    return `SOLAR SYSTEM:
+☀️ Sun
+ • 🔴 Mercury (closest)
+ • 🟡 Venus
+ • 🔵 Earth ← We are here
+ • 🔴 Mars
+ • 🟠 Jupiter (largest)
+ • 🪐 Saturn (rings)
+ • 🔵 Uranus
+ • 🔵 Neptune (farthest)`;
+  }
+  if(t.includes('rock cycle')){
+    return `ROCK CYCLE:
+🌋 Magma/Lava
+    ↓ (cools)
+🪨 Igneous Rock
+    ↓ (weathering/erosion)
+🏔️ Sediment
+    ↓ (pressure/layers)
+🪨 Sedimentary Rock
+    ↓ (heat/pressure)
+🪨 Metamorphic Rock
+    ↓ (melts)
+🌋 Back to Magma`;
+  }
+  if(t.includes('plant') || t.includes('photosynthesis')){
+    return `PHOTOSYNTHESIS:
+☀️ Sunlight
+    +
+💧 Water (roots absorb)
+    +
+💨 CO₂ (leaves absorb)
+    ↓
+🌿 Chlorophyll in leaves
+    ↓
+🍬 Glucose (food/energy)
+    +
+💨 Oxygen (released)`;
+  }
+  if(t.includes('plate tectonic')||t.includes('earthquake')||t.includes('volcano')){
+    return `PLATE TECTONICS:
+🏔️ Continental Plate ←→ 🌊 Oceanic Plate
+
+Types of Boundaries:
+→ ← Convergent (plates collide → mountains/volcanoes)
+← → Divergent (plates apart → new crust)
+↕ ↕ Transform (plates slide → earthquakes)
+
+🌋 Volcanoes form at convergent/divergent boundaries
+💥 Earthquakes occur along fault lines`;
+  }
+  return null;
+}
+
+function addDiagramToChat(topic){
+  const diagram = getDiagram(topic);
+  if(!diagram) return false;
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'msg ai';
+  div.style.animation = 'fadeUp 0.3s ease';
+  div.innerHTML = '<div class="msg-avatar">📊</div><div class="msg-bubble"><p style="font-size:12px;color:var(--muted);margin-bottom:6px">Visual diagram:</p><div class="diagram-box">'+diagram.split('<').join('&lt;').split('>').join('&gt;').split('\n').join('<br/>')+'</div></div>';
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return true;
+}
+
+// Detect topic from conversation for auto-suggest
+function detectTopicFromMessage(msg){
+  const keywords = ['food chain','food web','water cycle','photosynthesis','cell','dna','volcano','earthquake','solar system','planet','fraction','multiplication','division','algebra','equation','ecosystem','evolution','adaptation','civil war','world war','rock cycle','plate tectonic','human body','digestive','nervous','circulatory','percent','roman','greek','egypt','islam'];
+  const m = msg.toLowerCase();
+  for(const kw of keywords){
+    if(m.includes(kw)) return kw;
+  }
+  return null;
+}
+
+function requestVisual(){
+  const s = appState.currentStudent;
+  if(!s){return;}
+  // Try to detect topic from last few messages
+  const recentMsgs = appState.conversationHistory.slice(-4).map(m=>m.content).join(' ');
+  const topic = detectTopicFromMessage(recentMsgs) || (s.topic||s.subject||'');
+  if(!topic){
+    addMessage('ai','What topic would you like a video or diagram for? Type the topic and I will find resources for you.');
+    return;
+  }
+  const diagramAdded = addDiagramToChat(topic);
+  addVideoToChat(topic, s.grade, s.subject);
+  if(!diagramAdded){
+    logActivity('purple','🎬',s.name+' requested visual for: '+topic,'purple');
+  }
+}
+
 async function sendAI(userMsg,isGreeting=false){
   if(!isGreeting)appState.conversationHistory.push({role:'user',content:userMsg});
   appState.isLoading=true;
@@ -977,9 +1235,20 @@ async function sendAI(userMsg,isGreeting=false){
     const data=await res.json();removeTyping();
     if(!res.ok){addMessage('ai','Sorry, there was an issue: '+(data.error?.message||'Unknown error'));}
     else{
-      const reply=data.content[0].text;
+      let reply=data.content[0].text;
+      const suggestVisual=reply.includes('[SUGGEST_VISUAL]');
+      reply=reply.replace('[SUGGEST_VISUAL]','').trim();
       appState.conversationHistory.push({role:'assistant',content:reply});
       addMessage('ai',reply);
+      if(suggestVisual&&s){
+        const topic=detectTopicFromMessage(reply)||s.topic||s.subject||'';
+        if(topic){
+          setTimeout(function(){
+            addDiagramToChat(topic);
+            addVideoToChat(topic,s.grade,s.subject);
+          },800);
+        }
+      }
       if(s&&appState.activeSessions[s.id])logActivity('purple','💬',s.name+' — AI responded','purple');
     }
   }catch(e){removeTyping();addMessage('ai','Connection error: '+e.message);}
