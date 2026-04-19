@@ -3,407 +3,423 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Metanoia ND Hub</title>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Nunito+Sans:wght@400;600&display=swap" rel="stylesheet"/>
+<title>Metanoia AI Tutor</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#f0f4ff;
-  --surface:#ffffff;
-  --surface2:#f7f9ff;
-  --border:#e2e8f8;
-  --text:#1a1f3a;
-  --muted:#6b7280;
-  --accent:#6366f1;
-  --accent2:#10b981;
-  --accent3:#f59e0b;
-  --accent4:#ec4899;
-  --accent5:#8b5cf6;
-  --danger:#ef4444;
-  --radius:20px;
-  --font:'Nunito',sans-serif;
-  --font2:'Nunito Sans',sans-serif;
+  --bg:#0d0f14;--surface:#161920;--surface2:#1e2230;
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.13);
+  --accent:#7B6EF6;--accent2:#4ecdc4;--accent3:#f7b731;--danger:#ff6b6b;
+  --text:#eef0f7;--muted:#8b90a8;--muted2:#5a5f75;
+  --user-bubble:#2a2d3e;--ai-bubble:#1a2035;
+  --radius:16px;--font:'Sora',sans-serif;--mono:'Space Mono',monospace;
 }
-html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:16px}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px}
+.screen{display:none;min-height:100vh}.screen.active{display:flex}
 
-/* SCREENS */
-.screen{display:none;min-height:100vh;flex-direction:column;align-items:center;padding:2rem 1.25rem}
-.screen.active{display:flex}
+/* LOGIN */
+#login-screen{flex-direction:column;align-items:center;justify-content:center;padding:2rem 1.5rem;position:relative;overflow:hidden}
+#login-screen::before{content:'';position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(123,110,246,0.12) 0%,transparent 70%);top:-200px;left:-150px;pointer-events:none}
+#login-screen::after{content:'';position:absolute;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(78,205,196,0.08) 0%,transparent 70%);bottom:-100px;right:-100px;pointer-events:none}
+.logo-block{text-align:center;margin-bottom:2rem;position:relative;z-index:1}
+.logo-icon{width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 1rem;box-shadow:0 0 40px rgba(123,110,246,0.3)}
+.logo-block h1{font-size:26px;font-weight:600;letter-spacing:-0.5px}
+.logo-block h1 span{color:var(--accent)}
+.logo-block p{font-size:12px;color:var(--muted);margin-top:4px;font-family:var(--mono);letter-spacing:0.5px}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:2rem;width:100%;max-width:400px;position:relative;z-index:1}
+.login-card h2{font-size:12px;font-family:var(--mono);color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:1.5rem}
+.role-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1.5rem}
+.role-tab{padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:13px;font-family:var(--font);cursor:pointer;text-align:center;transition:all 0.2s}
+.role-tab.active{border-color:var(--accent);color:var(--text);background:rgba(123,110,246,0.12)}
+.field{margin-bottom:1rem}
+.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+.field input,.field select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-family:var(--font);font-size:14px;outline:none;transition:border-color 0.2s;appearance:none}
+.field input:focus,.field select:focus{border-color:var(--accent)}
+.api-field{margin-bottom:1.25rem}
+.api-field label{display:block;font-size:12px;color:var(--accent3);margin-bottom:6px}
+.api-field input{width:100%;background:rgba(247,183,49,0.06);border:1px solid rgba(247,183,49,0.25);border-radius:10px;padding:10px 14px;color:var(--text);font-family:var(--mono);font-size:13px;outline:none;transition:border-color 0.2s}
+.api-field input:focus{border-color:var(--accent3)}
+.primary-btn{width:100%;background:linear-gradient(135deg,var(--accent),#5a4fd4);border:none;border-radius:12px;padding:13px;color:#fff;font-family:var(--font);font-size:15px;font-weight:500;cursor:pointer;transition:opacity 0.2s,transform 0.15s;margin-top:0.5rem}
+.primary-btn:hover{opacity:0.9;transform:translateY(-1px)}
+.error-msg{background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.25);border-radius:10px;padding:10px 14px;font-size:13px;color:#ff8080;margin-top:10px;display:none}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 
-/* HEADER */
-.hub-header{width:100%;max-width:700px;display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem}
-.hub-logo{display:flex;align-items:center;gap:10px}
-.hub-logo-icon{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--accent5));display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 14px rgba(99,102,241,0.3)}
-.hub-logo h1{font-size:18px;font-weight:800;color:var(--text)}
-.hub-logo h1 span{color:var(--accent)}
-.hub-back{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:8px 16px;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;font-family:var(--font)}
-.hub-back:hover{color:var(--text);border-color:var(--accent)}
+/* PIN PAD */
+.pin-display{display:flex;justify-content:center;gap:12px;margin:1.25rem 0}
+.pin-dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--border2);background:transparent;transition:all 0.2s}
+.pin-dot.filled{background:var(--accent);border-color:var(--accent)}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1rem}
+.pin-btn{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;font-size:18px;font-weight:500;color:var(--text);cursor:pointer;transition:all 0.15s;font-family:var(--font)}
+.pin-btn:hover{background:var(--surface3,#252a3a);border-color:var(--border2)}
+.pin-btn:active{transform:scale(0.95)}
+.pin-btn.clear{font-size:13px;color:var(--muted)}
+.pin-btn.zero{grid-column:2}
 
-/* CHECKIN SCREEN */
-#checkin-screen{background:linear-gradient(160deg,#eef2ff 0%,#fdf4ff 100%)}
-.checkin-card{background:var(--surface);border-radius:28px;padding:2.5rem 2rem;width:100%;max-width:500px;box-shadow:0 8px 40px rgba(99,102,241,0.1)}
-.checkin-title{font-size:24px;font-weight:900;margin-bottom:0.5rem;text-align:center}
-.checkin-subtitle{font-size:15px;color:var(--muted);text-align:center;margin-bottom:2rem;font-family:var(--font2)}
-.name-input-wrap{margin-bottom:1.5rem}
-.name-input-wrap label{display:block;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px}
-.name-input-wrap input{width:100%;background:var(--surface2);border:2px solid var(--border);border-radius:14px;padding:12px 16px;font-family:var(--font);font-size:16px;font-weight:600;color:var(--text);outline:none;transition:border-color 0.2s}
-.name-input-wrap input:focus{border-color:var(--accent)}
-.mood-label{font-size:14px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:1rem;text-align:center}
-.mood-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:1.5rem}
-.mood-btn{background:var(--surface2);border:2px solid var(--border);border-radius:16px;padding:12px 6px;cursor:pointer;transition:all 0.2s;text-align:center}
-.mood-btn:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.08)}
-.mood-btn.selected{border-color:var(--accent);background:#eef2ff;transform:translateY(-2px);box-shadow:0 4px 12px rgba(99,102,241,0.2)}
-.mood-btn .emoji{font-size:28px;display:block;margin-bottom:4px}
-.mood-btn .mood-name{font-size:11px;font-weight:700;color:var(--muted)}
-.mood-btn.selected .mood-name{color:var(--accent)}
-.focus-label{font-size:14px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.75rem;text-align:center}
-.focus-slider{width:100%;margin-bottom:0.5rem;accent-color:var(--accent)}
-.focus-marks{display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:1.5rem}
-.checkin-btn{width:100%;background:linear-gradient(135deg,var(--accent),var(--accent5));border:none;border-radius:16px;padding:15px;color:#fff;font-family:var(--font);font-size:16px;font-weight:800;cursor:pointer;transition:opacity 0.2s,transform 0.15s;box-shadow:0 4px 16px rgba(99,102,241,0.35)}
-.checkin-btn:hover{opacity:0.92;transform:translateY(-1px)}
+/* DASHBOARD */
+#dashboard-screen{flex-direction:column;height:100vh;overflow:hidden}
+.dash-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+.dash-header-left{display:flex;align-items:center;gap:12px}
+.dash-logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:16px}
+.dash-header-left h2{font-size:15px;font-weight:500}
+.dash-header-left p{font-size:12px;color:var(--muted);margin-top:1px}
+.dash-header-right{display:flex;align-items:center;gap:10px}
+.tutor-badge{background:rgba(123,110,246,0.15);color:var(--accent);border:1px solid rgba(123,110,246,0.3);border-radius:20px;padding:4px 14px;font-size:12px;font-weight:500}
+.logout-btn{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;color:var(--muted);font-size:12px;font-family:var(--mono);cursor:pointer}
+.logout-btn:hover{color:var(--text)}
+.dash-body{flex:1;overflow-y:auto;padding:1.5rem}
+.dash-body::-webkit-scrollbar{width:4px}
+.dash-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:1.5rem}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1rem 1.25rem}
+.stat-card .stat-label{font-size:11px;color:var(--muted);font-family:var(--mono);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:8px}
+.stat-card .stat-value{font-size:26px;font-weight:600;color:var(--text)}
+.stat-card .stat-sub{font-size:11px;color:var(--muted2);margin-top:4px}
+.stat-card.accent .stat-value{color:var(--accent)}
+.stat-card.teal .stat-value{color:var(--accent2)}
+.stat-card.gold .stat-value{color:var(--accent3)}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.section-header h3{font-size:13px;font-family:var(--mono);color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+.add-student-btn{background:var(--accent);border:none;border-radius:8px;padding:7px 14px;color:#fff;font-size:12px;font-family:var(--font);font-weight:500;cursor:pointer}
+.add-student-btn:hover{opacity:0.85}
+.students-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-bottom:2rem}
+.student-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.25rem;position:relative;overflow:hidden;transition:border-color 0.2s}
+.student-card:hover{border-color:var(--border2)}
+.student-card.active-session{border-color:rgba(78,205,196,0.4)}
+.student-card.active-session::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent2),var(--accent))}
+.student-card-top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.student-avatar{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;flex-shrink:0;color:#fff}
+.student-card-info h4{font-size:14px;font-weight:500}
+.student-card-info p{font-size:12px;color:var(--muted);margin-top:2px}
+.pin-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(247,183,49,0.1);color:var(--accent3);border:1px solid rgba(247,183,49,0.25);margin-bottom:8px;font-family:var(--mono)}
+.status-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500;margin-bottom:8px}
+.status-badge.online{background:rgba(78,205,196,0.12);color:var(--accent2);border:1px solid rgba(78,205,196,0.25)}
+.status-badge.offline{background:var(--surface2);color:var(--muted);border:1px solid var(--border)}
+.status-badge .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.nd-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px}
+.nd-tag{font-size:10px;padding:2px 8px;border-radius:6px;background:rgba(123,110,246,0.1);color:var(--accent);border:1px solid rgba(123,110,246,0.2)}
+.student-card-actions{display:flex;gap:8px}
+.card-btn{flex:1;padding:8px;border-radius:8px;font-size:12px;font-family:var(--font);cursor:pointer;text-align:center;transition:all 0.2s}
+.card-btn.primary{background:var(--accent);border:none;color:#fff}
+.card-btn.primary:hover{opacity:0.85}
+.card-btn.secondary{background:var(--surface2);border:1px solid var(--border);color:var(--muted)}
+.card-btn.secondary:hover{color:var(--text);border-color:var(--border2)}
+.card-btn.danger{background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.2);color:var(--danger)}
+.card-btn.danger:hover{background:rgba(255,107,107,0.2)}
+.session-timer{font-family:var(--mono);font-size:11px;color:var(--accent2);margin-bottom:8px}
+.activity-log{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.25rem}
+.log-item{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.log-item:last-child{border-bottom:none;padding-bottom:0}
+.log-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.log-icon.green{background:rgba(78,205,196,0.12)}
+.log-icon.purple{background:rgba(123,110,246,0.12)}
+.log-icon.gold{background:rgba(247,183,49,0.12)}
+.log-text p{font-size:13px;color:var(--text);line-height:1.4}
+.log-text span{font-size:11px;color:var(--muted);font-family:var(--mono)}
 
-/* DASHBOARD SCREEN */
-#dash-screen{background:linear-gradient(160deg,#eef2ff 0%,#fdf4ff 100%)}
-.greeting-block{width:100%;max-width:700px;margin-bottom:1.5rem}
-.greeting-card{background:linear-gradient(135deg,var(--accent),var(--accent5));border-radius:24px;padding:1.5rem 2rem;color:#fff;display:flex;align-items:center;justify-content:space-between}
-.greeting-card h2{font-size:22px;font-weight:900;margin-bottom:4px}
-.greeting-card p{font-size:14px;opacity:0.85;font-family:var(--font2)}
-.mood-display{font-size:42px}
-.alert-card{border-radius:18px;padding:1rem 1.25rem;margin-bottom:1rem;width:100%;max-width:700px;display:flex;align-items:center;gap:12px;font-size:14px;font-weight:700}
-.alert-card.yellow{background:#fef9c3;border:2px solid #fde047;color:#854d0e}
-.alert-card.red{background:#fee2e2;border:2px solid #fca5a5;color:#7f1d1d}
-.alert-card.green{background:#dcfce7;border:2px solid #86efac;color:#14532d}
-.alert-icon{font-size:22px;flex-shrink:0}
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;z-index:100;padding:1rem}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:2rem;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
+.modal h3{font-size:16px;font-weight:500;margin-bottom:1.5rem}
+.modal-footer{display:flex;gap:10px;margin-top:1.5rem}
+.modal-footer button{flex:1;padding:11px;border-radius:10px;font-family:var(--font);font-size:14px;cursor:pointer}
+.modal-footer .cancel{background:var(--surface2);border:1px solid var(--border);color:var(--muted)}
+.modal-footer .confirm{background:var(--accent);border:none;color:#fff}
+.nd-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+.nd-chip{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;cursor:pointer;color:var(--muted);user-select:none;transition:all 0.2s}
+.nd-chip input{display:none}
+.nd-chip.selected{border-color:var(--accent);color:var(--text);background:rgba(123,110,246,0.1)}
+.nd-chip .dot2{width:8px;height:8px;border-radius:50%;background:var(--border);flex-shrink:0;transition:background 0.2s}
+.nd-chip.selected .dot2{background:var(--accent)}
 
-.tools-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;width:100%;max-width:700px;margin-bottom:1.5rem}
-.tool-card{background:var(--surface);border:2px solid var(--border);border-radius:24px;padding:1.5rem;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden}
-.tool-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,0.1)}
-.tool-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px}
-.tool-card.schedule::before{background:linear-gradient(90deg,var(--accent),var(--accent5))}
-.tool-card.timer::before{background:linear-gradient(90deg,var(--accent2),#06b6d4)}
-.tool-card.tasks::before{background:linear-gradient(90deg,var(--accent3),#f97316)}
-.tool-card.notes::before{background:linear-gradient(90deg,var(--accent4),var(--accent5))}
-.tool-icon{font-size:32px;margin-bottom:10px;display:block}
-.tool-card h3{font-size:16px;font-weight:800;margin-bottom:4px}
-.tool-card p{font-size:13px;color:var(--muted);font-family:var(--font2);line-height:1.5}
-
-/* SCHEDULE SCREEN */
-#schedule-screen{background:#f0fdf4}
-.schedule-wrap{width:100%;max-width:700px}
-.schedule-title{font-size:22px;font-weight:900;margin-bottom:1.5rem;text-align:center}
-.schedule-grid{display:flex;flex-direction:column;gap:10px}
-.slot{background:var(--surface);border:2px solid var(--border);border-radius:18px;padding:1rem 1.25rem;display:flex;align-items:center;gap:14px;transition:all 0.2s}
-.slot.done{background:#f0fdf4;border-color:#86efac;opacity:0.7}
-.slot.active-slot{border-color:var(--accent2);box-shadow:0 0 0 3px rgba(16,185,129,0.15)}
-.slot-time{font-size:13px;font-weight:800;color:var(--muted);font-family:var(--font2);min-width:60px}
-.slot-icon{font-size:24px;flex-shrink:0}
-.slot-info h4{font-size:15px;font-weight:800}
-.slot-info p{font-size:12px;color:var(--muted);font-family:var(--font2)}
-.slot-check{margin-left:auto;width:28px;height:28px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;transition:all 0.2s;flex-shrink:0}
-.slot-check:hover{border-color:var(--accent2);background:#f0fdf4}
-.slot.done .slot-check{background:var(--accent2);border-color:var(--accent2);color:#fff}
-
-/* TIMER SCREEN */
-#timer-screen{background:#f0f9ff}
-.timer-wrap{width:100%;max-width:500px;text-align:center}
-.timer-title{font-size:22px;font-weight:900;margin-bottom:2rem}
-.timer-ring{position:relative;width:220px;height:220px;margin:0 auto 2rem}
-.timer-ring svg{transform:rotate(-90deg)}
-.timer-ring circle{fill:none;stroke-width:12}
-.timer-ring .bg-ring{stroke:#e0e7ff}
-.timer-ring .progress-ring{stroke:var(--accent);stroke-linecap:round;transition:stroke-dashoffset 1s linear}
-.timer-display{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
-.timer-display .time{font-size:48px;font-weight:900;color:var(--text);line-height:1}
-.timer-display .phase{font-size:13px;font-weight:700;color:var(--muted);margin-top:4px}
-.timer-mode-tabs{display:flex;gap:8px;justify-content:center;margin-bottom:1.5rem;flex-wrap:wrap}
-.mode-tab{background:var(--surface);border:2px solid var(--border);border-radius:12px;padding:8px 16px;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);transition:all 0.2s}
-.mode-tab.active{background:var(--accent);border-color:var(--accent);color:#fff}
-.timer-controls{display:flex;gap:12px;justify-content:center;margin-bottom:1.5rem}
-.timer-btn{border:none;border-radius:16px;padding:14px 28px;font-family:var(--font);font-size:15px;font-weight:800;cursor:pointer;transition:all 0.2s}
-.timer-btn.start{background:linear-gradient(135deg,var(--accent2),#06b6d4);color:#fff;box-shadow:0 4px 16px rgba(16,185,129,0.3)}
-.timer-btn.reset{background:var(--surface);border:2px solid var(--border);color:var(--muted)}
-.timer-btn:hover{transform:translateY(-1px)}
-.pomodoro-count{font-size:13px;font-weight:700;color:var(--muted);margin-bottom:1rem}
-.pomodoro-dots{display:flex;gap:8px;justify-content:center}
-.p-dot{width:14px;height:14px;border-radius:50%;background:var(--border);transition:background 0.3s}
-.p-dot.filled{background:var(--accent)}
-
-/* TASKS SCREEN */
-#tasks-screen{background:#fffbeb}
-.tasks-wrap{width:100%;max-width:700px}
-.tasks-title{font-size:22px;font-weight:900;margin-bottom:1.5rem;text-align:center}
-.subject-tabs{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:1.5rem}
-.subj-tab{background:var(--surface);border:2px solid var(--border);border-radius:12px;padding:8px 16px;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);transition:all 0.2s}
-.subj-tab.active{background:var(--accent3);border-color:var(--accent3);color:#fff}
-.task-cards{display:flex;flex-direction:column;gap:10px}
-.task-card{background:var(--surface);border:2px solid var(--border);border-radius:18px;padding:1.25rem;display:flex;gap:14px;align-items:flex-start;transition:all 0.2s}
-.task-card.done-task{opacity:0.55;background:#f9fafb}
-.task-num{width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,var(--accent3),#f97316);color:#fff;font-size:16px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.task-card.done-task .task-num{background:#d1d5db}
-.task-body h4{font-size:15px;font-weight:800;margin-bottom:4px}
-.task-body p{font-size:13px;color:var(--muted);font-family:var(--font2);line-height:1.6}
-.task-tip{display:inline-block;background:#fef9c3;border:1.5px solid #fde047;border-radius:8px;padding:3px 10px;font-size:11px;font-weight:700;color:#854d0e;margin-top:8px}
-.task-check{margin-left:auto;width:30px;height:30px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;transition:all 0.2s;flex-shrink:0}
-.task-check:hover{border-color:var(--accent3)}
-.task-card.done-task .task-check{background:var(--accent2);border-color:var(--accent2);color:#fff}
-
-/* NOTES SCREEN */
-#notes-screen{background:#fdf4ff}
-.notes-wrap{width:100%;max-width:700px}
-.notes-title{font-size:22px;font-weight:900;margin-bottom:1.5rem;text-align:center}
-.notes-form{background:var(--surface);border:2px solid var(--border);border-radius:24px;padding:1.5rem;margin-bottom:1rem}
-.notes-form label{display:block;font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px}
-.notes-form textarea{width:100%;background:var(--surface2);border:2px solid var(--border);border-radius:14px;padding:12px 16px;font-family:var(--font2);font-size:14px;color:var(--text);outline:none;resize:none;line-height:1.7;transition:border-color 0.2s}
-.notes-form textarea:focus{border-color:var(--accent4)}
-.observation-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:1rem}
-.obs-chip{background:var(--surface2);border:2px solid var(--border);border-radius:10px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;font-family:var(--font)}
-.obs-chip.selected{background:#fdf4ff;border-color:var(--accent4);color:var(--accent4)}
-.save-note-btn{width:100%;background:linear-gradient(135deg,var(--accent4),var(--accent5));border:none;border-radius:14px;padding:13px;color:#fff;font-family:var(--font);font-size:15px;font-weight:800;cursor:pointer;transition:opacity 0.2s}
-.save-note-btn:hover{opacity:0.88}
-.saved-notes{display:flex;flex-direction:column;gap:10px;margin-top:1rem}
-.saved-note{background:var(--surface);border:2px solid var(--border);border-radius:18px;padding:1.25rem}
-.saved-note-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-.saved-note-header span{font-size:12px;font-weight:700;color:var(--muted);font-family:var(--font2)}
-.saved-note p{font-size:14px;line-height:1.7;font-family:var(--font2)}
-.saved-note-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.saved-note-tag{background:#fdf4ff;border:1.5px solid #e879f9;border-radius:8px;padding:2px 10px;font-size:11px;font-weight:700;color:#a21caf}
-.copy-note-btn{background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);color:var(--muted)}
-.copy-note-btn:hover{color:var(--text)}
-
-.progress-bar-wrap{background:#e0e7ff;border-radius:99px;height:10px;margin-top:1rem;overflow:hidden}
-.progress-bar{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent2),var(--accent));transition:width 0.5s ease}
+/* CHAT */
+#chat-screen{flex-direction:column;height:100vh}
+.chat-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+.chat-header-left{display:flex;align-items:center;gap:12px}
+.chat-avatar{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.chat-header-info h3{font-size:14px;font-weight:500}
+.chat-header-info p{font-size:12px;color:var(--muted);margin-top:1px}
+.status-dot-live{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent2);margin-right:4px}
+.header-actions{display:flex;gap:8px}
+.subject-pill{background:rgba(123,110,246,0.15);color:var(--accent);border:1px solid rgba(123,110,246,0.3);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:500}
+.icon-btn{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--muted);font-size:12px;font-family:var(--mono);cursor:pointer}
+.icon-btn:hover{color:var(--text)}
+.messages{flex:1;overflow-y:auto;padding:1.5rem 1.25rem;display:flex;flex-direction:column;gap:1rem;scroll-behavior:smooth}
+.messages::-webkit-scrollbar{width:4px}
+.messages::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.msg{display:flex;gap:10px;max-width:85%;animation:fadeUp 0.3s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.msg.user{align-self:flex-end;flex-direction:row-reverse}
+.msg.ai{align-self:flex-start}
+.msg-avatar{width:32px;height:32px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px}
+.msg.ai .msg-avatar{background:linear-gradient(135deg,var(--accent),var(--accent2))}
+.msg.user .msg-avatar{background:var(--surface2);border:1px solid var(--border)}
+.msg-bubble{padding:12px 16px;border-radius:14px;font-size:14px;line-height:1.7}
+.msg.ai .msg-bubble{background:var(--ai-bubble);border:1px solid var(--border);border-top-left-radius:4px}
+.msg.user .msg-bubble{background:var(--user-bubble);border-top-right-radius:4px}
+.msg-bubble p{margin-bottom:0.5rem}
+.msg-bubble p:last-child{margin-bottom:0}
+.msg-bubble strong{color:var(--accent2);font-weight:500}
+.msg-bubble em{color:var(--accent3);font-style:normal;font-weight:500}
+.typing{display:flex;align-items:center;gap:5px;padding:14px 16px}
+.typing span{width:7px;height:7px;border-radius:50%;background:var(--muted);animation:bounce 1.2s infinite}
+.typing span:nth-child(2){animation-delay:0.2s}
+.typing span:nth-child(3){animation-delay:0.4s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:0.5}30%{transform:translateY(-6px);opacity:1}}
+.input-area{padding:1rem 1.25rem;background:var(--surface);border-top:1px solid var(--border);flex-shrink:0}
+.input-row{display:flex;gap:10px;align-items:flex-end}
+#user-input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px 16px;color:var(--text);font-family:var(--font);font-size:14px;outline:none;resize:none;min-height:48px;max-height:140px;line-height:1.5;transition:border-color 0.2s}
+#user-input:focus{border-color:var(--accent)}
+#user-input::placeholder{color:var(--muted)}
+.send-btn{width:48px;height:48px;border-radius:12px;flex-shrink:0;background:linear-gradient(135deg,var(--accent),#5a4fd4);border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity 0.2s,transform 0.15s}
+.send-btn:hover{opacity:0.9;transform:scale(1.05)}
+.send-btn:disabled{opacity:0.4;cursor:default;transform:none}
+.input-hint{font-size:11px;color:var(--muted);margin-top:8px;text-align:center;font-family:var(--mono)}
+.session-summary-card{background:rgba(123,110,246,0.08);border:1px solid rgba(123,110,246,0.2);border-radius:12px;padding:1rem 1.25rem;margin-top:0.5rem}
+.session-summary-card h4{font-size:12px;color:var(--accent);font-family:var(--mono);letter-spacing:0.5px;margin-bottom:8px}
+.nd-badge{display:inline-block;font-size:11px;background:rgba(78,205,196,0.1);color:var(--accent2);border:1px solid rgba(78,205,196,0.25);border-radius:6px;padding:2px 8px;margin:0 3px 3px 0}
+.traffic-light{width:12px;height:12px;border-radius:50%;flex-shrink:0;display:inline-block;margin-right:6px}
+.traffic-light.green{background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,0.5)}
+.traffic-light.yellow{background:#f59e0b;box-shadow:0 0 6px rgba(245,158,11,0.5)}
+.traffic-light.red{background:#ef4444;box-shadow:0 0 6px rgba(239,68,68,0.5);animation:pulse-red 1.5s infinite}
+@keyframes pulse-red{0%,100%{box-shadow:0 0 6px rgba(239,68,68,0.5)}50%{box-shadow:0 0 14px rgba(239,68,68,0.8)}}
+.stat-mini{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.stat-mini-item{font-size:11px;font-family:var(--mono);color:var(--muted);display:flex;flex-direction:column;gap:2px}
+.stat-mini-item strong{font-size:13px;color:var(--text);font-family:var(--font)}
+.shake{animation:shake 0.4s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.video-card-label{font-size:11px;color:var(--muted);padding:6px 12px;font-family:var(--mono)}
+.khan-link{display:inline-flex;align-items:center;gap:8px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);border-radius:10px;padding:8px 14px;font-size:13px;color:var(--accent2);text-decoration:none;margin-top:8px;transition:all 0.2s;font-weight:600}
+.khan-link:hover{background:rgba(16,185,129,0.2)}
+.diagram-box{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-top:10px;font-family:var(--mono);font-size:12px;line-height:1.8;color:var(--text)}
+.visual-btn{background:rgba(123,110,246,0.12);border:1px solid rgba(123,110,246,0.3);border-radius:10px;padding:8px 16px;font-size:13px;color:var(--accent);cursor:pointer;font-family:var(--font);font-weight:600;transition:all 0.2s;margin-top:8px}
+.visual-btn:hover{background:rgba(123,110,246,0.2)}
+.visual-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.speak-btn{background:none;border:none;cursor:pointer;font-size:14px;padding:4px 6px;border-radius:6px;color:var(--muted);transition:all 0.2s;line-height:1;margin-top:4px;display:inline-flex;align-items:center;gap:4px}
+.speak-btn:hover{background:var(--surface2);color:var(--text)}
+.speak-btn.speaking{color:var(--accent2);animation:pulse-speak 1s infinite}
+@keyframes pulse-speak{0%,100%{opacity:1}50%{opacity:0.5}}
+.mic-btn{width:48px;height:48px;border-radius:12px;flex-shrink:0;background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s}
+.mic-btn:hover{border-color:var(--accent);color:var(--accent)}
+.mic-btn.listening{background:rgba(239,68,68,0.15);border-color:var(--danger);color:var(--danger);animation:pulse-mic 1s infinite}
+@keyframes pulse-mic{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.4)}70%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}
+.mute-btn{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--muted);font-size:12px;font-family:var(--mono);cursor:pointer;transition:all 0.2s}
+.mute-btn:hover{color:var(--text)}
+.mute-btn.muted{background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.3);color:var(--danger)}
+.notes-modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:2rem;width:100%;max-width:560px;max-height:85vh;overflow-y:auto;position:relative}
+.notes-modal h3{font-size:16px;font-weight:500;margin-bottom:0.5rem}
+.notes-modal .notes-meta{font-size:12px;color:var(--muted);font-family:var(--mono);margin-bottom:1.25rem}
+.notes-content{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1.25rem;font-size:13px;line-height:1.8;color:var(--text);white-space:pre-wrap;font-family:var(--mono);max-height:360px;overflow-y:auto}
+.notes-content::-webkit-scrollbar{width:4px}
+.notes-content::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.notes-actions{display:flex;gap:10px;margin-top:1.25rem}
+.notes-actions button{flex:1;padding:11px;border-radius:10px;font-family:var(--font);font-size:14px;cursor:pointer;transition:all 0.2s}
+.notes-actions .dl-btn{background:var(--accent);border:none;color:#fff}
+.notes-actions .dl-btn:hover{opacity:0.85}
+.notes-actions .close-btn{background:var(--surface2);border:1px solid var(--border);color:var(--muted)}
+.notes-actions .close-btn:hover{color:var(--text)}
+.generating{display:flex;align-items:center;gap:10px;padding:2rem;justify-content:center;color:var(--muted);font-size:13px;font-family:var(--mono)}
+.gen-dots span{animation:bounce 1.2s infinite;display:inline-block}
+.gen-dots span:nth-child(2){animation-delay:0.2s}
+.gen-dots span:nth-child(3){animation-delay:0.4s}
 </style>
 </head>
 <body>
-<!-- LOGIN SCREEN -->
-<div id="nd-login-screen" style="
-  position:fixed;inset:0;background:#0f1117;display:flex;align-items:center;
-  justify-content:center;z-index:9999;flex-direction:column;gap:1rem;padding:1.5rem;
-">
-  <div style="text-align:center;margin-bottom:1rem">
-    <div style="font-size:2.5rem;margin-bottom:0.5rem">🌟</div>
-    <h1 style="color:#fff;font-size:1.4rem;font-family:sans-serif;margin:0">Metanoia <span style="color:#7b6ef6">ND Hub</span></h1>
-    <p style="color:#6b7280;font-size:0.85rem;margin-top:0.4rem;font-family:sans-serif">Please log in to continue</p>
+
+<!-- LOGIN -->
+<div id="login-screen" class="screen active">
+  <div class="logo-block">
+    <div class="logo-icon">🧠</div>
+    <h1>Metanoia <span>AI Tutor</span></h1>
+    <p>METANOIA ACADEMY · NAMIBIA</p>
   </div>
-
-  <div style="background:#1e2030;border:1px solid #2d3148;border-radius:16px;padding:1.5rem;width:100%;max-width:360px">
-    <div style="margin-bottom:1rem">
-      <label style="color:#a5b4fc;font-size:0.8rem;font-family:sans-serif;display:block;margin-bottom:0.4rem">YOUR NAME</label>
-      <input id="nd-name-input" type="text" placeholder="Type your first name..."
-        autocomplete="off"
-        style="width:100%;padding:0.75rem;border-radius:10px;border:1px solid #374151;
-               background:#0f1117;color:#fff;font-size:1rem;font-family:sans-serif;box-sizing:border-box"
-        oninput="ndNameInput()"/>
+  <div class="login-card">
+    <h2>// Select access mode</h2>
+    <div class="role-tabs">
+      <div class="role-tab active" id="tab-tutor" onclick="setRole('tutor')">👩‍🏫 Tutor / Staff</div>
+      <div class="role-tab" id="tab-student" onclick="setRole('student')">🎒 Student</div>
     </div>
 
-    <div id="nd-pin-section" style="display:none">
-      <label style="color:#a5b4fc;font-size:0.8rem;font-family:sans-serif;display:block;margin-bottom:0.4rem">YOUR PIN</label>
-      <div style="display:flex;gap:0.5rem;justify-content:center;margin-bottom:1rem">
-        <div class="nd-dot" id="ndd0" style="width:14px;height:14px;border-radius:50%;background:#374151;border:2px solid #4b5563"></div>
-        <div class="nd-dot" id="ndd1" style="width:14px;height:14px;border-radius:50%;background:#374151;border:2px solid #4b5563"></div>
-        <div class="nd-dot" id="ndd2" style="width:14px;height:14px;border-radius:50%;background:#374151;border:2px solid #4b5563"></div>
-        <div class="nd-dot" id="ndd3" style="width:14px;height:14px;border-radius:50%;background:#374151;border:2px solid #4b5563"></div>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;margin-bottom:0.75rem">
-        <button onclick="ndPin('1')" style="padding:1rem;border-radius:10px;border:1px solid #374151;background:#252840;color:#fff;font-size:1.2rem;cursor:pointer">1</button>
-        <button onclick="ndPin('2')" style="padding:1rem;border-radius:10px;border:1px solid #374151;background:#252840;color:#fff;font-size:1.2rem;cursor:pointer">2</button>
-        <button onclick="ndPin('3')" style="padding:1rem;border-radius:10px;border:1px solid #374151;background:#252840;color:#fff;font-size:1.2rem;cursor:pointer">3</button>
-        <button onclick="ndPin('4')" style="padding:1rem;border-radius:10px;border:1px solid #374151;background:#252840;color:#fff;font-size:1.2rem;cursor:pointer">4</button>
-        <button onclick="ndPin('5')" style="padding:1rem;border-radius:10px;border:1px solid #374151;background:#252840;color:#fff;font-size:1.2rem;cursor:pointer">5</button>
-        <button onclick="ndPin('6')" style="padding:1rem;border-radius:10px;border:1px solid #374151;background:#252840;color:#fff;font-size:1.2rem;cursor:pointer">6</button>
-        <button onclick="ndPin('7')" style="padding:1rem;border-radius:10px;border:1px solid #374151;background:#252840;color:#fff;font-size:1.2rem;cursor:pointer">7</button>
-        <button onclick="ndPin('8')" style="padding:1rem;border-radius:10px;border:1px solid #374151;background:#252840;color:#fff;font-size:1.2rem;cursor:pointer">8</button>
-        <button onclick="ndPin('9')" style="padding:1rem;border-radius:10px;border:1px solid #374151;background:#252840;color:#fff;font-size:1.2rem;cursor:pointer">9</button>
-        <button onclick="ndPin('clear')" style="padding:1rem;border-radius:10px;border:1px solid #374151;background:#1a1d2e;color:#9ca3af;font-size:0.85rem;cursor:pointer">CLR</button>
-        <button onclick="ndPin('0')" style="padding:1rem;border-radius:10px;border:1px solid #374151;background:#252840;color:#fff;font-size:1.2rem;cursor:pointer">0</button>
-        <button onclick="ndPin('back')" style="padding:1rem;border-radius:10px;border:1px solid #374151;background:#1a1d2e;color:#9ca3af;font-size:1rem;cursor:pointer">⌫</button>
-      </div>
+    <!-- TUTOR LOGIN -->
+    <div id="tutor-fields">
+      <div class="field"><label>Username</label><input type="text" id="tutor-username" placeholder="Enter username" autocomplete="username"/></div>
+      <div class="field"><label>Password</label><input type="password" id="tutor-password" placeholder="Enter password" autocomplete="current-password"/></div>
+      <div class="field"><label>Center</label><select id="tutor-center"><option>Windhoek</option><option>Rehoboth</option></select></div>
     </div>
 
-    <div id="nd-login-error" style="display:none;color:#f87171;font-size:0.85rem;font-family:sans-serif;text-align:center;margin-bottom:0.75rem"></div>
-    <div id="nd-login-loading" style="display:none;color:#a5b4fc;font-size:0.85rem;font-family:sans-serif;text-align:center;margin-bottom:0.75rem">Checking...</div>
-  </div>
-</div>
-
-
-
-<!-- CHECK-IN SCREEN -->
-<div id="checkin-screen" class="screen active">
-  <div style="width:100%;max-width:500px">
-    <div class="hub-logo" style="justify-content:center;margin-bottom:2rem">
-      <div class="hub-logo-icon">🌟</div>
-      <h1>Metanoia <span>ND Hub</span></h1>
-    </div>
-    <div class="checkin-card">
-      <div class="checkin-title">Good morning! 👋</div>
-      <div class="checkin-subtitle">Let's check in before we start today.</div>
-      <div class="name-input-wrap">
+    <!-- STUDENT LOGIN -->
+    <div id="student-fields" style="display:none">
+      <div class="field">
         <label>Your name</label>
-        <input type="text" id="student-name" placeholder="Type your name here..."/>
+        <input type="text" id="s-name-input" placeholder="Type your first name..." autocomplete="off" oninput="onStudentNameInput()"/>
       </div>
-      <div class="mood-label">How are you feeling right now?</div>
-      <div class="mood-grid">
-        <div class="mood-btn" onclick="selectMood(this,'😔','Sad')"><span class="emoji">😔</span><span class="mood-name">Sad</span></div>
-        <div class="mood-btn" onclick="selectMood(this,'😟','Worried')"><span class="emoji">😟</span><span class="mood-name">Worried</span></div>
-        <div class="mood-btn" onclick="selectMood(this,'😐','Okay')"><span class="emoji">😐</span><span class="mood-name">Okay</span></div>
-        <div class="mood-btn" onclick="selectMood(this,'😊','Good')"><span class="emoji">😊</span><span class="mood-name">Good</span></div>
-        <div class="mood-btn" onclick="selectMood(this,'🤩','Great')"><span class="emoji">🤩</span><span class="mood-name">Great</span></div>
-      </div>
-      <div class="focus-label">How ready to focus are you? (1 = hard, 10 = ready!)</div>
-      <input type="range" class="focus-slider" id="focus-level" min="1" max="10" value="5"/>
-      <div class="focus-marks"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span></div>
-      <button class="checkin-btn" onclick="completeCheckin()">Let's go! 🚀</button>
-    </div>
-  </div>
-</div>
-
-<!-- DASHBOARD SCREEN -->
-<div id="dash-screen" class="screen">
-  <div class="hub-header">
-    <div class="hub-logo">
-      <div class="hub-logo-icon">🌟</div>
-      <h1>Metanoia <span>ND Hub</span></h1>
-    </div>
-    <button class="hub-back" onclick="showScreen('checkin-screen');resetCheckin()">New check-in</button>
-  </div>
-  <div class="greeting-block">
-    <div class="greeting-card">
-      <div>
-        <h2 id="greeting-name">Welcome!</h2>
-        <p id="greeting-message">Here is your learning hub for today.</p>
-      </div>
-      <div class="mood-display" id="greeting-mood">😊</div>
-    </div>
-  </div>
-  <div id="alert-area" style="width:100%;max-width:700px"></div>
-  <div class="tools-grid">
-    <div class="tool-card schedule" onclick="showScreen('schedule-screen')">
-      <span class="tool-icon">📅</span>
-      <h3>My Day Plan</h3>
-      <p>See your schedule and tick off each activity as you go.</p>
-    </div>
-    <div class="tool-card timer" onclick="showScreen('timer-screen')">
-      <span class="tool-icon">⏱️</span>
-      <h3>Focus Timer</h3>
-      <p>Work in short bursts with breaks — great for staying focused.</p>
-    </div>
-    <div class="tool-card tasks" onclick="showScreen('tasks-screen')">
-      <span class="tool-icon">✅</span>
-      <h3>Task Cards</h3>
-      <p>Break big tasks into small, easy steps you can tick off.</p>
-    </div>
-    <div class="tool-card notes" onclick="showScreen('notes-screen')">
-      <span class="tool-icon">📝</span>
-      <h3>Tutor Notes</h3>
-      <p>Record observations about this learner for parent reports.</p>
-    </div>
-  </div>
-</div>
-
-<!-- SCHEDULE SCREEN -->
-<div id="schedule-screen" class="screen">
-  <div class="hub-header">
-    <div class="hub-logo"><div class="hub-logo-icon">📅</div><h1>My <span>Day Plan</span></h1></div>
-    <button class="hub-back" onclick="showScreen('dash-screen')">← Back</button>
-  </div>
-  <div class="schedule-wrap">
-    <div class="schedule-title" id="schedule-greeting">Your day at Metanoia</div>
-    <div class="progress-bar-wrap"><div class="progress-bar" id="schedule-progress" style="width:0%"></div></div>
-    <div style="font-size:12px;font-weight:700;color:var(--muted);text-align:right;margin:6px 0 1rem;font-family:var(--font2)" id="progress-label">0 of 6 done</div>
-    <div class="schedule-grid" id="schedule-grid"></div>
-  </div>
-</div>
-
-<!-- TIMER SCREEN -->
-<div id="timer-screen" class="screen">
-  <div class="hub-header">
-    <div class="hub-logo"><div class="hub-logo-icon">⏱️</div><h1>Focus <span>Timer</span></h1></div>
-    <button class="hub-back" onclick="showScreen('dash-screen');resetTimer()">← Back</button>
-  </div>
-  <div class="timer-wrap">
-    <div class="timer-title" id="timer-greeting">Let's focus!</div>
-    <div class="timer-mode-tabs">
-      <div class="mode-tab active" onclick="setMode('pomodoro',this)">Pomodoro (25/5)</div>
-      <div class="mode-tab" onclick="setMode('short',this)">Short (15/3)</div>
-      <div class="mode-tab" onclick="setMode('mini',this)">Mini (10/2)</div>
-    </div>
-    <div class="timer-ring">
-      <svg width="220" height="220" viewBox="0 0 220 220">
-        <circle class="bg-ring" cx="110" cy="110" r="98"/>
-        <circle class="progress-ring" id="timer-circle" cx="110" cy="110" r="98" stroke-dasharray="616" stroke-dashoffset="0"/>
-      </svg>
-      <div class="timer-display">
-        <div class="time" id="timer-display">25:00</div>
-        <div class="phase" id="timer-phase">Focus time</div>
-      </div>
-    </div>
-    <div class="pomodoro-count" id="pomodoro-count">Round 1 of 4</div>
-    <div class="pomodoro-dots" id="pomodoro-dots">
-      <div class="p-dot" id="dot0"></div><div class="p-dot" id="dot1"></div>
-      <div class="p-dot" id="dot2"></div><div class="p-dot" id="dot3"></div>
-    </div>
-    <div class="timer-controls" style="margin-top:1.5rem">
-      <button class="timer-btn start" id="timer-start-btn" onclick="toggleTimer()">▶ Start</button>
-      <button class="timer-btn reset" onclick="resetTimer()">↺ Reset</button>
-    </div>
-    <div style="background:var(--surface);border:2px solid var(--border);border-radius:18px;padding:1.25rem;text-align:center;margin-top:0.5rem">
-      <div style="font-size:13px;font-weight:700;color:var(--muted);margin-bottom:6px">💡 Remember</div>
-      <div id="timer-tip" style="font-size:14px;font-family:var(--font2);color:var(--text);line-height:1.6"></div>
-    </div>
-  </div>
-</div>
-
-<!-- TASKS SCREEN -->
-<div id="tasks-screen" class="screen">
-  <div class="hub-header">
-    <div class="hub-logo"><div class="hub-logo-icon">✅</div><h1>Task <span>Cards</span></h1></div>
-    <button class="hub-back" onclick="showScreen('dash-screen')">← Back</button>
-  </div>
-  <div class="tasks-wrap">
-    <div class="tasks-title">What are you working on?</div>
-    <div class="subject-tabs" id="subject-tabs"></div>
-    <div class="task-cards" id="task-cards"></div>
-  </div>
-</div>
-
-<!-- NOTES SCREEN -->
-<div id="notes-screen" class="screen">
-  <div class="hub-header">
-    <div class="hub-logo"><div class="hub-logo-icon">📝</div><h1>Tutor <span>Notes</span></h1></div>
-    <button class="hub-back" onclick="showScreen('dash-screen')">← Back</button>
-  </div>
-  <div class="notes-wrap">
-    <div class="notes-title">Learner Observations</div>
-    <div class="notes-form">
-      <label>Student name</label>
-      <input type="text" id="note-student" placeholder="Student name..." style="width:100%;background:var(--surface2);border:2px solid var(--border);border-radius:14px;padding:12px 16px;font-family:var(--font);font-size:15px;font-weight:600;color:var(--text);outline:none;margin-bottom:1rem;transition:border-color 0.2s"/>
-      <label>What did you observe today?</label>
-      <textarea id="note-text" rows="4" placeholder="Write your observations here..."></textarea>
-      <div style="margin-top:1rem;margin-bottom:0.75rem">
-        <label>Quick tags — tap all that apply</label>
-        <div class="observation-chips">
-          <div class="obs-chip" onclick="toggleObs(this)">Focused well</div>
-          <div class="obs-chip" onclick="toggleObs(this)">Needed redirection</div>
-          <div class="obs-chip" onclick="toggleObs(this)">Anxious/distressed</div>
-          <div class="obs-chip" onclick="toggleObs(this)">Great progress</div>
-          <div class="obs-chip" onclick="toggleObs(this)">Refused tasks</div>
-          <div class="obs-chip" onclick="toggleObs(this)">Needed extra time</div>
-          <div class="obs-chip" onclick="toggleObs(this)">Sensory overload signs</div>
-          <div class="obs-chip" onclick="toggleObs(this)">Very engaged</div>
-          <div class="obs-chip" onclick="toggleObs(this)">Breakthrough moment</div>
-          <div class="obs-chip" onclick="toggleObs(this)">Struggled with reading</div>
-          <div class="obs-chip" onclick="toggleObs(this)">Struggled with numbers</div>
-          <div class="obs-chip" onclick="toggleObs(this)">Social interaction noted</div>
+      <div id="pin-section" style="display:none">
+        <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px">Enter your PIN</label>
+        <div class="pin-display">
+          <div class="pin-dot" id="pd0"></div>
+          <div class="pin-dot" id="pd1"></div>
+          <div class="pin-dot" id="pd2"></div>
+          <div class="pin-dot" id="pd3"></div>
+        </div>
+        <div class="pin-pad">
+          <button class="pin-btn" onclick="pinPress('1')">1</button>
+          <button class="pin-btn" onclick="pinPress('2')">2</button>
+          <button class="pin-btn" onclick="pinPress('3')">3</button>
+          <button class="pin-btn" onclick="pinPress('4')">4</button>
+          <button class="pin-btn" onclick="pinPress('5')">5</button>
+          <button class="pin-btn" onclick="pinPress('6')">6</button>
+          <button class="pin-btn" onclick="pinPress('7')">7</button>
+          <button class="pin-btn" onclick="pinPress('8')">8</button>
+          <button class="pin-btn" onclick="pinPress('9')">9</button>
+          <button class="pin-btn clear" onclick="pinClear()">clear</button>
+          <button class="pin-btn zero" onclick="pinPress('0')">0</button>
+          <button class="pin-btn" onclick="pinBack()">⌫</button>
         </div>
       </div>
-      <button class="save-note-btn" onclick="saveNote()">Save observation</button>
+      <div id="no-students-msg" style="display:none;font-size:13px;color:var(--danger);text-align:center;padding:0.5rem 0;font-family:var(--mono)">Name not found. Please check your name and try again.</div>
     </div>
-    <div class="saved-notes" id="saved-notes"></div>
+
+    <div id="login-error" class="error-msg"></div>
+    <button class="primary-btn" id="login-btn" onclick="doLogin()">Continue →</button>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard-screen" class="screen">
+  <div class="dash-header">
+    <div class="dash-header-left">
+      <div class="dash-logo">🧠</div>
+      <div><h2>Tutor Dashboard</h2><p id="dash-subtitle">Metanoia Academy · Windhoek</p></div>
+    </div>
+    <div class="dash-header-right">
+      <span class="tutor-badge" id="tutor-badge-name">Tutor</span>
+      <button class="logout-btn" onclick="doLogout()">logout</button>
+    </div>
+  </div>
+  <div class="dash-body">
+    <div class="stats-row">
+      <div class="stat-card accent"><div class="stat-label">Active sessions</div><div class="stat-value" id="stat-active">0</div><div class="stat-sub">Right now</div></div>
+      <div class="stat-card teal"><div class="stat-label">Students enrolled</div><div class="stat-value" id="stat-total">0</div><div class="stat-sub">This center</div></div>
+      <div class="stat-card gold"><div class="stat-label">Sessions today</div><div class="stat-value" id="stat-today">0</div><div class="stat-sub">Completed + active</div></div>
+      <div class="stat-card"><div class="stat-label">Neurodiverse</div><div class="stat-value" id="stat-nd">0</div><div class="stat-sub">Support learners</div></div>
+    </div>
+    <div class="section-header">
+      <h3>// Student roster</h3>
+      <button class="add-student-btn" onclick="openAddModal()">+ Add student</button>
+    </div>
+    <div class="students-grid" id="students-grid"></div>
+    <div class="section-header"><h3>// Activity log</h3></div>
+    <div class="activity-log" id="activity-log"><div style="font-size:13px;color:var(--muted);padding:1rem 0;text-align:center;font-family:var(--mono)">No activity yet today.</div></div>
+  </div>
+</div>
+
+<!-- CHAT -->
+<div id="chat-screen" class="screen">
+  <div class="chat-header">
+    <div class="chat-header-left">
+      <div class="chat-avatar">🧠</div>
+      <div class="chat-header-info">
+        <h3 id="chat-title">AI Tutor</h3>
+        <p><span class="status-dot-live"></span><span id="chat-sub">Active session</span></p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <span id="subject-pill" class="subject-pill">Subject</span>
+      <a href="/nd-hub.html" target="_blank" class="mute-btn" style="text-decoration:none;background:rgba(16,185,129,0.12);border-color:rgba(16,185,129,0.3);color:#10b981;font-size:12px">🌟 ND Hub</a>
+      <button class="mute-btn" id="mute-btn" onclick="toggleMute()">🔊 Audio on</button>
+      <button class="icon-btn" onclick="endSession()">end session</button>
+    </div>
+  </div>
+  <div class="messages" id="messages"></div>
+  <div class="input-area">
+    <div class="input-row">
+      <button class="mic-btn" id="mic-btn" onclick="toggleVoice()" title="Speak your question">🎤</button>
+      <textarea id="user-input" placeholder="Type or speak your question..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+      <button class="send-btn" id="send-btn" onclick="sendMessage()">↑</button>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
+      <div class="input-hint">Enter to send · Shift+Enter for new line</div>
+      <button class="visual-btn" onclick="requestVisual()" id="visual-btn">🎬 Show me a video</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD STUDENT MODAL -->
+<div class="modal-overlay" id="add-modal">
+  <div class="modal">
+    <h3>Add new student</h3>
+    <div class="field-row">
+      <div class="field"><label>Full name</label><input type="text" id="m-name" placeholder="Student name"/></div>
+      <div class="field"><label>PIN (4 digits)</label><input type="text" id="m-pin" placeholder="e.g. 1234" maxlength="4" pattern="[0-9]{4}"/></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Grade / Level</label>
+        <select id="m-grade"><option>Grade R</option><option>Grade 1</option><option>Grade 2</option><option>Grade 3</option><option>Grade 4</option><option>Grade 5</option><option>Grade 6</option><option selected>Grade 7</option><option>Grade 8</option><option>Grade 9</option><option>Grade 10</option><option>Grade 11</option><option>Grade 12</option><option>GED Preparation</option></select>
+      </div>
+      <div class="field"><label>Platform</label>
+        <select id="m-platform"><option>MobyMax</option><option>Cambrilearn</option><option>Essential Education (GED)</option><option>Independent study</option></select>
+      </div>
+    </div>
+    <div class="field"><label>Primary subject</label>
+      <select id="m-subject"><option>Mathematics</option><option>English / Language Arts</option><option>Science</option><option>Social Studies</option><option>Reading & Comprehension</option><option>Writing</option><option>Mathematical Reasoning (GED)</option><option>Reasoning Through Language Arts (GED)</option><option>Science (GED)</option><option>Social Studies (GED)</option></select>
+    </div>
+    <div class="field"><label>Current topic / unit (optional)</label>
+      <input type="text" id="m-topic" placeholder="e.g. Fractions, Chapter 3, GED Unit 2 — Algebra"/>
+    </div>
+    <div class="field"><label>Learning support needs</label>
+      <div class="nd-grid">
+        <label class="nd-chip" onclick="toggleChip(this)"><input type="checkbox" value="ADHD"/><span class="dot2"></span>ADHD / Focus</label>
+        <label class="nd-chip" onclick="toggleChip(this)"><input type="checkbox" value="Dyslexia"/><span class="dot2"></span>Dyslexia</label>
+        <label class="nd-chip" onclick="toggleChip(this)"><input type="checkbox" value="Autism"/><span class="dot2"></span>Autism spectrum</label>
+        <label class="nd-chip" onclick="toggleChip(this)"><input type="checkbox" value="Dyscalculia"/><span class="dot2"></span>Dyscalculia</label>
+        <label class="nd-chip" onclick="toggleChip(this)"><input type="checkbox" value="Anxiety"/><span class="dot2"></span>Anxiety / Low confidence</label>
+        <label class="nd-chip" onclick="toggleChip(this)"><input type="checkbox" value="None"/><span class="dot2"></span>No specific needs</label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="cancel" onclick="closeAddModal()">Cancel</button>
+      <button class="confirm" onclick="addStudent()">Add student</button>
+    </div>
+  </div>
+</div>
+
+<!-- PARENT REPORT MODAL -->
+<div class="modal-overlay" id="parent-modal-overlay">
+  <div class="notes-modal" id="parent-modal">
+    <h3>Parent Report</h3>
+    <p class="notes-meta" id="parent-meta">Weekly progress report</p>
+    <div id="parent-body">
+      <div class="generating"><span>Generating parent report</span><span class="gen-dots"><span>.</span><span>.</span><span>.</span></span></div>
+    </div>
+    <div class="notes-actions">
+      <button class="dl-btn" onclick="downloadParentReport()">Download .txt</button>
+      <button class="dl-btn" style="background:var(--accent2)" onclick="copyParentReport()">Copy to clipboard</button>
+      <button class="close-btn" onclick="closeParentModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- SESSION NOTES MODAL -->
+<div class="modal-overlay" id="notes-modal-overlay">
+  <div class="notes-modal" id="notes-modal">
+    <h3>Session Notes</h3>
+    <p class="notes-meta" id="notes-meta">Generating...</p>
+    <div id="notes-body">
+      <div class="generating">
+        <span>Generating session notes</span>
+        <span class="gen-dots"><span>.</span><span>.</span><span>.</span></span>
+      </div>
+    </div>
+    <div class="notes-actions">
+      <button class="dl-btn" onclick="downloadNotes()">Download .txt</button>
+      <button class="close-btn" onclick="closeNotesModal()">Close</button>
+    </div>
   </div>
 </div>
 
 <script>
-// ── SUPABASE + ND HUB LOGIN ──
+// ── SUPABASE CLIENT ──
 const SUPA_URL='https://ptvfbmuqgefncwkzrvxt.supabase.co';
 const SUPA_KEY='sb_publishable_eb-wpepxwtA1yyOyQ0bMCA_WimPKTZH';
 
@@ -492,394 +508,1130 @@ function getWeekKey(){
   return monday.toISOString().slice(0,10);
 }
 
-let ndPinEntry = '';
-let ndStudent = null;
+function saveSessionStat(studentId, durationMins, subject){
+  dbSaveSessionStat(studentId,durationMins,subject,appState.center);
+  // also keep local copy for immediate stats display
+  try{
+    const key='metanoia_stats_'+studentId;
+    const weekKey=getWeekKey();
+    const existing=JSON.parse(localStorage.getItem(key)||'{}');
+    if(!existing[weekKey])existing[weekKey]={sessions:[],parentReportSent:false};
+    existing[weekKey].sessions.push({date:new Date().toISOString(),duration:durationMins,subject});
+    const weeks=Object.keys(existing).sort().slice(-4);
+    const trimmed={};weeks.forEach(w=>trimmed[w]=existing[w]);
+    localStorage.setItem(key,JSON.stringify(trimmed));
+  }catch(e){}
+}
 
-function ndUpdateDots(){
-  for(let i=0;i<4;i++){
-    const d=document.getElementById('ndd'+i);
-    if(d) d.style.background = i<ndPinEntry.length ? '#7b6ef6' : '#374151';
+function markParentReportSent(studentId){
+  try{
+    const key='metanoia_stats_'+studentId;
+    const weekKey=getWeekKey();
+    const existing=JSON.parse(localStorage.getItem(key)||'{}');
+    if(!existing[weekKey])existing[weekKey]={sessions:[],parentReportSent:false};
+    existing[weekKey].parentReportSent=true;
+    localStorage.setItem(key,JSON.stringify(existing));
+  }catch(e){}
+}
+
+function getStudentStats(studentId){
+  try{
+    const key='metanoia_stats_'+studentId;
+    const weekKey=getWeekKey();
+    const data=JSON.parse(localStorage.getItem(key)||'{}');
+    const week=data[weekKey]||{sessions:[],parentReportSent:false};
+    const sessions=week.sessions||[];
+    const avgDuration=sessions.length?Math.round(sessions.reduce((a,s)=>a+s.duration,0)/sessions.length):0;
+    const subjects=[...new Set(sessions.map(s=>s.subject))];
+    // Get mood trend from ND Hub
+    let moodTrend='—';
+    try{
+      const ndNotes=JSON.parse(localStorage.getItem('metanoia_nd_notes')||'[]');
+      const weekStart=new Date();weekStart.setDate(weekStart.getDate()-7);
+      const studentMoods=ndNotes.filter(n=>n.student.toLowerCase().trim()===
+        (appState.students.find(s=>s.id===studentId)||{name:''}).name.toLowerCase().trim());
+      if(studentMoods.length){
+        const moods=studentMoods.slice(0,5).map(n=>n.text||'');
+        const hasLow=moods.some(m=>m.includes('anxious')||m.includes('distressed')||m.includes('worried'));
+        const hasTags=ndNotes.filter(n=>n.student.toLowerCase().trim()===
+          (appState.students.find(s=>s.id===studentId)||{name:''}).name.toLowerCase().trim())
+          .flatMap(n=>n.tags||[]);
+        const lowTags=['Anxious/distressed','Refused tasks','Sensory overload signs'];
+        const goodTags=['Focused well','Great progress','Very engaged','Breakthrough moment'];
+        const lowCount=hasTags.filter(t=>lowTags.includes(t)).length;
+        const goodCount=hasTags.filter(t=>goodTags.includes(t)).length;
+        moodTrend=goodCount>lowCount?'😊 Positive':lowCount>goodCount?'😟 Low':'😐 Mixed';
+      }
+    }catch(e){}
+    // Calculate traffic light
+    let status='green';
+    if(sessions.length===0) status='red';
+    else if(sessions.length<2) status='yellow';
+    if(moodTrend.includes('Low')) status=status==='green'?'yellow':'red';
+    return {sessions:sessions.length,avgDuration,subjects,parentReportSent:week.parentReportSent,moodTrend,status};
+  }catch(e){return {sessions:0,avgDuration:0,subjects:[],parentReportSent:false,moodTrend:'—',status:'red'};}
+}
+let pinEntry='';
+
+const avatarColors=['#7B6EF6','#4ecdc4','#f7b731','#ff6b6b','#a29bfe','#fd79a8','#00b894','#e17055'];
+function getColor(n){let h=0;for(let c of n)h=c.charCodeAt(0)+((h<<5)-h);return avatarColors[Math.abs(h)%avatarColors.length];}
+function getInitials(n){return n.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);}
+function toggleChip(el){el.classList.toggle('selected');el.querySelector('input').checked=el.classList.contains('selected');}
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+
+function setRole(r){
+  appState.role=r;
+  document.getElementById('tab-tutor').classList.toggle('active',r==='tutor');
+  document.getElementById('tab-student').classList.toggle('active',r==='student');
+  document.getElementById('tutor-fields').style.display=r==='tutor'?'block':'none';
+  document.getElementById('student-fields').style.display=r==='student'?'block':'none';
+  document.getElementById('login-btn').style.display=r==='tutor'?'block':'none';
+  if(r==='student') populateStudentSelect();
+}
+
+function onStudentNameInput(){
+  const name=document.getElementById('s-name-input').value.trim();
+  const pinSection=document.getElementById('pin-section');
+  const noMsg=document.getElementById('no-students-msg');
+  noMsg.style.display='none';
+  if(name.length>=2){
+    pinSection.style.display='block';
+    pinEntry='';updatePinDots();
+  } else {
+    pinSection.style.display='none';
   }
 }
 
-function ndNameInput(){
-  const name=document.getElementById('nd-name-input').value.trim();
-  const pinSec=document.getElementById('nd-pin-section');
-  ndPinEntry='';ndUpdateDots();
-  pinSec.style.display = name.length>=2 ? 'block' : 'none';
+function populateStudentSelect(){
+  // Load students from Supabase for PIN validation
+  const center=appState.center||'Windhoek';
+  dbGetStudents(center).then(function(rows){
+    appState.students=rows;
+  }).catch(function(){});
 }
 
-function ndPin(val){
-  const err=document.getElementById('nd-login-error');
-  err.style.display='none';
-  if(val==='clear'){ndPinEntry='';ndUpdateDots();return;}
-  if(val==='back'){ndPinEntry=ndPinEntry.slice(0,-1);ndUpdateDots();return;}
-  if(ndPinEntry.length>=4) return;
-  ndPinEntry+=val;
-  ndUpdateDots();
-  if(ndPinEntry.length===4) ndDoLogin();
+function buildStudentDropdown(){
+  const sel=document.getElementById('s-name-select');
+  sel.innerHTML='<option value="">— Choose your name —</option>';
+  const noMsg=document.getElementById('no-students-msg');
+  if(!appState.students.length){noMsg.style.display='block';document.getElementById('pin-section').style.display='none';return;}
+  noMsg.style.display='none';
+  appState.students.forEach(s=>{
+    const opt=document.createElement('option');
+    opt.value=s.id;opt.textContent=s.name;
+    sel.appendChild(opt);
+  });
+  sel.onchange=function(){
+    pinEntry='';updatePinDots();
+    document.getElementById('pin-section').style.display=this.value?'block':'none';
+    document.getElementById('login-error').style.display='none';
+  };
 }
 
-function ndDoLogin(){
-  const nameInput=document.getElementById('nd-name-input').value.trim().toLowerCase();
-  const err=document.getElementById('nd-login-error');
-  const loading=document.getElementById('nd-login-loading');
-  err.style.display='none';
-  loading.style.display='block';
+function pinPress(d){
+  if(pinEntry.length>=4)return;
+  pinEntry+=d;
+  updatePinDots();
+  if(pinEntry.length===4) setTimeout(()=>studentPinLogin(),200);
+}
+function pinBack(){if(pinEntry.length>0){pinEntry=pinEntry.slice(0,-1);updatePinDots();}}
+function pinClear(){pinEntry='';updatePinDots();}
+function updatePinDots(){
+  for(let i=0;i<4;i++){
+    document.getElementById('pd'+i).classList.toggle('filled',i<pinEntry.length);
+  }
+}
 
-  Promise.all([dbGetStudents('Windhoek'),dbGetStudents('Rehoboth')]).then(function(results){
-    loading.style.display='none';
-    const students=[...results[0],...results[1]];
+function studentPinLogin(){
+  const err=document.getElementById('login-error');
+  const nameInput=document.getElementById('s-name-input').value.trim().toLowerCase();
+  const noMsg=document.getElementById('no-students-msg');
+  noMsg.style.display='none';
+  if(!nameInput){err.textContent='Please enter your name.';err.style.display='block';return;}
+  if(pinEntry.length<4){err.textContent='Please enter your full 4-digit PIN.';err.style.display='block';return;}
+  // Load students if not already loaded
+  const tryLogin=function(students){
     const student=students.find(function(s){
       return s.name.toLowerCase().trim()===nameInput||s.name.toLowerCase().trim().startsWith(nameInput);
     });
     if(!student){
-      err.textContent='Name not recognised. Please check your name.';
-      err.style.display='block';ndPinEntry='';ndUpdateDots();return;
+      noMsg.style.display='block';
+      err.textContent='Name not recognised. Please check your name.';err.style.display='block';
+      pinEntry='';updatePinDots();return;
     }
-    if(ndPinEntry!==student.pin){
-      err.textContent='Incorrect PIN. Please try again.';
-      err.style.display='block';ndPinEntry='';ndUpdateDots();return;
+    if(pinEntry!==student.pin){
+      err.textContent='Incorrect PIN. Please try again.';err.style.display='block';
+      const card=document.querySelector('.login-card');card.classList.add('shake');
+      setTimeout(function(){card.classList.remove('shake');},400);
+      pinEntry='';updatePinDots();return;
     }
-    ndStudent=student;
-    document.getElementById('nd-login-screen').style.display='none';
-    // Set student name in hub if element exists
-    const nameEl=document.getElementById('student-name-display');
-    if(nameEl) nameEl.textContent=student.name;
-  }).catch(function(){
-    loading.style.display='none';
-    err.textContent='Connection error. Please check your internet.';
-    err.style.display='block';ndPinEntry='';ndUpdateDots();
-  });
+    err.style.display='none';
+    appState.currentStudent=student;
+    appState.conversationHistory=[];
+    startChatSession(student);
+  };
+  if(appState.students.length){
+    tryLogin(appState.students);
+  } else {
+    // Load from Supabase first
+    const center='Windhoek'; // load all centers
+    Promise.all([dbGetStudents('Windhoek'),dbGetStudents('Rehoboth')]).then(function(results){
+      appState.students=[...results[0],...results[1]];
+      tryLogin(appState.students);
+    }).catch(function(){
+      err.textContent='Could not connect. Please check your internet.';err.style.display='block';
+    });
+  }
 }
 
-let state={name:'',mood:'😊',moodName:'Good',focus:5};
-let timerInterval=null,timerSeconds=0,timerTotal=0,timerRunning=false,timerPhase='focus',pomodoroRound=0,pomodoroMode={focus:25,rest:5,rounds:4};
-let scheduleItems=[
-  {time:'09:00',icon:'🌅',title:'Arrival & Check-in',desc:'Settle in, check your mood, get ready',done:false},
-  {time:'09:15',icon:'📚',title:'Platform Learning',desc:'MobyMax / Cambrilearn / GED session',done:false},
-  {time:'10:00',icon:'⏱️',title:'Focus Timer Break',desc:'Take a short brain break — you earned it!',done:false},
-  {time:'10:10',icon:'✏️',title:'Writing / Reading Task',desc:'Work through your task cards',done:false},
-  {time:'11:00',icon:'🍎',title:'Snack & Movement',desc:'Eat, stretch, move your body',done:false},
-  {time:'11:20',icon:'🧠',title:'AI Tutor Session',desc:'Get help with anything you are stuck on',done:false},
-];
-let taskDone={};
-let savedNotes=[];
-const taskLibrary={
-  'Mathematics':[
-    {title:'Read the question carefully',desc:'Read it once slowly. Then read it again. Underline the important numbers.',tip:'Take your time — no rush!'},
-    {title:'Draw or write what you know',desc:'What numbers do you have? Write them down. Draw a picture if it helps.',tip:'Pictures make maths easier!'},
-    {title:'Choose your method',desc:'Will you add, subtract, multiply or divide? Circle the right one.',tip:'Look for clue words like "total" or "left over"'},
-    {title:'Work it out step by step',desc:'Do one small part at a time. Write each step. Check as you go.',tip:'One step at a time — you\'ve got this!'},
-    {title:'Check your answer',desc:'Does your answer make sense? Try the opposite operation to check.',tip:'Always check — even if you\'re sure!'},
-  ],
-  'English':[
-    {title:'Read the passage once through',desc:'Just read — don\'t worry about questions yet. Get the general idea.',tip:'What is this text mainly about?'},
-    {title:'Read the questions',desc:'Read each question carefully. Underline key words in the question.',tip:'What is the question actually asking?'},
-    {title:'Find clues in the text',desc:'Go back to the passage. Find the part that answers the question. Highlight it.',tip:'The answer is usually right there in the text!'},
-    {title:'Write your answer',desc:'Use your own words. Use full sentences. Start with a capital letter.',tip:'Use words from the question in your answer'},
-    {title:'Check your spelling',desc:'Read your answer aloud softly. Does it sound right? Fix any mistakes.',tip:'Read it like you\'re a teacher marking it'},
-  ],
-  'Science':[
-    {title:'Read the topic heading',desc:'What is this section about? Say it out loud in one sentence.',tip:'Saying it aloud helps your brain remember!'},
-    {title:'Find the key words',desc:'Look for bold or important words. Write them down with their meanings.',tip:'These words are the building blocks!'},
-    {title:'Look at diagrams and pictures',desc:'What do the pictures show? Read the labels carefully.',tip:'Diagrams tell you a lot — study them!'},
-    {title:'Summarise in your own words',desc:'Close the book. Write 3 things you learned. Open and check.',tip:'If you can explain it, you understand it!'},
-    {title:'Answer the questions',desc:'Go back to your notes. Use the key words in your answers.',tip:'One question at a time — no skipping ahead!'},
-  ],
-};
-const tips=[
-  'It\'s okay to take breaks — your brain needs rest to learn!',
-  'One step at a time. You don\'t have to do everything at once.',
-  'Mistakes are how we learn. Every mistake makes you smarter.',
-  'You have made it this far — that already shows how strong you are.',
-  'If something feels hard, that means your brain is growing!',
-  'Take a deep breath. You are safe and you can do this.',
-];
-
-// ── READ ALOUD ──
-function ndSpeak(text, btnEl){
-  if(!window.speechSynthesis){alert('Read-aloud is not supported in this browser.');return;}
-  window.speechSynthesis.cancel();
-  document.querySelectorAll('.nd-speak-btn').forEach(b=>{b.textContent='🔊';b.style.opacity='1';});
-  const utter=new SpeechSynthesisUtterance(text);
-  utter.rate=0.85;utter.pitch=1;utter.volume=1;
-  const voices=window.speechSynthesis.getVoices();
-  const v=voices.find(v=>v.lang.startsWith('en'))||voices[0];
-  if(v)utter.voice=v;
-  if(btnEl){
-    btnEl.textContent='⏹';btnEl.style.opacity='0.7';
-    utter.onend=function(){btnEl.textContent='🔊';btnEl.style.opacity='1';};
-    utter.onerror=function(){btnEl.textContent='🔊';btnEl.style.opacity='1';};
+function saveStudents(){
+  // kept for compatibility — actual saving happens per-student in addStudent/removeStudent
+}
+function saveSessionNote(studentId, note){
+  try{
+    const key='metanoia_notes_'+studentId;
+    const existing=JSON.parse(localStorage.getItem(key)||'[]');
+    existing.push({date:new Date().toISOString(),note});
+    // Keep last 10 sessions only
+    if(existing.length>10)existing.splice(0,existing.length-10);
+    localStorage.setItem(key,JSON.stringify(existing));
+  }catch(e){console.warn('Could not save note:',e);}
+}
+function loadSessionNotes(studentId){
+  try{return JSON.parse(localStorage.getItem('metanoia_notes_'+studentId)||'[]');}
+  catch(e){return [];}
+}
+function clearSessionNotes(studentId){
+  try{localStorage.removeItem('metanoia_notes_'+studentId);}
+  catch(e){}
+}
+async function loadStudents(){
+  try{
+    const rows=await dbGetStudents(appState.center);
+    if(rows.length) appState.students=rows;
+    else {
+      // fallback to localStorage for migration
+      const saved=localStorage.getItem('metanoia_students');
+      if(saved){
+        const parsed=JSON.parse(saved);
+        if(Array.isArray(parsed)&&parsed.length){
+          appState.students=parsed;
+          // migrate to Supabase
+          for(const s of parsed) await dbSaveStudent(s,appState.center);
+          localStorage.removeItem('metanoia_students');
+        }
+      }
+    }
+  }catch(e){console.warn('Could not load students:',e);}
+}
+function doLogin(){
+  const err=document.getElementById('login-error');err.style.display='none';
+  if(appState.role==='tutor'){
+    const username=document.getElementById('tutor-username').value.trim();
+    const password=document.getElementById('tutor-password').value.trim();
+    const center=document.getElementById('tutor-center').value;
+    if(!username||!password){err.textContent='Please enter your username and password.';err.style.display='block';return;}
+    const btn=document.getElementById('login-btn');
+    btn.textContent='Signing in...';btn.disabled=true;
+    fetch('/.netlify/functions/auth',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username,password})
+    }).then(function(r){return r.json();}).then(function(data){
+      btn.textContent='Continue →';btn.disabled=false;
+      if(!data.success){err.textContent=data.error||'Invalid credentials.';err.style.display='block';return;}
+      appState.tutorName='Tutor';appState.center=center;
+      document.getElementById('tutor-badge-name').textContent='Tutor';
+      document.getElementById('dash-subtitle').textContent='Metanoia Academy · '+center;
+      renderDashboard();show('dashboard-screen');
+      loadStudents().then(function(){renderDashboard();});
+    }).catch(function(e){
+      btn.textContent='Continue →';btn.disabled=false;
+      err.textContent='Connection error. Please try again.';err.style.display='block';
+    });
+  } else {
+    studentPinLogin();
   }
+}
+
+function renderDashboard(){
+  const active=Object.keys(appState.activeSessions).length;
+  const nd=appState.students.filter(s=>s.nd&&s.nd.length&&!s.nd.includes('None')).length;
+  document.getElementById('stat-active').textContent=active;
+  document.getElementById('stat-total').textContent=appState.students.length;
+  document.getElementById('stat-today').textContent=appState.todayCount+active;
+  document.getElementById('stat-nd').textContent=nd;
+  const grid=document.getElementById('students-grid');grid.innerHTML='';
+  if(!appState.students.length){
+    grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--muted);font-size:13px;font-family:var(--mono)">No students yet. Click "+ Add student" to begin.</div>';
+    return;
+  }
+  appState.students.forEach(function(s){
+    const isActive=!!appState.activeSessions[s.id];
+    const stats=getStudentStats(s.id);
+    const card=document.createElement('div');
+    card.className='student-card'+(isActive?' active-session':'');
+    const ndTags=(s.nd&&s.nd.length&&!s.nd.includes('None'))?s.nd.map(function(t){return '<span class="nd-tag">'+t+'</span>';}).join(''):'';
+    const timerHtml=isActive?'<div class="session-timer" id="timer-'+s.id+'">&#9203; Session active</div>':'';
+    card.innerHTML=
+      '<div class="student-card-top">'
+      +'<div class="student-avatar" style="background:'+s.color+'">'+getInitials(s.name)+'</div>'
+      +'<div class="student-card-info"><h4>'
+      +'<span class="traffic-light '+stats.status+'"></span>'
+      +s.name+'</h4><p>'+s.grade+' &middot; '+s.subject+'</p></div>'
+      +'</div>'
+      +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">'
+      +'<div class="status-badge '+(isActive?'online':'offline')+'"><span class="dot"></span>'+(isActive?'In session':'Available')+'</div>'
+      +'<div class="pin-badge">PIN: '+(s.pin||'----')+'</div>'
+      +(stats.parentReportSent?'<div class="pin-badge" style="background:rgba(16,185,129,0.1);color:var(--accent2);border-color:rgba(16,185,129,0.25)">&#10003; Report sent</div>':'')
+      +'</div>'
+      +'<div class="stat-mini">'
+      +'<div class="stat-mini-item"><span>Sessions</span><strong>'+stats.sessions+'</strong></div>'
+      +'<div class="stat-mini-item"><span>Avg length</span><strong>'+(stats.avgDuration?stats.avgDuration+'m':'—')+'</strong></div>'
+      +'<div class="stat-mini-item"><span>Mood</span><strong>'+stats.moodTrend+'</strong></div>'
+      +(stats.subjects.length?'<div class="stat-mini-item"><span>Subjects</span><strong>'+stats.subjects.slice(0,2).join(', ')+'</strong></div>':'')
+      +'</div>'
+      +(s.topic?'<div style="font-size:11px;color:var(--accent2);font-family:var(--mono);margin-bottom:8px;padding:4px 8px;background:rgba(78,205,196,0.08);border-radius:6px;border:1px solid rgba(78,205,196,0.2)">📌 '+s.topic+'</div>':'')
+      +(ndTags?'<div class="nd-tags">'+ndTags+'</div>':'')
+      +timerHtml
+      +'<div class="student-card-actions"></div>';
+    const actions=card.querySelector('.student-card-actions');
+    const sid=s.id;
+    const startBtn=document.createElement('button');
+    startBtn.className='card-btn primary';
+    startBtn.textContent='Start session';
+    startBtn.onclick=function(){launchSession(sid);};
+    const reportBtn=document.createElement('button');
+    reportBtn.className='card-btn secondary';
+    reportBtn.textContent='Parent report';
+    reportBtn.onclick=function(){openParentReport(sid);};
+    const removeBtn=document.createElement('button');
+    removeBtn.className='card-btn danger';
+    removeBtn.textContent='Remove';
+    removeBtn.onclick=function(){removeStudent(sid);};
+    actions.appendChild(startBtn);
+    actions.appendChild(reportBtn);
+    actions.appendChild(removeBtn);
+    grid.appendChild(card);
+  });
+  const log=document.getElementById('activity-log');
+  if(appState.activityLog.length){
+    log.innerHTML=appState.activityLog.slice().reverse().slice(0,8).map(function(a){
+      return '<div class="log-item"><div class="log-icon '+a.cls+'">'+a.icon+'</div><div class="log-text"><p>'+a.text+'</p><span>'+a.time+'</span></div></div>';
+    }).join('');
+  }
+}
+function launchSession(id){
+  const s=appState.students.find(x=>x.id===id);if(!s)return;
+  appState.currentStudent=s;appState.conversationHistory=[];
+  if(!appState.activeSessions[id]){
+    appState.activeSessions[id]={start:Date.now()};
+    logActivity('green','🟢','Session started for '+s.name,'green');
+    if(appState.sessionTimers[id])clearInterval(appState.sessionTimers[id]);
+    appState.sessionTimers[id]=setInterval(()=>{
+      const el=document.getElementById('timer-'+id);
+      if(el){const mins=Math.floor((Date.now()-appState.activeSessions[id].start)/60000);el.textContent='⏱ '+mins+'m active';}
+    },30000);
+  }
+  startChatSession(s);
+}
+
+function logActivity(t,icon,text,cls){
+  const now=new Date();
+  appState.activityLog.push({t,icon,text,cls,time:now.toLocaleTimeString('en-ZA',{hour:'2-digit',minute:'2-digit'})});
+}
+
+function startChatSession(s){
+  document.getElementById('chat-title').textContent='Tutoring '+s.name;
+  document.getElementById('chat-sub').textContent=s.grade+' · '+s.subject;
+  document.getElementById('subject-pill').textContent=s.subject;
+  document.getElementById('messages').innerHTML='';
+  const msgs=document.getElementById('messages');
+  const welcome=document.createElement('div');welcome.className='msg ai';
+  const ndHtml=(s.nd&&s.nd.length&&!s.nd.includes('None'))?'<div style="margin-top:10px">'+s.nd.map(f=>'<span class="nd-badge">'+f+'</span>').join('')+'</div>':'';
+  welcome.innerHTML='<div class="msg-avatar">🧠</div><div class="msg-bubble"><div class="session-summary-card"><h4>// SESSION STARTED</h4><p>Student: <strong>'+s.name+'</strong> · '+s.grade+' · '+s.subject+'</p><p style="font-size:12px;color:var(--muted);margin-top:4px">Platform: '+s.platform+'</p>'+ndHtml+'</div></div>';
+  msgs.appendChild(welcome);
+  show('chat-screen');
+  sendAI('Hello! Please greet the student warmly and begin the tutoring session.',true);
+}
+
+function getCurriculumContext(grade, subject, platform){
+  const gradeNum=parseInt((grade.match(/\d+/)||['0'])[0]);
+  const isGED=grade.includes('GED')||platform.includes('GED')||platform.includes('Essential');
+  const isMoby=platform.includes('MobyMax');
+  const isCambri=platform.includes('Cambri');
+  let ctx='';
+
+  // ── ESSENTIAL EDUCATION / GED ──
+  if(isGED||subject.includes('GED')){
+    // Full Essential Education curriculum embedded from student ILPs
+    const eeCurriculum = `
+ESSENTIAL EDUCATION — GED CURRICULUM (All Units and Lessons):
+
+MATHEMATICAL REASONING:
+Pre-GED: Whole Numbers and Operations (Adding, Subtracting, Multiplying, Dividing Whole Numbers, Number Lines, Patterns, Properties) | Factors and Multiples (GCF, LCM, Prime Factorization, Comparison Equations) | Fractions Rates and Ratios (Multiplying/Dividing/Adding/Subtracting Fractions, Ratios, Mixed Numbers) | Decimals (Introduction, Comparing, Adding/Subtracting, Multiplying/Dividing) | Exponents and Roots (Order of Operations, Calculator Use, Simplifying Exponents, Scientific Notation, Square Roots) | Measurement (American and Metric Units) | Percents (Working with Percents, Solving Percent Problems, Applications) | Graphs and Charts (Tables, Circle Graphs, Bar Graphs, Line Graphs, Scatter Plots)
+GED Prep: Expressions Equations and Inequalities (Integers, Linear Equations I, Inequalities, Rational Numbers) | Solving Linear Equations and Inequalities (Algebraic Expressions, Linear Equations II, Graphing Inequalities) | Two-Dimensional Geometry (Angle Pairs, Areas, Circles, Pythagorean Theorem, Congruence, Similarity, Scale Factor) | Three-Dimensional Geometry (Units, Volumes of Prisms/Cylinders/Pyramids/Cones, Rearranging Formulas, Density) | The Equation of a Line (Coordinate Plane, Slope-Intercept Form) | Basic Statistics (Measures of Center, Analyzing Relationships) | Probability (Basic and Compound Probability) | Understanding Functions (Function Basics, Properties of Functions)
+Advanced GED: Quadratic Equations (Square Roots, Factoring, Quadratic Formula) | Data Displays and Distributions (Histograms, Box Plots, Two-Way Tables, Scatter Plots, Linear Models) | Systems of Equations | Functions (Notation, Graphs, Rate of Change, Polynomials)
+
+REASONING THROUGH LANGUAGE ARTS — READING:
+Pre-GED: Intermediate Vocabulary (Linking Opinions, Precise Language, Context, Word Structure: Prefixes/Roots/Suffixes, Building Vocabulary) | Gaining Meaning from Text (Word Attack Skills, Main Ideas and Details, Summarizing and Paraphrasing) | Analysis and Application (Quoting from a Text, Applying Information, Structure and Meaning, Checking Reasoning, Analyzing Events and Ideas, Comparing Accounts, Graphics in Text) | Literary Works (Figurative Language, Themes and Details, Character Traits, Comparing Literary Works)
+GED Prep: Advanced Vocabulary (Complex Word Context, Advanced Affixes and Roots, Using Reference Materials) | Gaining Meaning from Words (Determining Word Meanings, Impact of a Word, Transitional Words) | Sequence and Development (Procedures and Processes, Central Ideas, Evaluating a Claim) | Analysis and Synthesis (Point of View, Conclusions and Generalizations, Synthesizing Data, Relationships in Text, Science and Technical Texts, Theme, Text Structure)
+Advanced GED: Inferences (Making Inferences, Inferences about Main Ideas, Evidence for Inferences) | Comparing Texts (Similar Topics, Different Genres and Formats) | Authors Perspective (Purpose and Point of View, Rhetorical Techniques, Comparing Authors Positions, Primary and Secondary Sources) | The Development of a Text (Central Idea, Theme, Events, Claim, Argument Structure, Evaluating Support, Following a Procedure)
+
+REASONING THROUGH LANGUAGE ARTS — WRITING:
+Pre-GED: Organization (Paragraph Organization, Organizing Written Works, Essay Prompts) | Writing Basics (Opinions and Reasons, Topics and Development, Linking Words, Conclusions, Essay Prompts)
+GED Prep: Writing for a Purpose (Style and Tone, Language and Purpose, Planning and Drafting History and Science Writing) | Arguments (Elements of Persuasion, Building an Argument, Fallacies, Evaluating Arguments, Comparing Arguments) | Writing Arguments (Claims and Counterclaims, Developing Arguments, Cohesion and Clarity, Conclusions)
+Advanced GED: GED Extended Response (Understanding the Prompt, Writing Process and Timing, Practice Essay) | Evaluating Written Responses (Multiple Essay Prompts on: Internet, Eye for an Eye, Obesity, Value of Education, Heroes, Important Inventions, Favorite Place, Free Time, Future Dreams)
+
+REASONING THROUGH LANGUAGE ARTS — LANGUAGE:
+Pre-GED: Basic Spelling (Spelling Patterns, Strategies, Possessives, Contractions) | Capitalization (Proper Nouns, First Words and Titles) | Basic Sentences (Subjects and Verbs, Sentence Structure, Punctuation, Verb Forms) | Building Sentences (Fragments and Run-ons, Joining Sentences)
+GED Prep: Commas (Beginning/Ending/Inessential Phrases, Series, Joining Sentences, Unneeded Commas) | Spelling (i before e Rule, Adding Endings) | Clear Language (Avoiding Shifts in Person, Using Pronouns, Misplaced Modifiers) | Issues with Verbs (Choosing Verb Tenses, Verbs in Special Cases) | Common Spelling Errors (Words That Sound Alike/Similar, Often Misspelled Words)
+Advanced GED: Effective Language (Parallelism, Cliches, Wordiness and Awkward Language) | Advanced Punctuation (Quotes and Titles, Colons and Semicolons, Dashes and Hyphens, Ellipses) | Constructing Sentences for Meaning (Using Phrases, Using Clauses, Advanced Colons and Semicolons)
+
+SCIENCE:
+Pre-GED: Science Basics (Language of Scientific Investigation, Science Tables and Diagrams, Science Graphs) | The Scientific Method (Introduction to Scientific Investigation, Recognizing and Evaluating Evidence, Working with Evidence, Reading Investigations)
+GED Prep: Scientific Information (Working with Textual Data, Drawing Conclusions from Scientific Text, Predicting and Inferring from Visual Data, Relationships in Data, Using Scientific Formulas) | Designing an Experiment (Elements of Experimental Design, Understanding Experimental Design, Forming and Refining a Hypothesis, Verifying Accuracy, Designing or Modifying an Experiment) | Evaluating Scientific Investigations (Evaluating Scientific Conclusions, Working Backward from Results, Evaluating an Investigation, Judging the Relevance of Data)
+
+SOCIAL STUDIES:
+GED Prep: Reading in Social Studies (Identifying Supporting Details, Conclusions and Inferences, Understanding Words in Context) | Understanding Context and Point of View (Historical Context and Point of View, Identifying Propaganda, Identifying Bias, Evaluating Credibility of an Author)
+Advanced GED: Analyzing Social Studies Events and Ideas (Analyzing Cause and Effect, Analyzing Events Processes and Ideas) | Working with Social Studies Data (Text and Visual Data, Communicating Data, Predicting Trends, Analyzing Relationships Between Variables, Calculating Central Tendency) | Reasoning in Social Studies (Recognizing Unsupported Claims, Telling Fact from Opinion, Comparing Opinions and Accounts)`;
+    if(subject.includes('Mathematical')||subject.includes('Math')){
+      ctx=`CURRICULUM CONTEXT — GED Mathematical Reasoning (Essential Education platform):
+${eeCurriculum}
+FOCUS FOR THIS SUBJECT: Mathematical Reasoning. Units progress from Pre-GED (Whole Numbers through Graphs) to GED Prep (Algebra, Geometry, Statistics, Functions) to Advanced GED (Quadratics, Systems, Functions).
+Exam: 45 questions, 115 minutes, calculator allowed Part 2.
+Tutoring approach: Ask which specific unit and lesson the student is on in Essential Education. Use the exact lesson names above. Break problems into numbered steps. Connect to real-world Namibian examples.`;
+    } else if(subject.includes('Language')||subject.includes('RLA')||subject.includes('Reasoning Through')||subject.includes('Writing')||subject.includes('Reading')){
+      ctx=`CURRICULUM CONTEXT — GED Reasoning Through Language Arts (Essential Education platform):
+${eeCurriculum}
+FOCUS FOR THIS SUBJECT: RLA covers three strands — Reading, Writing, and Language. Ask the student which strand and unit they are working on.
+Exam: 150 minutes. Reading comprehension, 45-minute Extended Response essay, grammar/language editing.
+Tutoring approach: For Writing — teach claim-evidence-reasoning structure. For Reading — help find evidence in texts. For Language — focus on grammar rules and sentence construction. Always use the exact lesson names from Essential Education above.`;
+    } else if(subject.includes('Science')){
+      ctx=`CURRICULUM CONTEXT — GED Science (Essential Education platform):
+${eeCurriculum}
+FOCUS FOR THIS SUBJECT: Science. Progresses from Science Basics and Scientific Method to Scientific Information, Designing Experiments, and Evaluating Investigations.
+Exam: 90 minutes, 34 questions. Heavy focus on reading scientific data, graphs, and experimental reasoning.
+Tutoring approach: Ask which specific Science unit and lesson the student is on. Teach scientific reasoning and data interpretation. Use Namibian ecosystem and environmental examples.`;
+    } else if(subject.includes('Social Studies')){
+      ctx=`CURRICULUM CONTEXT — GED Social Studies (Essential Education platform):
+${eeCurriculum}
+FOCUS FOR THIS SUBJECT: Social Studies. Covers reading comprehension in social studies, context and point of view, analyzing events, working with data, and reasoning.
+Exam: 70 minutes, 35 questions. Tests document analysis, cause-and-effect reasoning, data interpretation.
+Tutoring approach: Ask which Social Studies unit the student is working on. Teach document analysis. Connect US/world history concepts to Namibian history and government where possible.`;
+    }
+  }
+
+  // ── MOBYMAX ──
+  else if(isMoby){
+    const mobyScienceCurriculum='\nMOBYMAX SCIENCE CURRICULUM — Grades 1-8:\n\nGRADE 1 SCIENCE:\nLife Science: Animals (What Do Animals Need, Classifying Animals) | Plants (What Do Plants Need, Parts of a Plant, Roots, Leaves) | Life Cycles (Living Things Grow and Change, Life Cycle of Frog/Butterfly/Bean Plant) | Heredity and Growth (Why Living Things Look Like Parents, How Behaviors Help Babies Survive) | Adaptations (Animal Adaptations, Plant Adaptations, Responding to Environments) | Plants and Animals Living Together (Plants and Animals Need Each Other, Food Chains)\nEarth Science: The Surface of the Earth (What Is Earth Made Of, Landforms and Bodies of Water) | How Does Earths Surface Change (Rocks, Soil, Weathering and Erosion) | Natural Resources (What Are Natural Resources, Pollution, Reducing Pollution) | Weather (What Is Weather, Rain Snow and Sleet, Measuring Weather) | The Water Cycle (What is the Water Cycle, Clouds) | Seasons (Four Seasons, Winter, Spring, Summer, Fall)\nPhysical Science: Matter (What is Matter, Five Senses, Measuring Matter, Solids Liquids and Gases) | Changes in Matter (Mixing Matter, Heating and Cooling, Changing Matter) | Movement Location and Forces (Movement, Location, Forces) | Magnets (What Are Magnets, North and South Poles) | Heat Sound and Light Energy (Energy, Heat, Sound, Light) | How Do People Use Energy (How We Use Energy, How Body Uses Energy)\nSpace: Patterns in the Sky (The Sun, Day and Night, The Night Sky)\n\nGRADE 2 SCIENCE:\nLife Science: Living and Nonliving Things (What Do Plants Need, What Do Animals Need) | Plants (Parts of a Plant, How Plants Spread Seeds, How Can We Group Plants, Plant Adaptations) | Animals (Vertebrates and Invertebrates, Types of Vertebrates, Types of Invertebrates, Animal Adaptations) | Plants and Animals Working Together (Diversity of Life, Relationships Between Living Things, Food Chains and Food Webs, How Food Webs Change) | Life Cycles (Living Things Grow and Change, Life Cycle of Plants and Animals) | Environments (What Is an Environment, How Do Environments Change) | Habitats (Forest, Wetland, Ocean, Desert Habitats)\nEarth Science: Water (Who Needs Water, How We Use Water, Fresh and Salt Water, States of Water, Water Cycle, Cleaning Water) | Rocks Minerals and Soil | Fossils (What Is a Fossil, What Can Fossils Teach Us, Fossils and Dinosaurs) | Changing Surface of Earth (Weathering and Erosion, How Surface Changes Quickly, Landforms) | Weather and Seasons (What Is Weather, Measuring Weather, Water Cycle, Extreme Weather, Four Seasons)\nPhysical Science: Matter (What is Matter, States of Matter, Changing States, Changing Matter, Mixtures) | Energy (What is Energy, Heat, Light, Sound) | Motion and Forces | Work and Simple Machines | Magnets\nSpace: Earth Moon Sun and Stars (The Sun, Night and Day, Seasons, Solar System)\n\nGRADE 3 SCIENCE:\nLife Science: Living and Nonliving Things (Cells, Plant and Animal Cells) | Heredity (Inherited Traits, Inherited vs Acquired Traits, Natural Selection) | Parts of Plants (What Do Plants Need, Parts of a Plant, Leaves Stems Roots) | Life Cycles of Plants (Pollination, Deciduous and Coniferous Trees, How Seeds Grow, Life Cycle of Plant, How Seeds Are Scattered) | Animal Needs and Adaptations (Physical and Behavioral Adaptations) | Classifying Vertebrates (Mammals, Birds, Fish, Reptiles, Amphibians) | Classifying Invertebrates (Arthropods, Worms, Mollusks, Aquatic Invertebrates) | Life Cycles of Animals (Butterfly, Frog, Mammals) | Ecosystems (Environments, Adaptations for Different Environments) | Examples of Ecosystems (Grassland, Desert, Tundra, Forests, Tropical Forests, Freshwater, Oceans) | Relationships in Ecosystems (Producers Consumers Decomposers, Food Chains, Food Webs) | Changing Environments | Extinct Species and Fossil Records\nEarth Science: Rocks Minerals and Soil (Minerals, Types of Rocks, Rock Cycle, Soil) | Earths Changing Surface (Layers of Earth, Landforms, Weathering, Erosion, Volcanoes, Earthquakes) | Natural Resources (Pollution, Renewable and Nonrenewable Resources, Reduce Reuse Recycle) | Weather (Atmosphere, Measuring Weather, Severe Storms, Weather Maps, Weather Patterns)\nPhysical Science: Matter (Properties, What Is Matter Made Of, States of Matter) | Measuring Matter (Mass, Volume, Density, Length) | How Does Matter Change (Physical and Chemical Changes, Mixtures and Solutions) | Forces and Motion (Position, Force, Speed, Gravity and Magnetism) | Simple Machines (Work, Simple Machines) | Energy (Potential and Kinetic Energy, Changing Energy Forms, How Energy Travels) | Sound Energy (How Sounds Are Made, How Sound Travels) | Light Energy (How Light Travels, Reflection and Refraction, Light and Colors) | Electrical Energy (Electric Charges, Currents and Circuits) | Thermal Energy\nSpace: Solar System (Solar System, Day and Night, Seasons, Phases of Moon, Patterns in Stars)\n\nGRADE 4 SCIENCE:\nLife Science: The Building Blocks of Life (Cells, Parts of the Cell) | Classifying Organisms (Classification System, Vertebrates, Invertebrates, Vascular and Nonvascular Plants) | Animal Adaptations (Heredity, What Are Adaptations, Physical Adaptations, Behavioral Adaptations, Extinction) | Parts of Plants (Photosynthesis, Parts of a Plant) | Plant Reproduction (Seeds and Flowers, How Seeds Are Made, Life Cycles of Plants) | Ecosystems (What Is an Ecosystem, Examples, Living Things, Producers Consumers Decomposers, Energy Flow) | Changes in Ecosystems (Balanced Ecosystem, Relationships, How Ecosystems Change, Human Impact) | The Human Body (Skeletal, Muscular, Respiratory, Circulatory, Digestive, Nervous Systems, Protecting the Body)\nEarth Science: Earths Water (Water Cycle, Severe Storms) | Weather and Earths Air (Atmosphere, Air Pressure, Landforms and Temperature, Air Masses, Fronts, Clouds) | Predicting and Measuring Weather (Air Pressure, Wind, Rain and Humidity, Tracking Weather, Climate) | Severe Storms (Hurricanes, Tornadoes) | Minerals Rocks and Soil (Minerals, Sedimentary Igneous Metamorphic Rocks, Rock Cycle, Soil, Fossils) | Earths Changing Surface (Layers of Earth, Weathering, Erosion, Volcanoes, Earthquakes) | Natural Resources (Fossil Fuels, Conservation)\nPhysical Science: Matter (States of Matter, Atoms Molecules Elements) | Measuring Matter (Mass, Volume, Density) | Mixtures and Solutions | Changes in Matter (Physical and Chemical Properties and Changes) | Energy (Kinetic and Potential) | Heat (Thermal Energy, How Heat Moves) | Electricity (Charges, Currents, Circuits) | Magnetism (Electromagnets) | Sound (Sound Waves, How Sound Travels) | Light (How Matter Affects Light, Lenses) | Forces and Motion (Motion, Force, Gravity, Friction) | Simple Machines (Lever, Wheel and Axle, Pulley, Inclined Plane, Wedge, Screw, Complex Machines)\nSpace: Patterns in the Sky (How Earth Moves, The Moon, Stars) | The Universe and Our Solar System (Parts of Universe, The Planets)\n\nGRADE 5 SCIENCE:\nLife Science: Classifying Organisms (Vertebrates, Invertebrates, Plants, Dichotomous Key) | Cells (What Are Cells, Parts of Cell, Cellular Respiration, Cells Working Together) | Circulatory System (Blood, Blood Vessels, The Heart) | Respiratory System | Digestive and Urinary Systems | Plants (Leaves, Stems and Roots, Plant Reproduction, Plant Growth) | Biomes (Land Biomes, Water Biomes) | Changes in Ecosystems (How Ecosystems Change, Restoration, Preservation) | Changes in Species (Heredity, Adaptations, Evolution)\nEarth Science: Water on Earth (Oceans, Fresh Water, Water Cycle, Clouds and Precipitation) | The Atmosphere and Weather (Atmosphere, Air Pressure, Air Movement, Air Masses) | Weather and Climate (Forecasting, Severe Weather, Climate) | Earths Structure and Plate Tectonics (Layers of Earth, Plate Tectonics, Earthquakes, Volcanoes) | Weathering and Erosion (Weathering, Erosion, Soil) | Rocks and Minerals (Minerals, Rock Cycle) | Natural Resources (Types, Energy Resources, Conservation)\nPhysical Science: Matter (Atoms Elements Molecules Compounds, Periodic Table, Physical and Chemical Properties) | State Changes Mixtures and Solutions | Physical and Chemical Changes (Chemical Reactions) | Forces and Motion (Motion Speed Velocity, Forces, Newtons Laws) | Simple Machines (Work and Power) | Sound (Sound Waves, How Sound Travels) | Light (Electromagnetic Radiation, Lenses) | Thermal Energy | Electricity (Charges, Currents, Circuits, Electromagnets)\nSpace: Our Solar System (The Sun, Planets, Earths Orbit, The Moon) | Beyond Our Solar System (Galaxies, Stars, Constellations)\n\nGRADE 6 SCIENCE:\nLife on Earth: Living Things, Evolution and Natural Selection, Classifying Living Things | Viruses Archaea and Bacteria (Viruses, Prokaryotes, Bacteria) | Protists and Fungi | Plants Part 1 (Introduction, Classification, Parts of a Plant) | Plants Part 2 (Life Cycles, Reproduction, Response to Environment, How Plants Are Beneficial) | Animals Part 1 (Introduction, Animal Bodies, Invertebrates, Vertebrates, Animal Movement, Getting Energy, Body Systems) | Animals Part 2 (Reproduction, Life Cycles, Animal Behavior)\nEarth Water and Atmosphere: Water on Earth (Importance of Water, Water Cycle, Surface Water, Groundwater) | Oceanography (Characteristics, Ocean Floor, Waves, Currents) | Earths Atmosphere (What Is Atmosphere, Layers, Heat Transfer, Wind) | Weather (Clouds, Air Masses, Severe Weather, Predicting Weather) | Climate (What Factors Affect Climate, Climate Change, Human Impact)\nSound and Light: Waves (Properties of Waves, When Waves Interact) | Sound (Properties of Sound, How We Hear, Technology and Sound) | Electromagnetic Waves (Electromagnetic Radiation, Spectrum, Technology) | Light (Light and Color, Mirrors and Lenses, How We See, Technology)\n\nGRADE 7 SCIENCE:\nHuman Body Systems: Introduction (From Cells to Systems, Organ Systems Working Together, Homeostasis) | Skeletal and Muscular Systems | Circulatory and Respiratory Systems (Lymphatic System, Cardiovascular System) | Digestive and Excretory Systems (Food as Nutrients, Digestive System, Excretory System) | Nervous and Endocrine Systems (Two Parts of Nervous System, How Neurons Send Messages, Sensory Information, Endocrine System) | Reproductive System | Immune System (Infectious Diseases, Body Defenses, Immunity, Noninfectious Diseases)\nEcology and Environment: Introduction (Organisms and Environment, Changing Populations, Interactions Between Organisms, Energy Transfer, Matter Cycles) | Biomes and Ecosystems (Biomes, Aquatic Ecosystems, Biogeography, Biodiversity) | Earth and Its Resources (How Earth Supports Life, Natural Resources, Managing Resources) | Environmental Issues (Humans and Environment, Air Pollution, Water Pollution, Ocean Issues, Waste and Recycling, Land Use, Human Population Growth) | Energy Use and Conservation (Nonrenewable and Renewable Energy Sources)\nEarths Surface and Structure: Introduction (Topography, Landforms, Maps and Globes) | Weathering Erosion and Deposition (Weathering, Erosion, Types of Erosion and Deposition) | Minerals Rocks and Soil | History of Earth (Geologic Time, Eras, Relative and Absolute Dating, Fossil Record) | Earths Structure (Earth System, Earths Layers) | Plate Tectonics (Continental Drift, Theory of Plate Tectonics, Earths Changing Crust) | Volcanoes and Earthquakes\nMotion Forces and Energy: Motion (What Is Motion, Speed Velocity Acceleration) | Forces (What Is Force, Newtons Laws of Motion, Momentum, Fluids and Pressure) | Work and Machines (Work and Power, Simple Machines) | Energy (Kinetic and Potential Energy, Types of Energy, Transformation and Conservation) | Thermal Energy (What Is Thermal Energy, Heat Transfer, How Materials Respond to Heat) | Electricity (Electric Charge, Currents, Circuits, Electricity in Daily Life) | Magnetism and Electromagnetism\n\nGRADE 8 SCIENCE:\nCells and Heredity: Cells (What Are Cells, Chemistry of Cells, Parts of Cell, Structure and Function) | Cell Processes (Photosynthesis and Cellular Respiration, Exchanging Materials, Cell Division) | Heredity (Genes and Heredity, Punnett Squares, Patterns of Inheritance) | Reproduction (Chromosomes, Meiosis, Sexual and Asexual Reproduction) | Human Genetics (Sex-Linked Genes, Genetic Disorders, Biotechnology) | DNA (What is DNA, Replication, How Proteins Are Made)\nSpace Science: Earth Moon and Sun (Objects in Night Sky, The Moon, Earths Patterns, Moons Patterns, Gravity and Orbits) | The Universe (What Is Universe, Measuring Universe, Formation, Classifying Stars, Life Cycle of Stars) | The Solar System (Historical Models, Our Solar System, The Sun, Inner and Outer Planets, Other Objects) | Space Exploration\nChemistry: Matter (What Is Matter, How Is Matter Measured, What Is Matter Made Of, How Does Matter Change) | States of Matter (Solids Liquids Gases, Changing States) | Atoms and Periodic Table (Atoms, Periodic Table, Metals, Nonmetals, Radioactive Elements) | Atomic Bonds (Ionic Bonds, Covalent Bonds, Metallic Bonds) | Chemical Reactions (Chemical Changes, Process of Chemical Reaction, Chemical Equations) | Organic Chemistry (Introduction, Organic Compounds) | Nuclear Reactions | Solutions Acids and Bases\nScience Technology and Engineering: Introduction to Science (Scientific Investigations, Scientific Knowledge) | Scientific Measurement and Data (Measurement, How Scientists Use Math, Tables and Graphs, Models and Simulations) | Technology and Engineering\n';
+    const mobySsCurriculum='\nMOBYMAX SOCIAL STUDIES CURRICULUM — Grades 1-8:\n\nGRADE 1 SOCIAL STUDIES:\nPeople Living Together: Cultures Customs and Beliefs (Culture, Customs, Sharing Culture, Beliefs, Respecting Other Cultures) | Culture in Our Communities (What Is a Community, Culture in Communities) | The Salad Bowl (Culture in the United States)\nMarkets: Needs and Wants (Making Choices) | Goods and Services | Jobs (Producers and Consumers, Factories, Skills) | Buying and Trading (How Money Moves) | Industry (Resources)\nThe Places We Live: Our Earth (Continents, Oceans) | Our Country and States (USA, Symbols)\nGovernment: Our Leaders (Three Levels of Government, Government Services, Rights, Voting) | Being Good Citizens (Rules, Laws, What Is a Citizen)\nChanging People and Places: Past Present and Future (First Americans, Starting a New Country) | Heroes from the Past | Inventions that Changed the World (Transportation, Communication)\nSkills: Citizenship Skills | Map and Globe Skills (Cardinal Directions, Map Key) | Geography Skills | Graphs Charts and Diagrams | Economic and Financial Skills\n\nGRADE 2 SOCIAL STUDIES:\nThen and Now: Changing People and Places (How People and Places Change, Learning About History, Traditions) | Inventing a New World (New Tools, Changing Transportation and Communication)\nThe Land Around Us: Using Maps (What Maps Tell Us, Using a Map, Map Grid) | Landforms (Continents and Oceans, Landforms, Regions of USA)\nGovernment: Citizenship | Levels of Government (What Is Government, Local State Federal Government, Choosing Leaders) | One World Many Nations (Different Governments, Nations Working Together)\nResources and Environment: Natural Resources (Land and Water, Conserving Resources) | Weather and Climate | Farming (Past and Today, Climate and Weather Effect, Farm to Table)\nThe Market: Producers and Consumers (Goods and Services, How Goods Are Made, Industry) | Work and Money (Needs and Wants, Buying) | Scarcity | Trading\nHeroes and Influential People: Inventors, Scientists and Explorers, Traits of a Hero\nSharing the Way We Live: What Is Culture, Sharing Culture\nSkills: Citizenship Skills (Symbols, Holidays, Pledge) | Map and Globe Skills | Geography Skills | Graphs Charts and Diagrams | Economic and Financial Skills (Money, Budgeting, Saving) | Study Skills (Cause and Effect, Compare and Contrast, Sequence)\n\nGRADE 3 SOCIAL STUDIES:\nCultures and Communities: Exploring Culture (What Is Culture, Cultural Regions, Holidays, Heritage) | Communities (Urban Suburban Rural, Changing Communities)\nGeography: World Geography (Continents and Oceans, Four Hemispheres, Absolute and Relative Locations) | Earths Geographical Features (Landforms, How Landforms Change, Importance of Water, Living on the Land, Human-Made Features) | Weather and Climate (How Climate Affects the Way We Live) | The Environment (Natural Resources, How People Affect Environment, Protecting Resources, Natural Disasters) | Exploring Regions (Geographic Regions of USA, Regions Around the World, Ecosystems)\nEconomics: Working Together (Producers and Consumers, Trade) | Resources (Three Kinds of Resources, Businesses and Industries) | Earning Saving and Spending (Work and Money, Making Economic Decisions)\nGovernment and Citizenship: Government (What Is Government, Levels, Three Branches) | Citizenship (Being a Good Citizen, Rights and Responsibilities, Laws and Consequences)\nHistory: Early America (American Indians, European Explorers and Settlers) | A New Nation (Americas Independence, Growing Country, The Civil War)\nSkills: Citizenship Skills | Map and Globe Skills (Latitude and Longitude) | Graphs Charts and Diagrams | Economic and Financial Skills (Advertising, Entrepreneurs) | Study Skills (Cause and Effect, Primary and Secondary Sources, Main Idea)\n\nGRADE 4 SOCIAL STUDIES:\nUS Geography: Introduction (The United States, Neighbors) | Physical Geography (Landforms, Natural Resources, Climates) | Human Geography (American People, Where Americans Live)\nRegions of the US: Introduction to Regions | Northeast (Geography Climate Resources, History and Modern Times) | Southeast (Geography Climate Resources, History and Modern Times) | Midwest (Geography Climate Resources, History and Modern Times) | Southwest (Geography Climate Resources) | West (Geography Climate Resources)\nUS History: Early History (Early America, European Exploration and Colonization) | Building a Nation (American Independence, Growing Nation) | The Civil War and Economic Changes | America in 20th Century (World Wars, Cold War, Modern History)\nThe US Economy: Introduction to Economics (What Is Economy, Parts, Types) | Money and Businesses | Trade and Globalization | Earning Saving and Spending\nUS Government: Our Democracy (Introduction, Founding, Citizens Rights) | How Does Government Work (Three Branches, State and Local Governments)\nSkills: Map Skills (Globe, Political Map, Physical Map, Latitude and Longitude) | Graphs Charts and Diagrams | Study Skills (Classify, Cause and Effect, Primary and Secondary Sources)\n\nGRADE 5 SOCIAL STUDIES:\nGeography: Geography of USA (Introduction, Landform Regions, Bodies of Water) | Human Geography (Where Americans Live, Americans and the Environment)\nEconomics: Introduction to Economics, Business, US and World Economy, Personal Finance\nGovernment: Introduction to US Government, Three Branches, Levels, Rights and Responsibilities\nHistory Early America: The First Americans (Ancient Civilizations, American Indians) | European Explorers (Age of Exploration, Spanish Expeditions, Columbian Exchange) | European Colonies (New Spain, English Colonies, Pilgrims and Puritans, French and Dutch Colonies) | British Colonies (Thirteen Colonies, Colonial Life, Slavery, French and Indian War)\nHistory A New Nation: Road to Independence (New Taxes, Rebellion) | American Independence and Revolutionary War (Declaring Independence, America Goes to War) | A New Government (Creating the Constitution, Ratification) | Growth Conflict and Change | Moving West\nHistory Civil War and Reconstruction: Buildup to Civil War | The Civil War | Reconstruction\nHistory Expansion and Industry: Expanding West (Mining, Ranching, Transcontinental Railroad, Homesteaders) | Expanding Overseas | Innovation Industry and Immigration (New Inventions, Changing Transportation, Immigration)\nHistory Progressive Era through WWII: Progressive Era (Labor Reform, Womens Rights) | World War I | Roaring Twenties and Great Depression (New Deal) | World War II Parts 1 and 2\nHistory America after WWII: Postwar Years | The Cold War | A Changing Nation (Civil Rights Movement) | Recent American History (Modern Challenges, War on Terror)\n\n\nGRADE 6 SOCIAL STUDIES — WORLD GEOGRAPHY:\nIntroduction to Geography of Earth: Our Planet (Introduction to Earth, Earth Science) | Earths Land and Water (Earths Land, Earths Water) | Weather Climate and Ecosystems (Climate Regions and Ecosystems around the World) | People and the Environment (Natural Resources, Land Use and Pollution) | Earths Population (Population Distribution and Density, Changing Populations) | Regions (Political Region, Cultural and Economic Regions)\nThe United States and Canada: The United States (Geography, US History Parts 1 and 2, USA in 21st Century) | Canada (Geography, Canadian History, Canadian Government, Modern Canada)\nMexico Central America and the Caribbean: Mexico (Geography, Mexican History, Modern Mexico) | Central America and the Caribbean (Geography, History, Governments, 21st Century)\nSouth America: Northern South America | Countries of the Andes | The Southern Cone | Brazil (Geography, Brazilian History, Modern Brazil)\nEurope: Western Europe (Geography, History, Governments and Economies) | Eastern Europe (Geography, History, Governments and Economies)\nRussia Southern Caucasus and Central Asia: Russia (Geography, Early Russia, Soviet Union and Russian Federation, Modern Russia) | Southern Caucasus and Central Asia\nAfrica: North Africa (Geography, History, 21st Century) | West and Central Africa | East and Southern Africa\nSouthwest Asia: Mesopotamian Region | Arabian Peninsula | Iran | Turkey and Cyprus\nSouth and Southeast Asia: South Asia | Southeast Asia\nEast Asia: China Taiwan and Mongolia | Japan | North Korea and South Korea\nAustralia and Pacific Islands | Antarctica\nGovernment and Citizenship: Introduction to Government, The US Government, American Citizenship\nEconomics: Introduction to Economics, Economies around the World, Business Industries and Trade, Personal Finances\nCulture and Religion: Exploring Culture, World Religions\nSkills: Map Skills (Resource Map, Population Density Map, Elevation Maps, Time Zone Map, Latitude and Longitude, Cartogram, Thematic Map) | Citizenship Skills (United Nations)\n\nGRADE 7 SOCIAL STUDIES — WORLD HISTORY:\nEarly Humans and First Civilizations: Prehistory (Uncovering Prehistory, First People, Paleolithic Era) | Migration Agriculture and Civilization (Migration and Adaptation, Agricultural Revolution, Cities and Civilizations)\nAncient Civilizations in Fertile Crescent: Early Civilizations (Sumer, Early and Later Mesopotamian Empires, Phoenicians and Lydians) | Ancient Egyptians (Government Society and Culture) | Ancient Egyptians and Kingdom of Kush (Trade Conflict, Kingdom of Kush) | Ancient Israelites\nAfrican Civilizations: Early West African Civilizations (African Geography, Ghana Empire, Mali and Songhai Empires) | Life in West African Empires (Social Structure, West African Culture) | Kush Aksum and East African City-States\nAncient India: The Vedic Age (Indus Valley, Indo-Aryan Civilization) | Hinduism Jainism and Buddhism | Maurya and Gupta Empires\nAncient and Imperial China: Ancient China (Huang River, Shang Dynasty, Zhou Dynasty, Religion and Philosophy) | Chinese Empire (Qin Dynasty, Han Dynasty, Silk Road) | China in Middle Ages (Tang and Song Dynasties, Mongol Empire, Ming and Qing Dynasties)\nJapan: Ancient Classical and Medieval Japan (Geography, Heian Period, Feudal Japan)\nAncient Greeks: Introduction (Early Cultures, Ancient Greek Society, Spartan Oligarchy, Athenian Democracy) | War and Conquest (Greeks at War, Macedonian Empire) | Ancient Greek Culture (Religion, Art and Architecture, Scholarly Work)\nAncient Romans: History of Roman Republic (Early Roman History, Roman Republic, War and End of Republic) | History of Roman Empire (Rise and Decline and Fall) | Life in Ancient Rome (Social Structure, Roman Culture, Roman Innovations)\n\nGRADE 8 SOCIAL STUDIES — WORLD HISTORY:\nByzantine Empire: History, Great Schism, Life in Byzantine Empire, Influence\nEarly Islamic Civilizations: Islam and Islamic Empires (Islam, Arab Muslim Empire, Other Muslim Empires) | Islamic Innovations and Culture (Life in Arab Muslim Empires, Islamic Innovations, Islamic Culture)\nCivilizations in the Americas: Olmecs Maya and Aztecs (Mesoamericas Early Inhabitants, The Maya, The Aztecs) | The Inca Empire (Rule, Incan Society) | North American Indians (Early Cultures, Eastern Woodlands and Great Plains, West and North)\nEurope during Middle Ages: Early Middle Ages (Europes Land, Migration Period, Charlemagne, Viking Invasions, Feudalism) | Life During High Middle Ages (Farming Trade Towns, Medieval Culture) | Medieval Holy Wars (The Crusades, Religious Conflict in Spain) | Power Struggles (Holy Roman Empire, Norman Invasion, Magna Carta) | Late Middle Ages (Hundred Years War, Black Death)\nRenaissance and Reformation: The Renaissance (Changing Times in Europe, Renaissance Ideas Spread, Renaissance Culture) | The Reformation (Challenges the Church, Counter-Reformation, Religion Divides Europe)\nEuropean Colonization of the Americas: Exploration Conquest and Economic Changes (Age of Exploration, Spanish Conquests) | European Colonies in the Americas (Spanish, Portuguese, North American Colonization, Colonization and Slavery)\nMonarchies and Revolutions: Monarchies in Early Modern Europe (Spanish, French, Russian, English Monarchies) | Scientific Revolution and Enlightenment | Age of Revolution (American Revolution, French Revolution)\nMoving Toward a Modern World: Nationalism and Imperialism (Growing Nationalism, Age of Imperialism, Struggles for Independence) | Industrial Revolutions (Industrial Revolution, Changing Economic Ideas) | World War I and World War II (WWI, Interwar Period, WWII) | World after WWII (Cold War, Changing World, Modern Economy, Environment)\n';
+    if(subject.includes('Math')){
+      const mathTopics={0:'Counting to 20, number recognition, basic shapes, patterns',1:'Addition and subtraction to 20, place value to 100, measurement basics, 2D shapes',2:'Addition/subtraction to 1000, place value, introduction to multiplication, fractions as equal parts',3:'Multiplication and division facts, fractions on number lines, area and perimeter, telling time',4:'Multi-digit multiplication, long division, equivalent fractions, decimals to hundredths, angles',5:'Fractions (add/subtract/multiply), decimals, volume, coordinate planes, algebraic patterns',6:'Ratios and proportional relationships, negative numbers, expressions and equations, statistics',7:'Proportional relationships, linear equations, geometry (scale drawings, circles), probability',8:'Linear functions, systems of equations, Pythagorean theorem, transformations, statistics'};
+      const topicList=mathTopics[Math.min(gradeNum,8)]||mathTopics[7];
+      ctx='CURRICULUM CONTEXT — MobyMax Mathematics (Grade '+gradeNum+'):\nKey topics at this level: '+topicList+'.\nMobyMax approach: Adaptive skill-based modules with placement tests, instruction videos, and practice problems.\nTutoring focus: Ask which specific MobyMax skill or module the student is on. Celebrate module completions.';
+    } else if(subject.includes('English')||subject.includes('Language')||subject.includes('Reading')){
+      const elaTopics={0:'Phonics, sight words, print concepts',1:'Phonics, sight words, simple sentences, reading fluency',2:'Phonics patterns, fluency, main idea, story elements, basic grammar',3:'Reading comprehension strategies, vocabulary, grammar, writing sentences',4:'Inferencing, summarising, figurative language, paragraph writing',5:'Text structure, author purpose, theme, multi-paragraph essays',6:'Analysing arguments, citing evidence, informational writing',7:'Literary analysis, research writing, grammar',8:'Rhetorical analysis, argumentative writing, advanced grammar'};
+      const topicList=elaTopics[Math.min(gradeNum,8)]||elaTopics[7];
+      ctx='CURRICULUM CONTEXT — MobyMax English/Language Arts (Grade '+gradeNum+'):\nKey topics: '+topicList+'.\nMobyMax approach: Adaptive reading and writing modules.\nTutoring focus: Ask what passage or writing task the student is working on. Help find evidence in text.';
+    } else if(subject.includes('Science')){
+      ctx='CURRICULUM CONTEXT — MobyMax Science (Grade '+gradeNum+'):\n'+mobyScienceCurriculum+'\nTutoring focus: Ask which specific Science unit and lesson the student is on in MobyMax. Use exact lesson names above. Connect to real-world Namibian examples.';
+    } else if(subject.includes('Social Studies')){
+      ctx='CURRICULUM CONTEXT — MobyMax Social Studies (Grade '+gradeNum+'):\n'+mobySsCurriculum+'\nTutoring focus: Ask which specific Social Studies unit and lesson the student is on in MobyMax. Use exact lesson names above.';
+    }
+  }
+  // ── CAMBRILEARN ──
+  else if(isCambri){
+    ctx=`CURRICULUM CONTEXT — Cambrilearn (Cambridge International Curriculum):
+Cambrilearn follows the Cambridge International curriculum (IGCSE and A-Level). Students watch video lessons, complete assignments, and take assessments online.
+Grade 8-9 typically: Cambridge Lower Secondary — core subjects with Cambridge-style assessments.
+Grade 10-11 typically: IGCSE subjects — each subject has a syllabus with specific topics, coursework, and exam preparation.
+Grade 12: Cambridge A-Level or equivalent.
+Tutoring focus: Ask the student which Cambridge subject and which specific syllabus topic they are working on in Cambrilearn today. Use Cambridge command words (describe, explain, analyse, evaluate, assess) when guiding answers. Help students understand mark schemes and how Cambridge examiners award marks.`;
+  }
+
+  // ── GENERAL K-12 ──
+  else {
+    ctx=`CURRICULUM CONTEXT — Grade ${gradeNum} ${subject}:
+Tutoring approach: Follow the Namibian curriculum scope for this grade. Ask the student what chapter, unit, or topic they are currently studying. Use their textbook language and terminology.`;
+  }
+
+  return ctx;
+}
+
+function buildSystemPrompt(s){
+  let nd='';
+  if(s.nd&&s.nd.length&&!s.nd.includes('None')){
+    nd='\n\nSPECIAL LEARNER SUPPORT INSTRUCTIONS:\n';
+    if(s.nd.includes('ADHD'))nd+='- Keep responses SHORT. One idea at a time. Numbered steps. Ask if ready before continuing.\n';
+    if(s.nd.includes('Dyslexia'))nd+='- Simple words. Short paragraphs. No walls of text. Use bullet points.\n';
+    if(s.nd.includes('Autism'))nd+='- Literal and predictable. No sarcasm or idioms. Clear expectations each step.\n';
+    if(s.nd.includes('Dyscalculia'))nd+='- Real-world examples for numbers. Go slowly. Visual descriptions.\n';
+    if(s.nd.includes('Anxiety'))nd+='- Acknowledge effort before correcting. Never say wrong without encouragement.\n';
+  }
+  const topicLine=s.topic?'\n\nCURRENT TOPIC/UNIT: '+s.topic+'. Focus your tutoring specifically on this topic today.':'';
+  const curriculumCtx=getCurriculumContext(s.grade,s.subject,s.platform);
+  return `You are a warm, patient, expert AI tutor for Metanoia Academy, Namibia.
+
+STUDENT PROFILE:
+Name: ${s.name} | Grade: ${s.grade} | Subject: ${s.subject} | Platform: ${s.platform}${topicLine}
+
+${curriculumCtx}${nd}
+
+TUTORING RULES:
+- Never give the answer directly. Always guide the student to find it through questions and hints.
+- After 2 failed attempts, give a small targeted hint then try again together.
+- After every explanation, check understanding with a simple question.
+- Use encouraging, age-appropriate language. Celebrate small wins.
+- Gently redirect if the student goes off-topic.
+- Keep responses concise — short paragraphs, numbered steps when helpful.
+- At natural pause points, summarise what was covered and suggest one specific thing to practise next.
+- Always ask the student what they are working on today if they haven't told you yet.\n- VISUAL SUPPORT: When a student struggles with a visual concept (cycles, systems, diagrams, processes, anatomy), add [SUGGEST_VISUAL] at the end of your response to trigger automatic visual help.`;
+}
+
+function formatMsg(t){return t.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\*(.*?)\*/g,'<em>$1</em>').replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br/>');}
+function addMessage(role,rawContent){
+  const msgs=document.getElementById('messages');
+  const div=document.createElement('div');div.className='msg '+role;
+  div.innerHTML='<div class="msg-avatar">'+(role==='ai'?'🧠':'👤')+'</div><div class="msg-bubble"><p>'+formatMsg(rawContent)+'</p></div>';
+  if(role==='ai'){
+    const bubble=div.querySelector('.msg-bubble');
+    const speakBtn=document.createElement('button');
+    speakBtn.className='speak-btn';
+    speakBtn.textContent='🔊';
+    speakBtn.title='Read aloud';
+    const captured=rawContent;
+    speakBtn.onclick=function(){
+      if(speakBtn.classList.contains('speaking')){
+        window.speechSynthesis.cancel();
+      } else {
+        speakText(captured,speakBtn);
+      }
+    };
+    bubble.appendChild(speakBtn);
+    autoSpeak(rawContent);
+  }
+  msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
+}
+function showTyping(){
+  const msgs=document.getElementById('messages');
+  const div=document.createElement('div');div.className='msg ai';div.id='typing-ind';
+  div.innerHTML='<div class="msg-avatar">🧠</div><div class="msg-bubble"><div class="typing"><span></span><span></span><span></span></div></div>';
+  msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
+}
+function removeTyping(){const el=document.getElementById('typing-ind');if(el)el.remove();}
+
+// ── VISUAL AND VIDEO SUPPORT ──
+
+// Khan Academy URL mapping by topic keywords
+function getKhanUrl(topic, grade){
+  const t = topic.toLowerCase();
+  const g = parseInt((grade||'').match(/\d+/)||[5]) || 5;
+  if(t.includes('food chain')||t.includes('food web')) return 'https://www.khanacademy.org/science/ms-biology/x17d61cc3b56c56e4:matter-and-energy-in-ecosystems/x17d61cc3b56c56e4:food-chains-and-food-webs/v/food-chains-and-food-webs';
+  if(t.includes('water cycle')) return 'https://www.khanacademy.org/science/ms-biology/x17d61cc3b56c56e4:biotic-and-abiotic-factors/x17d61cc3b56c56e4:the-water-cycle/v/the-water-cycle';
+  if(t.includes('photosynthesis')) return 'https://www.khanacademy.org/science/ms-biology/x17d61cc3b56c56e4:matter-and-energy-in-ecosystems/x17d61cc3b56c56e4:photosynthesis/v/photosynthesis';
+  if(t.includes('cell')||t.includes('cells')) return 'https://www.khanacademy.org/science/ms-biology/x17d61cc3b56c56e4:cells/x17d61cc3b56c56e4:intro-to-cells/v/introduction-to-cells';
+  if(t.includes('dna')) return 'https://www.khanacademy.org/science/ms-biology/x17d61cc3b56c56e4:heredity-genetics/x17d61cc3b56c56e4:dna/v/dna';
+  if(t.includes('fraction')) return 'https://www.khanacademy.org/math/cc-'+g+'th-grade-math/x2256d1d8f1b38a9b:fractions/cc-'+g+'th-fractions-intro/v/fraction-basics';
+  if(t.includes('algebra')||t.includes('equation')) return 'https://www.khanacademy.org/math/algebra/x2f8bb11595b61c86:foundation-algebra/x2f8bb11595b61c86:intro-equations/v/variables-expressions-and-equations';
+  if(t.includes('geometry')||t.includes('area')||t.includes('perimeter')) return 'https://www.khanacademy.org/math/geometry';
+  if(t.includes('volcano')||t.includes('earthquake')) return 'https://www.khanacademy.org/science/ms-earth-space-science/x0f02f37fd0d5cf3b:earth-materials-and-systems/x0f02f37fd0d5cf3b:plate-tectonics/v/plates-and-their-movement';
+  if(t.includes('solar system')||t.includes('planet')) return 'https://www.khanacademy.org/science/ms-earth-space-science/x0f02f37fd0d5cf3b:earth-in-space/x0f02f37fd0d5cf3b:our-solar-system/v/the-solar-system';
+  if(t.includes('evolution')||t.includes('adaptation')) return 'https://www.khanacademy.org/science/ms-biology/x17d61cc3b56c56e4:natural-selection/x17d61cc3b56c56e4:natural-selection-and-evolution/v/natural-selection-and-the-rock-pocket-mouse';
+  if(t.includes('civil war')) return 'https://www.khanacademy.org/humanities/us-history/civil-war-era';
+  if(t.includes('world war')||t.includes('wwi')||t.includes('wwii')) return 'https://www.khanacademy.org/humanities/world-history/euro-hist';
+  if(t.includes('percent')||t.includes('percentage')) return 'https://www.khanacademy.org/math/pre-algebra/pre-algebra-ratios-rates/pre-algebra-percent-word-problems/v/solving-percent-problems';
+  if(t.includes('multiplication')) return 'https://www.khanacademy.org/math/cc-third-grade-math/intro-to-multiplication/v/multiplication-as-equal-groups';
+  if(t.includes('division')) return 'https://www.khanacademy.org/math/cc-third-grade-math/intro-to-division/v/introduction-to-division';
+  if(t.includes('reading')||t.includes('comprehension')) return 'https://www.khanacademy.org/ela/cc-'+g+'th-grade-reading-vocab';
+  if(t.includes('essay')||t.includes('writing')) return 'https://www.khanacademy.org/ela/cc-'+g+'th-grade-reading-vocab/x3a585dd2:informational-reading-foundations';
+  if(t.includes('roman')||t.includes('rome')) return 'https://www.khanacademy.org/humanities/world-history/ancient-medieval/roman/v/roman-history-overview';
+  if(t.includes('greek')||t.includes('greece')) return 'https://www.khanacademy.org/humanities/world-history/ancient-medieval/ancient-greece/v/ancient-greece';
+  if(t.includes('egypt')) return 'https://www.khanacademy.org/humanities/world-history/ancient-medieval/ancient-egypt-hittites/v/ancient-egypt';
+  if(t.includes('islam')||t.includes('muslim')) return 'https://www.khanacademy.org/humanities/world-history/medieval-times/islamv/v/origin-of-islam';
+  // Default - Khan Academy search
+  return 'https://www.khanacademy.org/search?search_again=1&page_search_query='+encodeURIComponent(topic);
+}
+
+// YouTube search query builder
+function getYouTubeSearchQuery(topic, grade, subject){
+  const g = grade||'';
+  const gradeStr = g.includes('GED') ? 'GED' : g;
+  let query = topic + ' ' + gradeStr + ' ' + (subject||'');
+  // Add educational qualifiers
+  if(parseInt((g.match(/\d+/)||[0])[0]) <= 6) query += ' for kids explained';
+  else query += ' lesson explained';
+  return query.trim();
+}
+
+// Get YouTube video ID for common topics
+// Using reliable educational channel videos
+function getYouTubeVideoId(topic){
+  const t = topic.toLowerCase();
+  // Crash Course Kids and educational channels - verified IDs
+  if(t.includes('food chain')||t.includes('food web')) return 'ByV3MtnTOcI';
+  if(t.includes('water cycle')) return 'ncORPosDrjI';
+  if(t.includes('photosynthesis')) return 'sQK3Yr4Sc_k';
+  if(t.includes('cell')&&!t.includes('excel')) return '8IlzKri08kU';
+  if(t.includes('dna')) return 'AhsIF-cmoQQ';
+  if(t.includes('plate tectonic')) return 'ryrXAGY1dmE';
+  if(t.includes('volcano')) return 'LQwZwKS4s9E';
+  if(t.includes('earthquake')) return 'ryrXAGY1dmE';
+  if(t.includes('solar system')) return '92t1BR33tF0';
+  if(t.includes('fraction')) return 'c4MBHHd2goc';
+  if(t.includes('multiplication')) return 'mvOkMYCygps';
+  if(t.includes('division')) return 'gHTH6PKfpRk';
+  if(t.includes('algebra')||t.includes('equation')) return 'NybHckSEQBI';
+  if(t.includes('evolution')||t.includes('natural selection')) return 'P3GagfbA2vo';
+  if(t.includes('civil war')) return 'Afsm3uotLhU';
+  if(t.includes('world war 2')||t.includes('wwii')) return 'DwKPFT-RioU';
+  if(t.includes('world war 1')||t.includes('wwi')) return 'dHSQAEam2yc';
+  if(t.includes('digestive')) return 'Bg4SyXb4b9Q';
+  if(t.includes('nervous system')) return 'aet_oxqCPfQ';
+  if(t.includes('circulatory')||t.includes('heart')) return 'CWFyxn0qDEU';
+  if(t.includes('ecosystem')) return 'fPxQDScFBHM';
+  if(t.includes('rock cycle')) return 'rKhBmkCPFgs';
+  if(t.includes('climate change')) return 'G4H1N_yXBiA';
+  if(t.includes('roman')||t.includes('rome')) return 'oPmgBxmhP1Q';
+  if(t.includes('greek')||t.includes('greece')) return 'X15JHaEGM1o';
+  if(t.includes('egypt')) return 'hO1tzmi1V5g';
+  if(t.includes('percent')) return 'rR95Cbcjzus';
+  if(t.includes('human body')) return 'Bg4SyXb4b9Q';
+  if(t.includes('adaptation')) return 'OoOQRlFxKZA';
+  if(t.includes('heredity')||t.includes('genetics')) return 'CBezq1fFUEA';
+  return null;
+}
+
+// Add a video card to the chat
+function addVideoToChat(topic, grade, subject){
+  const msgs = document.getElementById('messages');
+  const videoId = getYouTubeVideoId(topic);
+  const khanUrl = getKhanUrl(topic, grade);
+  const searchQuery = getYouTubeSearchQuery(topic, grade, subject);
+  const youtubeSearchUrl = 'https://www.youtube.com/results?search_query='+encodeURIComponent(searchQuery);
+  const youtubeWatchUrl = videoId ? 'https://www.youtube.com/watch?v='+videoId : youtubeSearchUrl;
+  const thumbnailUrl = videoId ? 'https://img.youtube.com/vi/'+videoId+'/hqdefault.jpg' : null;
+
+  const div = document.createElement('div');
+  div.className = 'msg ai';
+  div.style.animation = 'fadeUp 0.3s ease';
+
+  let html = '<div class="msg-avatar">🎬</div><div class="msg-bubble">';
+  html += '<p style="font-size:13px;color:var(--muted);margin-bottom:8px">Here are some visual resources to help:</p>';
+
+  if(videoId && thumbnailUrl){
+    html += '<a href="'+youtubeWatchUrl+'" target="_blank" style="display:block;position:relative;border-radius:12px;overflow:hidden;margin-bottom:10px;text-decoration:none;max-width:420px">';
+    html += '<img src="'+thumbnailUrl+'" style="width:100%;display:block;border-radius:12px;" alt="'+topic+' video">';
+    html += '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3);border-radius:12px">';
+    html += '<div style="width:60px;height:60px;background:rgba(255,0,0,0.9);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px">▶</div></div>';
+    html += '<div style="background:var(--surface2);padding:8px 12px;font-size:12px;color:var(--muted);font-family:var(--mono)">▶ YouTube — '+topic+' (tap to watch)</div>';
+    html += '</a>';
+  }
+
+  html += '<div class="visual-row">';
+  if(!videoId){
+    html += '<a href="'+youtubeSearchUrl+'" target="_blank" class="khan-link">▶ Search YouTube: '+topic+'</a>';
+  }
+  html += '<a href="'+khanUrl+'" target="_blank" class="khan-link">📚 Khan Academy — '+topic+'</a>';
+  html += '</div>';
+  html += '</div>';
+
+  div.innerHTML = html;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+// Generate ASCII/text diagram for common concepts
+function getDiagram(topic){
+  const t = topic.toLowerCase();
+  if(t.includes('food chain')||t.includes('food web')){
+    return `FOOD CHAIN DIAGRAM:
+☀️ Sun (Energy Source)
+    ↓
+🌿 Producers (Plants) — make their own food
+    ↓
+🐛 Primary Consumers (Herbivores) — eat plants
+    ↓
+🐸 Secondary Consumers (Carnivores) — eat herbivores
+    ↓
+🦅 Tertiary Consumers (Top Predators)
+    ↓
+🍄 Decomposers (Fungi/Bacteria) — break down dead matter`;
+  }
+  if(t.includes('water cycle')){
+    return `WATER CYCLE DIAGRAM:
+☁️ Cloud Formation (Condensation)
+↙ ↓ ↘
+🌧️ Precipitation    ❄️ Snow
+↓                      ↓
+💧 Runoff ————→ 🏞️ Collection (Lakes/Oceans)
+                        ↓
+              🌡️ Evaporation ↑
+              🌿 Transpiration ↑
+                        ↑
+              ——— back to clouds ———`;
+  }
+  if(t.includes('cell')){
+    return `ANIMAL CELL DIAGRAM:
+┌─────────────────────────┐
+│   🔵 Cell Membrane      │
+│  ┌──────────────────┐   │
+│  │  🧠 Nucleus      │   │
+│  │  (DNA/Genes)     │   │
+│  └──────────────────┘   │
+│  ⚡ Mitochondria         │
+│  (Energy production)    │
+│  🔬 Ribosomes           │
+│  (Protein making)       │
+└─────────────────────────┘`;
+  }
+  if(t.includes('solar system')||t.includes('planet')){
+    return `SOLAR SYSTEM:
+☀️ Sun
+ • 🔴 Mercury (closest)
+ • 🟡 Venus
+ • 🔵 Earth ← We are here
+ • 🔴 Mars
+ • 🟠 Jupiter (largest)
+ • 🪐 Saturn (rings)
+ • 🔵 Uranus
+ • 🔵 Neptune (farthest)`;
+  }
+  if(t.includes('rock cycle')){
+    return `ROCK CYCLE:
+🌋 Magma/Lava
+    ↓ (cools)
+🪨 Igneous Rock
+    ↓ (weathering/erosion)
+🏔️ Sediment
+    ↓ (pressure/layers)
+🪨 Sedimentary Rock
+    ↓ (heat/pressure)
+🪨 Metamorphic Rock
+    ↓ (melts)
+🌋 Back to Magma`;
+  }
+  if(t.includes('plant') || t.includes('photosynthesis')){
+    return `PHOTOSYNTHESIS:
+☀️ Sunlight
+    +
+💧 Water (roots absorb)
+    +
+💨 CO₂ (leaves absorb)
+    ↓
+🌿 Chlorophyll in leaves
+    ↓
+🍬 Glucose (food/energy)
+    +
+💨 Oxygen (released)`;
+  }
+  if(t.includes('plate tectonic')||t.includes('earthquake')||t.includes('volcano')){
+    return `PLATE TECTONICS:
+🏔️ Continental Plate ←→ 🌊 Oceanic Plate
+
+Types of Boundaries:
+→ ← Convergent (plates collide → mountains/volcanoes)
+← → Divergent (plates apart → new crust)
+↕ ↕ Transform (plates slide → earthquakes)
+
+🌋 Volcanoes form at convergent/divergent boundaries
+💥 Earthquakes occur along fault lines`;
+  }
+  return null;
+}
+
+function addDiagramToChat(topic){
+  const diagram = getDiagram(topic);
+  if(!diagram) return false;
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'msg ai';
+  div.style.animation = 'fadeUp 0.3s ease';
+  div.innerHTML = '<div class="msg-avatar">📊</div><div class="msg-bubble"><p style="font-size:12px;color:var(--muted);margin-bottom:6px">Visual diagram:</p><div class="diagram-box">'+diagram.split('<').join('&lt;').split('>').join('&gt;').split('\n').join('<br/>')+'</div></div>';
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return true;
+}
+
+// Detect topic from conversation for auto-suggest
+function detectTopicFromMessage(msg){
+  const keywords = ['food chain','food web','water cycle','photosynthesis','cell','dna','volcano','earthquake','solar system','planet','fraction','multiplication','division','algebra','equation','ecosystem','evolution','adaptation','civil war','world war','rock cycle','plate tectonic','human body','digestive','nervous','circulatory','percent','roman','greek','egypt','islam'];
+  const m = msg.toLowerCase();
+  for(const kw of keywords){
+    if(m.includes(kw)) return kw;
+  }
+  return null;
+}
+
+function requestVisual(){
+  const s = appState.currentStudent;
+  if(!s){return;}
+  // Try to detect topic from last few messages
+  const recentMsgs = appState.conversationHistory.slice(-4).map(m=>m.content).join(' ');
+  const topic = detectTopicFromMessage(recentMsgs) || (s.topic||s.subject||'');
+  if(!topic){
+    addMessage('ai','What topic would you like a video or diagram for? Type the topic and I will find resources for you.');
+    return;
+  }
+  const diagramAdded = addDiagramToChat(topic);
+  addVideoToChat(topic, s.grade, s.subject);
+  if(!diagramAdded){
+    logActivity('purple','🎬',s.name+' requested visual for: '+topic,'purple');
+  }
+}
+
+async function sendAI(userMsg,isGreeting=false){
+  if(!isGreeting)appState.conversationHistory.push({role:'user',content:userMsg});
+  appState.isLoading=true;
+  const btn=document.getElementById('send-btn');if(btn)btn.disabled=true;
+  showTyping();
+  const s=appState.currentStudent;
+  const messages=isGreeting?[{role:'user',content:userMsg}]:[...appState.conversationHistory];
+  try{
+    const res=await fetch('/.netlify/functions/chat',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({messages,system:buildSystemPrompt(s)})
+    });
+    const data=await res.json();removeTyping();
+    if(!res.ok){addMessage('ai','Sorry, there was an issue: '+(data.error?.message||'Unknown error'));}
+    else{
+      let reply=data.content[0].text;
+      const suggestVisual=reply.includes('[SUGGEST_VISUAL]');
+      reply=reply.replace('[SUGGEST_VISUAL]','').trim();
+      appState.conversationHistory.push({role:'assistant',content:reply});
+      addMessage('ai',reply);
+      if(suggestVisual&&s){
+        const topic=detectTopicFromMessage(reply)||s.topic||s.subject||'';
+        if(topic){
+          setTimeout(function(){
+            addDiagramToChat(topic);
+            addVideoToChat(topic,s.grade,s.subject);
+          },800);
+        }
+      }
+      if(s&&appState.activeSessions[s.id])logActivity('purple','💬',s.name+' — AI responded','purple');
+    }
+  }catch(e){removeTyping();addMessage('ai','Connection error: '+e.message);}
+  appState.isLoading=false;if(btn)btn.disabled=false;
+}
+
+// ── TEXT TO SPEECH (ElevenLabs) ──
+let ttsEnabled=true;
+let currentAudio=null;
+let recognition=null;
+let isListening=false;
+
+function toggleMute(){
+  ttsEnabled=!ttsEnabled;
+  const btn=document.getElementById('mute-btn');
+  if(btn){
+    btn.textContent=ttsEnabled?'🔊 Audio on':'🔇 Audio off';
+    btn.classList.toggle('muted',!ttsEnabled);
+  }
+  if(!ttsEnabled&&currentAudio){
+    currentAudio.pause();currentAudio=null;
+    document.querySelectorAll('.speak-btn').forEach(b=>{b.classList.remove('speaking');b.textContent='🔊';});
+  }
+}
+
+function stripMarkdown(text){
+  return text
+    .replace(/\*\*(.*?)\*\*/g,'$1')
+    .replace(/\*(.*?)\*/g,'$1')
+    .replace(/#{1,6}\s/g,'')
+    .replace(/`(.*?)`/g,'$1')
+    .replace(/<[^>]+>/g,'')
+    .trim();
+}
+
+async function speakText(text, btnEl){
+  // Stop any current audio
+  if(currentAudio){currentAudio.pause();currentAudio=null;}
+  document.querySelectorAll('.speak-btn').forEach(b=>{b.classList.remove('speaking');b.textContent='🔊';});
+  if(btnEl){btnEl.classList.add('speaking');btnEl.textContent='⏳';}
+  // Split long text at sentence boundaries, speak first 1000 chars
+  const stripped=stripMarkdown(text);
+  const clean=stripped.length>1000 ? stripped.slice(0,stripped.lastIndexOf('.',1000)+1)||stripped.slice(0,1000) : stripped;
+  console.log('[TTS] Calling ElevenLabs for:', clean.slice(0,50));
+  try{
+    const res=await fetch('/.netlify/functions/tts',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({text:clean})
+    });
+    console.log('[TTS] Response status:', res.status, 'Content-Type:', res.headers.get('content-type'));
+    if(!res.ok){
+      const errText=await res.text();
+      console.error('[TTS] Error response:', errText);
+      throw new Error('TTS failed: '+res.status+' '+errText);
+    }
+    const blob=await res.blob();
+    console.log('[TTS] Got audio blob, size:', blob.size, 'type:', blob.type);
+    if(blob.size < 100){
+      console.error('[TTS] Blob too small, likely not audio');
+      throw new Error('Invalid audio response');
+    }
+    const url=URL.createObjectURL(blob);
+    const audio=new Audio(url);
+    currentAudio=audio;
+    if(btnEl){btnEl.textContent='⏹';}
+    audio.onended=function(){currentAudio=null;if(btnEl){btnEl.classList.remove('speaking');btnEl.textContent='🔊';}URL.revokeObjectURL(url);};
+    audio.onerror=function(e){
+      console.error('[TTS] Audio playback error:', e);
+      currentAudio=null;if(btnEl){btnEl.classList.remove('speaking');btnEl.textContent='🔊';}
+      fallbackSpeak(clean,btnEl);
+    };
+    audio.play().then(()=>console.log('[TTS] Playing!')).catch(e=>{console.error('[TTS] Play error:',e);fallbackSpeak(clean,btnEl);});
+  }catch(e){
+    console.error('[TTS] Exception:', e.message);
+    if(btnEl){btnEl.classList.remove('speaking');btnEl.textContent='🔊';}
+    fallbackSpeak(clean,btnEl);
+  }
+}
+
+function fallbackSpeak(text,btnEl){
+  if(!window.speechSynthesis)return;
+  const utter=new SpeechSynthesisUtterance(text);
+  utter.rate=0.9;utter.pitch=1;
+  const voices=window.speechSynthesis.getVoices();
+  const v=voices.find(v=>v.lang.startsWith('en')&&v.name.toLowerCase().includes('female'))||voices.find(v=>v.lang.startsWith('en'))||voices[0];
+  if(v)utter.voice=v;
+  if(btnEl){utter.onend=function(){btnEl.classList.remove('speaking');btnEl.textContent='🔊';};}
   window.speechSynthesis.speak(utter);
 }
 
-function showScreen(id){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  window.scrollTo(0,0);
+function autoSpeak(text){
+  if(!ttsEnabled)return;
+  setTimeout(function(){speakText(text,null);},300);
 }
 
-function selectMood(el,emoji,name){
-  document.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('selected'));
-  el.classList.add('selected');
-  state.mood=emoji;state.moodName=name;
-}
-
-function completeCheckin(){
-  const name=document.getElementById('student-name').value.trim();
-  if(!name){alert('Please enter your name!');return;}
-  if(!state.moodName){alert('Please select how you are feeling!');return;}
-  state.name=name;
-  state.focus=parseInt(document.getElementById('focus-level').value);
-  document.getElementById('greeting-name').textContent='Hi, '+name+'! '+state.mood;
-  document.getElementById('greeting-mood').textContent=state.mood;
-  const hour=new Date().getHours();
-  const timeGreet=hour<12?'Good morning':'hour<17'?'Good afternoon':'Good evening';
-  document.getElementById('greeting-message').textContent='Mood: '+state.moodName+' · Focus level: '+state.focus+'/10';
-  buildAlerts();
-  buildSchedule();
-  buildSubjectTabs();
-  document.getElementById('note-student').value=name;
-  document.getElementById('timer-greeting').textContent='Let\'s focus, '+name+'!';
-  document.getElementById('schedule-greeting').textContent=name+'\'s day at Metanoia';
-  document.getElementById('timer-tip').textContent=tips[Math.floor(Math.random()*tips.length)];
-  showScreen('dash-screen');
-}
-
-function buildAlerts(){
-  const area=document.getElementById('alert-area');
-  area.innerHTML='';
-  if(state.focus<=3){
-    area.innerHTML+='<div class="alert-card red"><span class="alert-icon">🔴</span><div><strong>Low focus today</strong> — Let\'s start with the Focus Timer and a short movement break before learning.</div></div>';
-  } else if(state.focus<=5){
-    area.innerHTML+='<div class="alert-card yellow"><span class="alert-icon">🟡</span><div><strong>Moderate focus</strong> — Use the Pomodoro timer today and keep tasks small and achievable.</div></div>';
-  } else {
-    area.innerHTML+='<div class="alert-card green"><span class="alert-icon">🟢</span><div><strong>Great focus level!</strong> — You are ready to tackle your learning today. Let\'s go!</div></div>';
+// ── VOICE INPUT ──
+function toggleVoice(){
+  if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){
+    alert('Voice input is not supported in this browser. Please use Chrome.');
+    return;
   }
-  if(state.moodName==='Sad'||state.moodName==='Worried'){
-    area.innerHTML+='<div class="alert-card yellow" style="margin-top:8px"><span class="alert-icon">💛</span><div><strong>'+state.name+' may need extra support</strong> — Check in verbally before starting tasks. Consider a calming activity first.</div></div>';
+  if(isListening){stopVoice();return;}
+  const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+  recognition=new SpeechRecognition();
+  recognition.continuous=false;
+  recognition.interimResults=true;
+  recognition.lang='en-ZA';
+  const micBtn=document.getElementById('mic-btn');
+  const input=document.getElementById('user-input');
+  recognition.onstart=function(){
+    isListening=true;
+    if(micBtn){micBtn.classList.add('listening');micBtn.textContent='⏹';}
+    if(input)input.placeholder='Listening... speak now';
+  };
+  recognition.onresult=function(e){
+    let transcript='';
+    for(let i=e.resultIndex;i<e.results.length;i++){transcript+=e.results[i][0].transcript;}
+    if(input){input.value=transcript;autoResize(input);}
+  };
+  recognition.onend=function(){
+    isListening=false;
+    if(micBtn){micBtn.classList.remove('listening');micBtn.textContent='🎤';}
+    if(input)input.placeholder='Type or speak your question...';
+    // Auto-send if we got something
+    const text=input?input.value.trim():'';
+    if(text){setTimeout(function(){sendMessage();},300);}
+  };
+  recognition.onerror=function(e){
+    isListening=false;
+    if(micBtn){micBtn.classList.remove('listening');micBtn.textContent='🎤';}
+    if(input)input.placeholder='Type or speak your question...';
+    if(e.error==='not-allowed')alert('Microphone access was denied. Please allow microphone access in your browser settings.');
+  };
+  recognition.start();
+}
+
+function stopVoice(){
+  if(recognition)recognition.stop();
+  isListening=false;
+  const micBtn=document.getElementById('mic-btn');
+  if(micBtn){micBtn.classList.remove('listening');micBtn.textContent='🎤';}
+}
+
+function sendMessage(){
+  if(appState.isLoading)return;
+  const input=document.getElementById('user-input');
+  const text=input.value.trim();if(!text)return;
+  input.value='';input.style.height='auto';
+  addMessage('user',text);sendAI(text);
+}
+function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}
+function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,140)+'px';}
+
+let currentParentReport='';
+function openParentReport(studentId){
+  const s=appState.students.find(x=>x.id===studentId);
+  if(!s){alert('Student not found.');return;}
+  const notes=loadSessionNotes(studentId);
+  if(!notes.length){
+    alert('No session notes found for '+s.name+' yet. Complete at least one tutoring session first.');
+    return;
   }
-}
-
-function buildSchedule(){
-  scheduleItems.forEach(s=>s.done=false);
-  const grid=document.getElementById('schedule-grid');
-  grid.innerHTML='';
-  scheduleItems.forEach(function(item,i){
-    const div=document.createElement('div');
-    div.className='slot';div.id='slot-'+i;
-
-    const timeEl=document.createElement('div');timeEl.className='slot-time';timeEl.textContent=item.time;
-    const iconEl=document.createElement('div');iconEl.className='slot-icon';iconEl.textContent=item.icon;
-    const infoEl=document.createElement('div');infoEl.className='slot-info';
-    const h4=document.createElement('h4');h4.textContent=item.title;
-    const p=document.createElement('p');p.textContent=item.desc;
-    infoEl.appendChild(h4);infoEl.appendChild(p);
-
-    const speakBtn=document.createElement('button');
-    speakBtn.className='nd-speak-btn';
-    speakBtn.title='Read aloud';
-    speakBtn.style.cssText='background:none;border:none;font-size:16px;cursor:pointer;padding:4px;margin-right:6px;flex-shrink:0';
-    speakBtn.textContent='🔊';
-    const slotText=item.title+'. '+item.desc;
-    speakBtn.onclick=function(){ndSpeak(slotText,speakBtn);};
-
-    const checkEl=document.createElement('div');
-    checkEl.className='slot-check';
-    checkEl.onclick=function(){toggleSlot(i);};
-
-    div.appendChild(timeEl);div.appendChild(iconEl);div.appendChild(infoEl);
-    div.appendChild(speakBtn);div.appendChild(checkEl);
-    grid.appendChild(div);
-  });
-  updateProgress();
-}
-function toggleSlot(i){
-  scheduleItems[i].done=!scheduleItems[i].done;
-  const slot=document.getElementById('slot-'+i);
-  const check=slot.querySelector('.slot-check');
-  slot.classList.toggle('done',scheduleItems[i].done);
-  check.textContent=scheduleItems[i].done?'✓':'';
-  updateProgress();
-}
-
-function updateProgress(){
-  const done=scheduleItems.filter(s=>s.done).length;
-  const pct=Math.round(done/scheduleItems.length*100);
-  document.getElementById('schedule-progress').style.width=pct+'%';
-  document.getElementById('progress-label').textContent=done+' of '+scheduleItems.length+' done';
-}
-
-function setMode(mode,el){
-  document.querySelectorAll('.mode-tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
-  resetTimer();
-  if(mode==='pomodoro'){pomodoroMode={focus:25,rest:5,rounds:4};}
-  else if(mode==='short'){pomodoroMode={focus:15,rest:3,rounds:4};}
-  else{pomodoroMode={focus:10,rest:2,rounds:4};}
-  updateTimerDisplay(pomodoroMode.focus*60);
-  document.getElementById('timer-phase').textContent='Focus time';
-}
-
-function updateTimerDisplay(secs){
-  const m=Math.floor(secs/60),s=secs%60;
-  document.getElementById('timer-display').textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;
-  const total=timerPhase==='focus'?pomodoroMode.focus*60:pomodoroMode.rest*60;
-  const pct=secs/total;
-  const circumference=616;
-  document.getElementById('timer-circle').style.strokeDashoffset=circumference*(1-pct);
-  document.getElementById('timer-circle').style.stroke=timerPhase==='focus'?'var(--accent)':'var(--accent2)';
-}
-
-function toggleTimer(){
-  if(timerRunning){
-    clearInterval(timerInterval);timerRunning=false;
-    document.getElementById('timer-start-btn').textContent='▶ Resume';
-  } else {
-    if(!timerSeconds){
-      timerSeconds=pomodoroMode.focus*60;timerTotal=timerSeconds;timerPhase='focus';
+  const combinedNotes=notes.map((n,i)=>'SESSION '+(i+1)+' ('+new Date(n.date).toLocaleDateString('en-ZA')+')\n'+n.note).join('\n\n---\n\n');
+  document.getElementById('parent-modal-overlay').classList.add('open');
+  document.getElementById('parent-meta').textContent=s.name+' · '+s.grade+' · Week ending '+new Date().toLocaleDateString('en-ZA');
+  document.getElementById('parent-body').innerHTML='<div class="generating"><span>Generating parent report</span><span class="gen-dots"><span>.</span><span>.</span><span>.</span></span></div>';
+  currentParentReport='';
+  // Pull ND hub observations for this student from localStorage
+  let ndSection='';
+  try{
+    const ndRaw=localStorage.getItem('metanoia_nd_notes');
+    console.log('ND notes raw:', ndRaw);
+    const ndNotes=JSON.parse(ndRaw||'[]');
+    console.log('ND notes parsed:', ndNotes.length, 'entries');
+    console.log('Looking for student:', s.name.toLowerCase().trim());
+    const studentNdNotes=ndNotes.filter(n=>{
+      console.log('Comparing:', JSON.stringify(n.student.toLowerCase().trim()), 'vs', JSON.stringify(s.name.toLowerCase().trim()));
+      return n.student.toLowerCase().trim()===s.name.toLowerCase().trim();
+    });
+    console.log('Matched ND notes:', studentNdNotes.length);
+    if(studentNdNotes.length){
+      ndSection='\n\nND HUB OBSERVATIONS:\n'+studentNdNotes.slice(0,5).map(n=>
+        n.date+' '+n.time+': '+n.text+(n.tags.length?' ['+n.tags.join(', ')+']':'')
+      ).join('\n');
     }
-    timerRunning=true;
-    document.getElementById('timer-start-btn').textContent='⏸ Pause';
-    timerInterval=setInterval(()=>{
-      timerSeconds--;updateTimerDisplay(timerSeconds);
-      if(timerSeconds<=0){
-        clearInterval(timerInterval);timerRunning=false;
-        if(timerPhase==='focus'){
-          pomodoroRound++;
-          document.getElementById('dot'+(pomodoroRound-1)).classList.add('filled');
-          document.getElementById('pomodoro-count').textContent='Round '+pomodoroRound+' of '+pomodoroMode.rounds+' — Break time!';
-          document.getElementById('timer-phase').textContent='Break time!';
-          timerPhase='rest';timerSeconds=pomodoroMode.rest*60;
-          document.getElementById('timer-start-btn').textContent='▶ Start break';
-          document.getElementById('timer-tip').textContent=tips[Math.floor(Math.random()*tips.length)];
-        } else {
-          timerPhase='focus';timerSeconds=pomodoroMode.focus*60;
-          document.getElementById('timer-phase').textContent='Focus time';
-          document.getElementById('timer-start-btn').textContent='▶ Start round';
-          document.getElementById('pomodoro-count').textContent='Round '+(pomodoroRound+1)+' of '+pomodoroMode.rounds;
-        }
-        updateTimerDisplay(timerSeconds);
-      }
-    },1000);
+  }catch(e){console.error('ND notes error:',e);}
+
+  fetch('/.netlify/functions/parentreport',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      studentName:s.name,grade:s.grade,subject:s.subject,
+      platform:s.platform,sessionNotes:combinedNotes+ndSection,
+      centerName:appState.center,tutorName:appState.tutorName
+    })
+  }).then(r=>r.json()).then(data=>{
+    if(!data.content){document.getElementById('parent-body').innerHTML='<div class="notes-content">Error: '+(data.error?.message||'Unknown error')+'</div>';return;}
+    currentParentReport=data.content[0].text;
+    document.getElementById('parent-body').innerHTML='<div class="notes-content">'+currentParentReport.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>';
+    if(s&&s.id) markParentReportSent(s.id);
+    renderDashboard();
+  }).catch(e=>{document.getElementById('parent-body').innerHTML='<div class="notes-content">Error: '+e.message+'</div>';});
+}
+function downloadParentReport(){
+  if(!currentParentReport){alert('Report not ready yet.');return;}
+  const blob=new Blob([currentParentReport],{type:'text/plain'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='parent-report-'+new Date().toISOString().slice(0,10)+'.txt';
+  a.click();
+}
+function copyParentReport(){
+  if(!currentParentReport){alert('Report not ready yet.');return;}
+  navigator.clipboard.writeText(currentParentReport).then(()=>alert('Copied! You can now paste it into WhatsApp or email.')).catch(()=>alert('Could not copy. Please use Download instead.'));
+}
+function closeParentModal(){document.getElementById('parent-modal-overlay').classList.remove('open');currentParentReport='';}
+
+function endSession(){
+  const s=appState.currentStudent;
+  const history=[...appState.conversationHistory];
+  let mins=0;
+  if(s&&appState.activeSessions[s.id]){
+    mins=Math.floor((Date.now()-appState.activeSessions[s.id].start)/60000);
+    delete appState.activeSessions[s.id];
+    if(appState.sessionTimers[s.id]){clearInterval(appState.sessionTimers[s.id]);delete appState.sessionTimers[s.id];}
+    logActivity('green','✅',s.name+' session ended · '+mins+'m','green');
+    appState.todayCount++;
+  }
+  if(s) saveSessionStat(s.id, mins, s.subject);
+  appState.currentStudent=null;appState.conversationHistory=[];
+  if(appState.role==='tutor'){renderDashboard();show('dashboard-screen');}
+  else{pinEntry='';updatePinDots();show('login-screen');}
+  if(s&&history.length>1) generateSessionNotes(s,mins,history);
+}
+
+let currentNotes='';
+async function generateSessionNotes(s,mins,history){
+  document.getElementById('notes-modal-overlay').classList.add('open');
+  document.getElementById('notes-meta').textContent=s.name+' · '+s.grade+' · '+s.subject;
+  document.getElementById('notes-body').innerHTML='<div class="generating"><span>Generating session notes</span><span class="gen-dots"><span>.</span><span>.</span><span>.</span></span></div>';
+  currentNotes='';
+  try{
+    const res=await fetch('/.netlify/functions/summary',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        studentName:s.name,grade:s.grade,subject:s.subject,
+        platform:s.platform,duration:mins,conversation:history
+      })
+    });
+    const data=await res.json();
+    if(!res.ok||!data.content){
+      document.getElementById('notes-body').innerHTML='<div class="notes-content">Could not generate notes: '+(data.error?.message||'Unknown error')+'</div>';
+      return;
+    }
+    currentNotes=data.content[0].text;
+    document.getElementById('notes-body').innerHTML='<div class="notes-content">'+currentNotes.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>';
+    if(s&&s.id){saveSessionNote(s.id,currentNotes);dbSaveNote(s.id,currentNotes,appState.center);}
+  }catch(e){
+    document.getElementById('notes-body').innerHTML='<div class="notes-content">Error generating notes: '+e.message+'</div>';
   }
 }
 
-function resetTimer(){
-  clearInterval(timerInterval);timerRunning=false;timerSeconds=0;timerPhase='focus';pomodoroRound=0;
-  updateTimerDisplay(pomodoroMode.focus*60);
-  document.getElementById('timer-start-btn').textContent='▶ Start';
-  document.getElementById('timer-phase').textContent='Focus time';
-  document.getElementById('pomodoro-count').textContent='Round 1 of '+pomodoroMode.rounds;
-  for(let i=0;i<4;i++)document.getElementById('dot'+i).classList.remove('filled');
+function downloadNotes(){
+  if(!currentNotes){alert('Notes not ready yet.');return;}
+  const blob=new Blob([currentNotes],{type:'text/plain'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='session-notes-'+new Date().toISOString().slice(0,10)+'.txt';
+  a.click();
 }
 
-function buildSubjectTabs(){
-  const tabs=document.getElementById('subject-tabs');
-  tabs.innerHTML='';
-  Object.keys(taskLibrary).forEach((subj,i)=>{
-    const btn=document.createElement('div');
-    btn.className='subj-tab'+(i===0?' active':'');
-    btn.textContent=subj;
-    btn.onclick=function(){
-      document.querySelectorAll('.subj-tab').forEach(t=>t.classList.remove('active'));
-      btn.classList.add('active');
-      buildTasks(subj);
-    };
-    tabs.appendChild(btn);
-  });
-  buildTasks('Mathematics');
+function closeNotesModal(){
+  document.getElementById('notes-modal-overlay').classList.remove('open');
+  currentNotes='';
 }
 
-function buildTasks(subj){
-  const cards=document.getElementById('task-cards');
-  cards.innerHTML='';
-  (taskLibrary[subj]||[]).forEach(function(task,i){
-    const key=subj+'_'+i;
-    const div=document.createElement('div');
-    div.className='task-card'+(taskDone[key]?' done-task':'');
-    div.id='task-'+key;
-
-    const numEl=document.createElement('div');numEl.className='task-num';numEl.textContent=i+1;
-
-    const bodyEl=document.createElement('div');bodyEl.className='task-body';
-    const h4=document.createElement('h4');h4.textContent=task.title;
-    const p=document.createElement('p');p.textContent=task.desc;
-    const tip=document.createElement('span');tip.className='task-tip';tip.textContent='💡 '+task.tip;
-
-    const speakBtn=document.createElement('button');
-    speakBtn.className='nd-speak-btn';
-    speakBtn.style.cssText='background:none;border:1.5px solid #e2e8f8;border-radius:8px;font-size:13px;cursor:pointer;padding:4px 10px;margin-top:8px;color:#6b7280;display:block';
-    speakBtn.textContent='🔊 Read aloud';
-    const taskText=task.title+'. '+task.desc+'. Tip: '+task.tip;
-    speakBtn.onclick=function(){ndSpeak(taskText,speakBtn);};
-
-    bodyEl.appendChild(h4);bodyEl.appendChild(p);bodyEl.appendChild(tip);bodyEl.appendChild(speakBtn);
-
-    const checkEl=document.createElement('div');
-    checkEl.className='task-check';
-    checkEl.textContent=taskDone[key]?'✓':'';
-    checkEl.onclick=function(){toggleTask(key,subj);};
-
-    div.appendChild(numEl);div.appendChild(bodyEl);div.appendChild(checkEl);
-    cards.appendChild(div);
-  });
-}
-function toggleTask(key,subj){
-  taskDone[key]=!taskDone[key];
-  buildTasks(subj);
+function doLogout(){
+  appState={role:'tutor',apiKey:'',tutorName:'',center:'Windhoek',students:[],activeSessions:{},sessionTimers:{},todayCount:0,activityLog:[],currentStudent:null,conversationHistory:[],isLoading:false};
+  show('login-screen');
 }
 
-function toggleObs(el){el.classList.toggle('selected');}
-
-function saveNote(){
-  const student=document.getElementById('note-student').value.trim();
-  const text=document.getElementById('note-text').value.trim();
-  if(!student||!text){alert('Please fill in the student name and your observation.');return;}
-  const tags=Array.from(document.querySelectorAll('.obs-chip.selected')).map(c=>c.textContent);
-  const note={student,text,tags,date:new Date().toLocaleDateString('en-ZA',{day:'numeric',month:'short',year:'numeric'}),time:new Date().toLocaleTimeString('en-ZA',{hour:'2-digit',minute:'2-digit'})};
-  savedNotes.unshift(note);
-  try{localStorage.setItem('metanoia_nd_notes',JSON.stringify(savedNotes));}catch(e){}
-  document.getElementById('note-text').value='';
-  document.querySelectorAll('.obs-chip').forEach(c=>c.classList.remove('selected'));
-  renderNotes();
+function openAddModal(){document.getElementById('add-modal').classList.add('open');}
+function closeAddModal(){
+  document.getElementById('add-modal').classList.remove('open');
+  document.querySelectorAll('#add-modal .nd-chip').forEach(c=>{c.classList.remove('selected');c.querySelector('input').checked=false;});
+  document.getElementById('m-name').value='';
+  document.getElementById('m-pin').value='';
+  document.getElementById('m-topic').value='';
 }
 
-function renderNotes(){
-  const container=document.getElementById('saved-notes');
-  if(!savedNotes.length){container.innerHTML='';return;}
-  container.innerHTML=savedNotes.map((n,i)=>`
-    <div class="saved-note">
-      <div class="saved-note-header">
-        <strong>${n.student}</strong>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span>${n.date} ${n.time}</span>
-          <button class="copy-note-btn" onclick="copyNote(${i})">Copy</button>
-        </div>
-      </div>
-      <p>${n.text}</p>
-      ${n.tags.length?'<div class="saved-note-tags">'+n.tags.map(t=>'<span class="saved-note-tag">'+t+'</span>').join('')+'</div>':''}
-    </div>`).join('');
+function addStudent(){
+  const name=document.getElementById('m-name').value.trim();
+  const pin=document.getElementById('m-pin').value.trim();
+  if(!name){alert('Please enter a student name.');return;}
+  if(!pin||!/^\d{4}$/.test(pin)){alert('Please enter a 4-digit PIN number.');return;}
+  const chips=document.querySelectorAll('#add-modal .nd-chip.selected');
+  const nd=Array.from(chips).map(c=>c.querySelector('input').value);
+  const s={
+    id:'s'+Date.now(),name,pin,
+    grade:document.getElementById('m-grade').value,
+    subject:document.getElementById('m-subject').value,
+    platform:document.getElementById('m-platform').value,
+    topic:document.getElementById('m-topic').value.trim(),
+    nd:nd.length?nd:['None'],
+    color:getColor(name)
+  };
+  appState.students.push(s);
+  dbSaveStudent(s,appState.center).then(()=>console.log('Student saved to cloud'));
+  logActivity('gold','➕',name+' added to roster','gold');
+  closeAddModal();renderDashboard();
 }
 
-function copyNote(i){
-  const n=savedNotes[i];
-  const text='LEARNER OBSERVATION — '+n.student+'\nDate: '+n.date+' '+n.time+'\n\n'+n.text+(n.tags.length?'\n\nObservations: '+n.tags.join(', '):'');
-  navigator.clipboard.writeText(text).then(()=>alert('Copied! Paste into WhatsApp or email.')).catch(()=>alert('Could not copy automatically.'));
+function removeStudent(id){
+  if(!confirm('Remove this student from the roster?'))return;
+  const s=appState.students.find(x=>x.id===id);
+  appState.students=appState.students.filter(x=>x.id!==id);
+  if(appState.activeSessions[id]){delete appState.activeSessions[id];if(appState.sessionTimers[id]){clearInterval(appState.sessionTimers[id]);delete appState.sessionTimers[id];}}
+  if(s){logActivity('gold','🗑️',s.name+' removed from roster','gold');dbDeleteStudent(id);}
+  renderDashboard();
 }
-
-function resetCheckin(){
-  document.getElementById('student-name').value='';
-  document.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('selected'));
-  document.getElementById('focus-level').value=5;
-  state={name:'',mood:'😊',moodName:'Good',focus:5};
-}
-
-// Load saved notes
-try{const saved=localStorage.getItem('metanoia_nd_notes');if(saved){savedNotes=JSON.parse(saved);renderNotes();}}catch(e){}
-updateTimerDisplay(25*60);
 </script>
 </body>
 </html>
