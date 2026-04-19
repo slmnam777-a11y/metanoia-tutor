@@ -328,6 +328,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
       <span id="subject-pill" class="subject-pill">Subject</span>
       <a href="/nd-hub.html" target="_blank" class="mute-btn" style="text-decoration:none;background:rgba(16,185,129,0.12);border-color:rgba(16,185,129,0.3);color:#10b981;font-size:12px">🌟 ND Hub</a>
       <button class="mute-btn" id="mute-btn" onclick="toggleMute()">🔊 Audio on</button>
+      <button class="mute-btn" style="background:rgba(245,158,11,0.12);border-color:rgba(245,158,11,0.3);color:#f59e0b;font-size:12px" onclick="showStudentProgressReport()">📊 My Progress</button>
       <button class="icon-btn" onclick="endSession()">end session</button>
     </div>
   </div>
@@ -380,6 +381,22 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
     <div class="modal-footer">
       <button class="cancel" onclick="closeAddModal()">Cancel</button>
       <button class="confirm" onclick="addStudent()">Add student</button>
+    </div>
+  </div>
+</div>
+
+<!-- PROGRESS REPORT MODAL -->
+<div class="modal-overlay" id="progress-modal-overlay">
+  <div class="notes-modal" id="progress-modal" style="max-width:600px">
+    <h3>📊 Weekly Progress Report</h3>
+    <p class="notes-meta" id="progress-meta">Generating report...</p>
+    <div id="progress-body" style="white-space:pre-wrap;font-size:13px;line-height:1.7;max-height:400px;overflow-y:auto;padding:1rem;background:var(--surface2);border-radius:10px;border:1px solid var(--border)">
+      <div class="generating"><span>Generating progress report</span><span class="gen-dots"><span>.</span><span>.</span><span>.</span></span></div>
+    </div>
+    <div class="notes-actions" style="margin-top:1rem">
+      <button class="dl-btn" onclick="downloadProgressPDF()">⬇ Download PDF</button>
+      <button class="dl-btn" style="background:rgba(16,185,129,0.1);border-color:rgba(16,185,129,0.3);color:var(--accent2)" onclick="copyProgressReport()">📋 Copy</button>
+      <button class="dl-btn" style="background:transparent;border-color:var(--border);color:var(--muted)" onclick="closeProgressModal()">Close</button>
     </div>
   </div>
 </div>
@@ -805,12 +822,18 @@ function renderDashboard(){
     reportBtn.className='card-btn secondary';
     reportBtn.textContent='Parent report';
     reportBtn.onclick=function(){openParentReport(sid);};
+    const progressBtn=document.createElement('button');
+    progressBtn.className='card-btn';
+    progressBtn.style.cssText='background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.3);color:#f59e0b;font-size:11px;padding:6px 10px';
+    progressBtn.textContent='📊 Progress report';
+    progressBtn.onclick=function(){openProgressReport(sid);};
     const removeBtn=document.createElement('button');
     removeBtn.className='card-btn danger';
     removeBtn.textContent='Remove';
     removeBtn.onclick=function(){removeStudent(sid);};
     actions.appendChild(startBtn);
     actions.appendChild(reportBtn);
+    actions.appendChild(progressBtn);
     actions.appendChild(removeBtn);
     grid.appendChild(card);
   });
@@ -1632,6 +1655,157 @@ function removeStudent(id){
   if(s){logActivity('gold','🗑️',s.name+' removed from roster','gold');dbDeleteStudent(id);}
   renderDashboard();
 }
+
+// ── PROGRESS REPORT ──
+let currentProgressReport = '';
+let currentProgressStudent = null;
+
+async function openProgressReport(sid){
+  const s = appState.students.find(x=>x.id===sid);
+  if(!s) return;
+  currentProgressStudent = s;
+  currentProgressReport = '';
+
+  // Show modal
+  document.getElementById('progress-modal-overlay').style.display='flex';
+  document.getElementById('progress-meta').textContent = s.name + ' — Week of ' + getWeekLabel();
+  document.getElementById('progress-body').innerHTML = '<div class="generating"><span>Generating progress report</span><span class="gen-dots"><span>.</span><span>.</span><span>.</span></span></div>';
+
+  // Get stats and notes
+  const stats = getStudentStats(sid);
+  let notes = '';
+  try {
+    const dbNotes = await dbGetNotes(sid);
+    notes = dbNotes.map(n=>n.note).join(' | ');
+  } catch(e) {}
+
+  // Also try localStorage notes
+  if(!notes) {
+    try {
+      const localKey = 'metanoia_notes_' + sid;
+      const localNotes = JSON.parse(localStorage.getItem(localKey) || '[]');
+      notes = localNotes.slice(-5).map(n=>n.note||n).join(' | ');
+    } catch(e) {}
+  }
+
+  // Get total mins from stats
+  let totalMins = 0;
+  try {
+    const statsKey = 'metanoia_stats_' + sid;
+    const weekKey = getWeekKey();
+    const stored = JSON.parse(localStorage.getItem(statsKey) || '{}');
+    const weekData = stored[weekKey];
+    if(weekData && weekData.sessions) {
+      totalMins = weekData.sessions.reduce((a,b)=>a+(b.duration||0), 0);
+    }
+  } catch(e) {}
+
+  try {
+    const res = await fetch('/.netlify/functions/progressreport', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        student: s,
+        stats: {...stats, totalMins},
+        notes: notes,
+        weekLabel: getWeekLabel()
+      })
+    });
+    const data = await res.json();
+    if(data.report) {
+      currentProgressReport = data.report;
+      document.getElementById('progress-body').textContent = data.report;
+    } else {
+      document.getElementById('progress-body').textContent = 'Could not generate report. Please try again.';
+    }
+  } catch(e) {
+    document.getElementById('progress-body').textContent = 'Connection error. Please check your internet and try again.';
+  }
+}
+
+function getWeekLabel(){
+  const now = new Date();
+  const start = new Date(now);
+  start.setDate(now.getDate() - now.getDay() + 1);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  const fmt = d => d.toLocaleDateString('en-ZA', {day:'numeric', month:'short'});
+  return fmt(start) + ' – ' + fmt(end) + ', ' + now.getFullYear();
+}
+
+function closeProgressModal(){
+  document.getElementById('progress-modal-overlay').style.display='none';
+}
+
+function copyProgressReport(){
+  if(!currentProgressReport) return;
+  navigator.clipboard.writeText(currentProgressReport).then(()=>{
+    const btn = event.target;
+    btn.textContent='✓ Copied!';
+    setTimeout(()=>{btn.textContent='📋 Copy';}, 2000);
+  });
+}
+
+function downloadProgressPDF(){
+  if(!currentProgressReport || !currentProgressStudent) return;
+  const s = currentProgressStudent;
+  const week = getWeekLabel();
+
+  // Build a styled HTML page and print to PDF
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; color: #1a1a2e; background: #fff; padding: 40px; }
+  .header { background: linear-gradient(135deg, #7b6ef6, #10b981); color: white; padding: 24px 32px; border-radius: 12px; margin-bottom: 24px; }
+  .header h1 { font-size: 22px; margin-bottom: 4px; }
+  .header p { font-size: 13px; opacity: 0.85; }
+  .meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+  .meta-card { background: #f8f9ff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px; }
+  .meta-card label { font-size: 10px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px; }
+  .meta-card strong { font-size: 14px; color: #1a1a2e; }
+  .report-body { background: #f8f9ff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; white-space: pre-wrap; font-size: 13px; line-height: 1.8; color: #374151; }
+  .footer { margin-top: 24px; text-align: center; font-size: 11px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 16px; }
+  .logo { font-size: 13px; font-weight: bold; margin-bottom: 4px; }
+  @media print { body { padding: 20px; } }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>Weekly Progress Report</h1>
+  <p>Metanoia Academy · ${week}</p>
+</div>
+<div class="meta-grid">
+  <div class="meta-card"><label>Student</label><strong>${s.name}</strong></div>
+  <div class="meta-card"><label>Grade</label><strong>${s.grade}</strong></div>
+  <div class="meta-card"><label>Subject</label><strong>${s.subject}</strong></div>
+  <div class="meta-card"><label>Platform</label><strong>${s.platform}</strong></div>
+  <div class="meta-card"><label>Current Topic</label><strong>${s.topic||'General'}</strong></div>
+  <div class="meta-card"><label>Center</label><strong>${appState.center||'Metanoia Academy'}</strong></div>
+</div>
+<div class="report-body">${currentProgressReport.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+<div class="footer">
+  <div class="logo">Metanoia Academy — AI Tutor Platform</div>
+  <div>metanoia-learn.com · Confidential — For parent/guardian use only</div>
+</div>
+</body>
+</html>`;
+
+  const win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+  setTimeout(()=>{ win.print(); }, 500);
+}
+
+// Allow student to view their own progress report at end of session
+async function showStudentProgressReport(){
+  const s = appState.currentStudent;
+  if(!s) return;
+  await openProgressReport(s.id);
+}
+
 </script>
 </body>
 </html>
