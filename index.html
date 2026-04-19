@@ -243,15 +243,16 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 
     <!-- TUTOR LOGIN -->
     <div id="tutor-fields">
-      <div class="field"><label>Tutor name</label><input type="text" id="tutor-name" placeholder="e.g. Ms. Jacobs"/></div>
+      <div class="field"><label>Username</label><input type="text" id="tutor-username" placeholder="Enter username" autocomplete="username"/></div>
+      <div class="field"><label>Password</label><input type="password" id="tutor-password" placeholder="Enter password" autocomplete="current-password"/></div>
       <div class="field"><label>Center</label><select id="tutor-center"><option>Windhoek</option><option>Rehoboth</option></select></div>
     </div>
 
     <!-- STUDENT LOGIN -->
     <div id="student-fields" style="display:none">
       <div class="field">
-        <label>Select your name</label>
-        <select id="s-name-select"><option value="">— Choose your name —</option></select>
+        <label>Your name</label>
+        <input type="text" id="s-name-input" placeholder="Type your first name..." autocomplete="off" oninput="onStudentNameInput()"/>
       </div>
       <div id="pin-section" style="display:none">
         <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px">Enter your PIN</label>
@@ -276,7 +277,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
           <button class="pin-btn" onclick="pinBack()">⌫</button>
         </div>
       </div>
-      <div id="no-students-msg" style="display:none;font-size:13px;color:var(--muted);text-align:center;padding:1rem 0;font-family:var(--mono)">No students registered yet.<br/>Please ask your tutor to add you.</div>
+      <div id="no-students-msg" style="display:none;font-size:13px;color:var(--danger);text-align:center;padding:0.5rem 0;font-family:var(--mono)">Name not found. Please check your name and try again.</div>
     </div>
 
     <div id="login-error" class="error-msg"></div>
@@ -587,18 +588,25 @@ function setRole(r){
   if(r==='student') populateStudentSelect();
 }
 
+function onStudentNameInput(){
+  const name=document.getElementById('s-name-input').value.trim();
+  const pinSection=document.getElementById('pin-section');
+  const noMsg=document.getElementById('no-students-msg');
+  noMsg.style.display='none';
+  if(name.length>=2){
+    pinSection.style.display='block';
+    pinEntry='';updatePinDots();
+  } else {
+    pinSection.style.display='none';
+  }
+}
+
 function populateStudentSelect(){
-  const sel=document.getElementById('s-name-select');
-  sel.innerHTML='<option value="">— Loading students... —</option>';
-  // Load from Supabase using last known center or default
+  // Load students from Supabase for PIN validation
   const center=appState.center||'Windhoek';
   dbGetStudents(center).then(function(rows){
     appState.students=rows;
-    buildStudentDropdown();
-  }).catch(function(){
-    // fallback
-    buildStudentDropdown();
-  });
+  }).catch(function(){});
 }
 
 function buildStudentDropdown(){
@@ -635,21 +643,44 @@ function updatePinDots(){
 
 function studentPinLogin(){
   const err=document.getElementById('login-error');
-  const sid=document.getElementById('s-name-select').value;
-  if(!sid){err.textContent='Please select your name.';err.style.display='block';return;}
-  const student=appState.students.find(s=>s.id===sid);
-  if(!student){err.textContent='Student not found.';err.style.display='block';return;}
-  if(pinEntry!==student.pin){
-    err.textContent='Incorrect PIN. Please try again.';err.style.display='block';
-    const card=document.querySelector('.login-card');card.classList.add('shake');
-    setTimeout(()=>card.classList.remove('shake'),400);
-    pinEntry='';updatePinDots();
-    return;
+  const nameInput=document.getElementById('s-name-input').value.trim().toLowerCase();
+  const noMsg=document.getElementById('no-students-msg');
+  noMsg.style.display='none';
+  if(!nameInput){err.textContent='Please enter your name.';err.style.display='block';return;}
+  if(pinEntry.length<4){err.textContent='Please enter your full 4-digit PIN.';err.style.display='block';return;}
+  // Load students if not already loaded
+  const tryLogin=function(students){
+    const student=students.find(function(s){
+      return s.name.toLowerCase().trim()===nameInput||s.name.toLowerCase().trim().startsWith(nameInput);
+    });
+    if(!student){
+      noMsg.style.display='block';
+      err.textContent='Name not recognised. Please check your name.';err.style.display='block';
+      pinEntry='';updatePinDots();return;
+    }
+    if(pinEntry!==student.pin){
+      err.textContent='Incorrect PIN. Please try again.';err.style.display='block';
+      const card=document.querySelector('.login-card');card.classList.add('shake');
+      setTimeout(function(){card.classList.remove('shake');},400);
+      pinEntry='';updatePinDots();return;
+    }
+    err.style.display='none';
+    appState.currentStudent=student;
+    appState.conversationHistory=[];
+    startChatSession(student);
+  };
+  if(appState.students.length){
+    tryLogin(appState.students);
+  } else {
+    // Load from Supabase first
+    const center='Windhoek'; // load all centers
+    Promise.all([dbGetStudents('Windhoek'),dbGetStudents('Rehoboth')]).then(function(results){
+      appState.students=[...results[0],...results[1]];
+      tryLogin(appState.students);
+    }).catch(function(){
+      err.textContent='Could not connect. Please check your internet.';err.style.display='block';
+    });
   }
-  err.style.display='none';
-  appState.currentStudent=student;
-  appState.conversationHistory=[];
-  startChatSession(student);
 }
 
 function saveStudents(){
@@ -694,14 +725,32 @@ async function loadStudents(){
 }
 function doLogin(){
   const err=document.getElementById('login-error');err.style.display='none';
-  const name=document.getElementById('tutor-name').value.trim();
-  const center=document.getElementById('tutor-center').value;
-  if(!name){err.textContent='Please enter your name.';err.style.display='block';return;}
-  appState.tutorName=name;appState.center=center;
-  document.getElementById('tutor-badge-name').textContent=name;
-  document.getElementById('dash-subtitle').textContent='Metanoia Academy · '+center;
-  renderDashboard();show('dashboard-screen');
-  loadStudents().then(function(){renderDashboard();});
+  if(appState.role==='tutor'){
+    const username=document.getElementById('tutor-username').value.trim();
+    const password=document.getElementById('tutor-password').value.trim();
+    const center=document.getElementById('tutor-center').value;
+    if(!username||!password){err.textContent='Please enter your username and password.';err.style.display='block';return;}
+    const btn=document.getElementById('login-btn');
+    btn.textContent='Signing in...';btn.disabled=true;
+    fetch('/.netlify/functions/auth',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username,password})
+    }).then(function(r){return r.json();}).then(function(data){
+      btn.textContent='Continue →';btn.disabled=false;
+      if(!data.success){err.textContent=data.error||'Invalid credentials.';err.style.display='block';return;}
+      appState.tutorName='Tutor';appState.center=center;
+      document.getElementById('tutor-badge-name').textContent='Tutor';
+      document.getElementById('dash-subtitle').textContent='Metanoia Academy · '+center;
+      renderDashboard();show('dashboard-screen');
+      loadStudents().then(function(){renderDashboard();});
+    }).catch(function(e){
+      btn.textContent='Continue →';btn.disabled=false;
+      err.textContent='Connection error. Please try again.';err.style.display='block';
+    });
+  } else {
+    studentPinLogin();
+  }
 }
 
 function renderDashboard(){
