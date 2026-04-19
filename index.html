@@ -36,10 +36,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
 .field input,.field select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-family:var(--font);font-size:14px;outline:none;transition:border-color 0.2s;appearance:none}
 .field input:focus,.field select:focus{border-color:var(--accent)}
-.api-field{margin-bottom:1.25rem}
-.api-field label{display:block;font-size:12px;color:var(--accent3);margin-bottom:6px}
-.api-field input{width:100%;background:rgba(247,183,49,0.06);border:1px solid rgba(247,183,49,0.25);border-radius:10px;padding:10px 14px;color:var(--text);font-family:var(--mono);font-size:13px;outline:none;transition:border-color 0.2s}
-.api-field input:focus{border-color:var(--accent3)}
 .primary-btn{width:100%;background:linear-gradient(135deg,var(--accent),#5a4fd4);border:none;border-radius:12px;padding:13px;color:#fff;font-family:var(--font);font-size:15px;font-weight:500;cursor:pointer;transition:opacity 0.2s,transform 0.15s;margin-top:0.5rem}
 .primary-btn:hover{opacity:0.9;transform:translateY(-1px)}
 .error-msg{background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.25);border-radius:10px;padding:10px 14px;font-size:13px;color:#ff8080;margin-top:10px;display:none}
@@ -132,6 +128,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .nd-chip.selected{border-color:var(--accent);color:var(--text);background:rgba(123,110,246,0.1)}
 .nd-chip .dot2{width:8px;height:8px;border-radius:50%;background:var(--border);flex-shrink:0;transition:background 0.2s}
 .nd-chip.selected .dot2{background:var(--accent)}
+/* Cambridge badge on subject dropdown */
+.cambri-badge{display:inline-block;font-size:10px;background:rgba(78,205,196,0.12);color:var(--accent2);border:1px solid rgba(78,205,196,0.25);border-radius:6px;padding:2px 7px;margin-left:6px;font-family:var(--mono);vertical-align:middle}
 
 /* CHAT */
 #chat-screen{flex-direction:column;height:100vh}
@@ -189,7 +187,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .stat-mini-item strong{font-size:13px;color:var(--text);font-family:var(--font)}
 .shake{animation:shake 0.4s ease}
 @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
-.video-card-label{font-size:11px;color:var(--muted);padding:6px 12px;font-family:var(--mono)}
 .khan-link{display:inline-flex;align-items:center;gap:8px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);border-radius:10px;padding:8px 14px;font-size:13px;color:var(--accent2);text-decoration:none;margin-top:8px;transition:all 0.2s;font-weight:600}
 .khan-link:hover{background:rgba(16,185,129,0.2)}
 .diagram-box{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-top:10px;font-family:var(--mono);font-size:12px;line-height:1.8;color:var(--text)}
@@ -356,14 +353,35 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
     </div>
     <div class="field-row">
       <div class="field"><label>Grade / Level</label>
-        <select id="m-grade"><option>Grade R</option><option>Grade 1</option><option>Grade 2</option><option>Grade 3</option><option>Grade 4</option><option>Grade 5</option><option>Grade 6</option><option selected>Grade 7</option><option>Grade 8</option><option>Grade 9</option><option>Grade 10</option><option>Grade 11</option><option>Grade 12</option><option>GED Preparation</option></select>
+        <select id="m-grade" onchange="onModalGradeChange()">
+          <option>Early Years A</option>
+          <option>Early Years B</option>
+          <option>Primary Stage 1</option>
+          <option>Primary Stage 2</option>
+          <option>Primary Stage 3</option>
+          <option>Primary Stage 4</option>
+          <option>Primary Stage 5</option>
+          <option selected>Primary Stage 6</option>
+          <option>Foundation I</option>
+          <option>Foundation II</option>
+          <option>International GCSE (CAIE)</option>
+          <option>AS Level (CAIE)</option>
+          <option>A Level (CAIE)</option>
+          <option>GED Preparation</option>
+        </select>
       </div>
       <div class="field"><label>Platform</label>
-        <select id="m-platform"><option>MobyMax</option><option>Cambrilearn</option><option>Essential Education (GED)</option><option>Independent study</option></select>
+        <select id="m-platform" onchange="onModalPlatformChange()">
+          <option>Essential Education (GED)</option>
+          <option>MobyMax</option>
+          <option>Cambrilearn</option>
+          <option>Independent study</option>
+        </select>
       </div>
     </div>
-    <div class="field"><label>Primary subject</label>
-      <select id="m-subject"><option>Mathematics</option><option>English / Language Arts</option><option>Science</option><option>Social Studies</option><option>Reading & Comprehension</option><option>Writing</option><option>Mathematical Reasoning (GED)</option><option>Reasoning Through Language Arts (GED)</option><option>Science (GED)</option><option>Social Studies (GED)</option></select>
+    <div class="field" id="subject-field-wrap">
+      <label>Primary subject <span id="subject-platform-badge"></span></label>
+      <select id="m-subject"></select>
     </div>
     <div class="field"><label>Current topic / unit (optional)</label>
       <input type="text" id="m-topic" placeholder="e.g. Fractions, Chapter 3, GED Unit 2 — Algebra"/>
@@ -436,6 +454,183 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 </div>
 
 <script>
+// ════════════════════════════════════════════════════════════
+// CAMBRIDGE SUBJECTS PER GRADE
+// ════════════════════════════════════════════════════════════
+const CAMBRILEARN_SUBJECTS = {
+  'Early Years A': [
+    'Early Years Literacy A',
+    "Early Years Let's Explore"
+  ],
+  'Early Years B': [
+    'Early Years Literacy B',
+    'Early Years Mathematics'
+  ],
+  'Primary Stage 1': [
+    'English (PS1-BB)',
+    'Mathematics (PS1-BB)',
+    'Science (PS1-BB)',
+    'Geography (PS1)',
+    'History (PS1)'
+  ],
+  'Primary Stage 2': [
+    'English (PS2-BB)',
+    'Mathematics (PS2-BB)',
+    'Science (PS2-BB)'
+  ],
+  'Primary Stage 3': [
+    'English (PS3-BB)',
+    'Mathematics (PS3-BB)',
+    'Science (PS3-BB)'
+  ],
+  'Primary Stage 4': [
+    'English (PS4-BB)',
+    'Mathematics (PS4-BB)',
+    'Science (PS4-BB)',
+    'Computers (PS4)'
+  ],
+  'Primary Stage 5': [
+    'English (PS5-BB)',
+    'Mathematics (PS5-BB)',
+    'Science (PS5) BB',
+    'Computers (PS5)'
+  ],
+  'Primary Stage 6': [
+    'English (PS6-BB)',
+    'Mathematics (PS6-BB)',
+    'Science (PS6) BB',
+    'Computers (PS6)'
+  ],
+  'Foundation I': [
+    'Afrikaans (FI) (2024-2030)',
+    'Computers (FI)',
+    'English (FI)',
+    'French (FI) (2026-2030)',
+    'Mathematics (FI) (2026-2029)',
+    'Science (F1) (2024-2027)',
+    'Spanish (FI)'
+  ],
+  'Foundation II': [
+    'Afrikaans (FII) (2024-2030)',
+    'English (FII)',
+    'French (FII) (2026-2030)',
+    'History (FII)',
+    'Introduction to Commerce (FII)',
+    'Mathematics (FII-BB)',
+    'Science (FII) (2025-2030)',
+    'Spanish (FII)'
+  ],
+  'International GCSE (CAIE)': [
+    'Accounting 2025-2026 (0452)',
+    'Afrikaans Second Language 2025-2027 (0548)',
+    'Biology 2025-2028 (0610)',
+    'Business Studies 2025-2026 (0450)',
+    'Chemistry 2023-2028 (0620)',
+    'Economics 2025-2026 (0455)',
+    'English First Language 2020-2026 (0500)',
+    'French Foreign Language 2025-2027 (0520)',
+    'Geography 2020-2026 (0460)',
+    'History 2024-2026 (0470)',
+    'ICT 2023-2028 (0417)',
+    'Mathematics Core 2020-2030 (0580)',
+    'Mathematics Extended 2020-2030 (0580)',
+    'Physics 2025-2028 (0625)',
+    'Spanish Foreign Language 2025-2027 (0530)'
+  ],
+  'AS Level (CAIE)': [
+    'Accounting 2023-2028 (9706)',
+    'Afrikaans 2026 (8679)',
+    'Biology 2022-2027 (9700)',
+    'Business 2026-2028 (9609)',
+    'Chemistry 2022-2027 (9701)',
+    'Computer Science 2025-2029',
+    'Economics 2025-2028 (9708)',
+    'English Language 2021-2028 (9093)',
+    'Geography 2023-2029 (9696)',
+    'History - European History 2025-2026 (9489)',
+    'History - International Relations 2025-2026 (9489)',
+    'IT 2025-2027',
+    'Maths - Pure Maths P1 2020-2030 (9709)',
+    'Maths - Pure Maths P1&P2 2020-2030 (9709)',
+    'Maths - Mechanics P4 2020-2027 (9709)',
+    'Maths - Statistics P5 2020-2030 (9709)',
+    'Physics 2022-2027 (9702)'
+  ],
+  'A Level (CAIE)': [
+    'Biology 2022-2027 (9700)',
+    'Business 2026-2028 (9609)',
+    'Chemistry 2022-2027 (9701)',
+    'English Language 2021-2028 (9093)',
+    'Maths - Pure Maths P3 2020-2027 (9709)',
+    'Maths - Statistics P6 2020-2027 (9709)',
+    'Physics 2022-2027 (9702)'
+  ]
+}
+
+// Subjects for non-Cambridge platforms};
+
+// Subjects for non-Cambridge platforms (flat list)
+const MOBYMAX_SUBJECTS = ['Mathematics','English / Language Arts','Science','Social Studies','Reading & Comprehension','Writing'];
+const GED_SUBJECTS = ['Mathematical Reasoning (GED)','Reasoning Through Language Arts (GED)','Science (GED)','Social Studies (GED)'];
+const GENERAL_SUBJECTS = ['Mathematics','English / Language Arts','Science','Social Studies','Reading & Comprehension','Writing','History','Geography','Art'];
+
+// ── DYNAMIC SUBJECT DROPDOWN ──
+function getSubjectsForContext(grade, platform){
+  const isCambri = platform && platform.includes('Cambri');
+  const isGED = platform && (platform.includes('Essential') || platform.includes('GED'));
+  const isMoby = platform && platform.includes('MobyMax');
+  if(isCambri){
+    return CAMBRILEARN_SUBJECTS[grade] || CAMBRILEARN_SUBJECTS['Primary Stage 6'];
+  } else if(isGED || (grade && grade.includes('GED'))){
+    return GED_SUBJECTS;
+  } else if(isMoby){
+    return MOBYMAX_SUBJECTS;
+  } else {
+    return GENERAL_SUBJECTS;
+  }
+}
+
+function populateSubjectDropdown(grade, platform, currentValue){
+  const sel = document.getElementById('m-subject');
+  const badge = document.getElementById('subject-platform-badge');
+  if(!sel) return;
+  const subjects = getSubjectsForContext(grade, platform);
+  const isCambri = platform && platform.includes('Cambri');
+  // Update badge
+  if(badge){
+    if(isCambri){
+      const gradeNum = parseInt((grade.match(/\d+/)||[0])[0]);
+      let level = 'Cambridge Primary';
+      if(gradeNum >= 7 && gradeNum <= 9) level = 'Lower Secondary';
+      else if(gradeNum >= 10 && gradeNum <= 11) level = 'IGCSE';
+      else if(gradeNum >= 12) level = 'AS/A Level';
+      badge.innerHTML = '<span class="cambri-badge">🎓 '+level+'</span>';
+    } else {
+      badge.innerHTML = '';
+    }
+  }
+  const prev = currentValue || (sel.value);
+  sel.innerHTML = '';
+  subjects.forEach(function(s){
+    const opt = document.createElement('option');
+    opt.value = s; opt.textContent = s;
+    if(s === prev) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+function onModalGradeChange(){
+  const grade = document.getElementById('m-grade').value;
+  const platform = document.getElementById('m-platform').value;
+  populateSubjectDropdown(grade, platform, null);
+}
+
+function onModalPlatformChange(){
+  const grade = document.getElementById('m-grade').value;
+  const platform = document.getElementById('m-platform').value;
+  populateSubjectDropdown(grade, platform, null);
+}
+
 // ── SUPABASE CLIENT ──
 const SUPA_URL='https://ptvfbmuqgefncwkzrvxt.supabase.co';
 const SUPA_KEY='sb_publishable_eb-wpepxwtA1yyOyQ0bMCA_WimPKTZH';
@@ -455,59 +650,30 @@ async function dbGetStudents(center){
     return rows.map(r=>({...r,nd:r.nd||[]}));
   }catch(e){console.error('dbGetStudents:',e);return[];}
 }
-
 async function dbSaveStudent(s,center){
-  try{
-    await supaFetch('students','POST',{...s,center,nd:s.nd||[]});
-  }catch(e){
-    // Try update if already exists
-    try{await supaFetch('students?id=eq.'+s.id,'PATCH',{...s,center,nd:s.nd||[]});}
-    catch(e2){console.error('dbSaveStudent:',e2);}
-  }
+  try{await supaFetch('students','POST',{...s,center,nd:s.nd||[]});}
+  catch(e){try{await supaFetch('students?id=eq.'+s.id,'PATCH',{...s,center,nd:s.nd||[]});}catch(e2){console.error('dbSaveStudent:',e2);}}
 }
-
 async function dbDeleteStudent(id){
-  try{await supaFetch('students?id=eq.'+id,'DELETE');}
-  catch(e){console.error('dbDeleteStudent:',e);}
+  try{await supaFetch('students?id=eq.'+id,'DELETE');}catch(e){console.error('dbDeleteStudent:',e);}
 }
-
 async function dbSaveSessionStat(studentId,durationMins,subject,center){
-  try{await supaFetch('session_stats','POST',{student_id:studentId,duration_mins:durationMins,subject,center});}
-  catch(e){console.error('dbSaveSessionStat:',e);}
+  try{await supaFetch('session_stats','POST',{student_id:studentId,duration_mins:durationMins,subject,center});}catch(e){console.error('dbSaveSessionStat:',e);}
 }
-
 async function dbGetSessionStats(studentId){
-  try{
-    const weekAgo=new Date();weekAgo.setDate(weekAgo.getDate()-7);
-    const rows=await supaFetch('session_stats?student_id=eq.'+studentId+'&created_at=gte.'+weekAgo.toISOString()+'&order=created_at.desc');
-    return rows;
-  }catch(e){console.error('dbGetSessionStats:',e);return[];}
+  try{const weekAgo=new Date();weekAgo.setDate(weekAgo.getDate()-7);return await supaFetch('session_stats?student_id=eq.'+studentId+'&created_at=gte.'+weekAgo.toISOString()+'&order=created_at.desc');}catch(e){return[];}
 }
-
 async function dbSaveNote(studentId,note,center){
-  try{await supaFetch('session_notes','POST',{student_id:studentId,note,center});}
-  catch(e){console.error('dbSaveNote:',e);}
+  try{await supaFetch('session_notes','POST',{student_id:studentId,note,center});}catch(e){console.error('dbSaveNote:',e);}
 }
-
 async function dbGetNotes(studentId){
-  try{
-    const weekAgo=new Date();weekAgo.setDate(weekAgo.getDate()-7);
-    const rows=await supaFetch('session_notes?student_id=eq.'+studentId+'&created_at=gte.'+weekAgo.toISOString()+'&order=created_at.desc');
-    return rows;
-  }catch(e){console.error('dbGetNotes:',e);return[];}
+  try{const weekAgo=new Date();weekAgo.setDate(weekAgo.getDate()-7);return await supaFetch('session_notes?student_id=eq.'+studentId+'&created_at=gte.'+weekAgo.toISOString()+'&order=created_at.desc');}catch(e){return[];}
 }
-
 async function dbSaveNdObservation(studentName,note,tags,center){
-  try{await supaFetch('nd_observations','POST',{student_name:studentName,note,tags,center});}
-  catch(e){console.error('dbSaveNdObservation:',e);}
+  try{await supaFetch('nd_observations','POST',{student_name:studentName,note,tags,center});}catch(e){console.error('dbSaveNdObservation:',e);}
 }
-
 async function dbGetNdObservations(studentName){
-  try{
-    const weekAgo=new Date();weekAgo.setDate(weekAgo.getDate()-7);
-    const rows=await supaFetch('nd_observations?student_name=eq.'+encodeURIComponent(studentName)+'&created_at=gte.'+weekAgo.toISOString()+'&order=created_at.desc');
-    return rows;
-  }catch(e){console.error('dbGetNdObservations:',e);return[];}
+  try{const weekAgo=new Date();weekAgo.setDate(weekAgo.getDate()-7);return await supaFetch('nd_observations?student_name=eq.'+encodeURIComponent(studentName)+'&created_at=gte.'+weekAgo.toISOString()+'&order=created_at.desc');}catch(e){return[];}
 }
 
 let appState={
@@ -518,78 +684,26 @@ let appState={
 };
 
 function getWeekKey(){
-  const now=new Date();
-  const day=now.getDay();
-  const monday=new Date(now);
-  monday.setDate(now.getDate()-(day===0?6:day-1));
-  return monday.toISOString().slice(0,10);
+  const now=new Date();const day=now.getDay();const monday=new Date(now);
+  monday.setDate(now.getDate()-(day===0?6:day-1));return monday.toISOString().slice(0,10);
 }
-
-function saveSessionStat(studentId, durationMins, subject){
+function saveSessionStat(studentId,durationMins,subject){
   dbSaveSessionStat(studentId,durationMins,subject,appState.center);
-  // also keep local copy for immediate stats display
-  try{
-    const key='metanoia_stats_'+studentId;
-    const weekKey=getWeekKey();
-    const existing=JSON.parse(localStorage.getItem(key)||'{}');
-    if(!existing[weekKey])existing[weekKey]={sessions:[],parentReportSent:false};
-    existing[weekKey].sessions.push({date:new Date().toISOString(),duration:durationMins,subject});
-    const weeks=Object.keys(existing).sort().slice(-4);
-    const trimmed={};weeks.forEach(w=>trimmed[w]=existing[w]);
-    localStorage.setItem(key,JSON.stringify(trimmed));
-  }catch(e){}
+  try{const key='metanoia_stats_'+studentId;const weekKey=getWeekKey();const existing=JSON.parse(localStorage.getItem(key)||'{}');if(!existing[weekKey])existing[weekKey]={sessions:[],parentReportSent:false};existing[weekKey].sessions.push({date:new Date().toISOString(),duration:durationMins,subject});const weeks=Object.keys(existing).sort().slice(-4);const trimmed={};weeks.forEach(w=>trimmed[w]=existing[w]);localStorage.setItem(key,JSON.stringify(trimmed));}catch(e){}
 }
-
 function markParentReportSent(studentId){
-  try{
-    const key='metanoia_stats_'+studentId;
-    const weekKey=getWeekKey();
-    const existing=JSON.parse(localStorage.getItem(key)||'{}');
-    if(!existing[weekKey])existing[weekKey]={sessions:[],parentReportSent:false};
-    existing[weekKey].parentReportSent=true;
-    localStorage.setItem(key,JSON.stringify(existing));
-  }catch(e){}
+  try{const key='metanoia_stats_'+studentId;const weekKey=getWeekKey();const existing=JSON.parse(localStorage.getItem(key)||'{}');if(!existing[weekKey])existing[weekKey]={sessions:[],parentReportSent:false};existing[weekKey].parentReportSent=true;localStorage.setItem(key,JSON.stringify(existing));}catch(e){}
 }
-
 function getStudentStats(studentId){
   try{
-    const key='metanoia_stats_'+studentId;
-    const weekKey=getWeekKey();
-    const data=JSON.parse(localStorage.getItem(key)||'{}');
-    const week=data[weekKey]||{sessions:[],parentReportSent:false};
-    const sessions=week.sessions||[];
-    const avgDuration=sessions.length?Math.round(sessions.reduce((a,s)=>a+s.duration,0)/sessions.length):0;
-    const subjects=[...new Set(sessions.map(s=>s.subject))];
-    // Get mood trend from ND Hub
+    const key='metanoia_stats_'+studentId;const weekKey=getWeekKey();const data=JSON.parse(localStorage.getItem(key)||'{}');const week=data[weekKey]||{sessions:[],parentReportSent:false};const sessions=week.sessions||[];const avgDuration=sessions.length?Math.round(sessions.reduce((a,s)=>a+s.duration,0)/sessions.length):0;const subjects=[...new Set(sessions.map(s=>s.subject))];
     let moodTrend='—';
-    try{
-      const ndNotes=JSON.parse(localStorage.getItem('metanoia_nd_notes')||'[]');
-      const weekStart=new Date();weekStart.setDate(weekStart.getDate()-7);
-      const studentMoods=ndNotes.filter(n=>n.student.toLowerCase().trim()===
-        (appState.students.find(s=>s.id===studentId)||{name:''}).name.toLowerCase().trim());
-      if(studentMoods.length){
-        const moods=studentMoods.slice(0,5).map(n=>n.text||'');
-        const hasLow=moods.some(m=>m.includes('anxious')||m.includes('distressed')||m.includes('worried'));
-        const hasTags=ndNotes.filter(n=>n.student.toLowerCase().trim()===
-          (appState.students.find(s=>s.id===studentId)||{name:''}).name.toLowerCase().trim())
-          .flatMap(n=>n.tags||[]);
-        const lowTags=['Anxious/distressed','Refused tasks','Sensory overload signs'];
-        const goodTags=['Focused well','Great progress','Very engaged','Breakthrough moment'];
-        const lowCount=hasTags.filter(t=>lowTags.includes(t)).length;
-        const goodCount=hasTags.filter(t=>goodTags.includes(t)).length;
-        moodTrend=goodCount>lowCount?'😊 Positive':lowCount>goodCount?'😟 Low':'😐 Mixed';
-      }
-    }catch(e){}
-    // Calculate traffic light
-    let status='green';
-    if(sessions.length===0) status='red';
-    else if(sessions.length<2) status='yellow';
-    if(moodTrend.includes('Low')) status=status==='green'?'yellow':'red';
-    return {sessions:sessions.length,avgDuration,subjects,parentReportSent:week.parentReportSent,moodTrend,status};
-  }catch(e){return {sessions:0,avgDuration:0,subjects:[],parentReportSent:false,moodTrend:'—',status:'red'};}
+    try{const ndNotes=JSON.parse(localStorage.getItem('metanoia_nd_notes')||'[]');const studentMoods=ndNotes.filter(n=>n.student.toLowerCase().trim()===(appState.students.find(s=>s.id===studentId)||{name:''}).name.toLowerCase().trim());if(studentMoods.length){const hasTags=ndNotes.filter(n=>n.student.toLowerCase().trim()===(appState.students.find(s=>s.id===studentId)||{name:''}).name.toLowerCase().trim()).flatMap(n=>n.tags||[]);const lowTags=['Anxious/distressed','Refused tasks','Sensory overload signs'];const goodTags=['Focused well','Great progress','Very engaged','Breakthrough moment'];const lowCount=hasTags.filter(t=>lowTags.includes(t)).length;const goodCount=hasTags.filter(t=>goodTags.includes(t)).length;moodTrend=goodCount>lowCount?'😊 Positive':lowCount>goodCount?'😟 Low':'😐 Mixed';}}catch(e){}
+    let status='green';if(sessions.length===0)status='red';else if(sessions.length<2)status='yellow';if(moodTrend.includes('Low'))status=status==='green'?'yellow':'red';
+    return{sessions:sessions.length,avgDuration,subjects,parentReportSent:week.parentReportSent,moodTrend,status};
+  }catch(e){return{sessions:0,avgDuration:0,subjects:[],parentReportSent:false,moodTrend:'—',status:'red'};}
 }
 let pinEntry='';
-
 const avatarColors=['#7B6EF6','#4ecdc4','#f7b731','#ff6b6b','#a29bfe','#fd79a8','#00b894','#e17055'];
 function getColor(n){let h=0;for(let c of n)h=c.charCodeAt(0)+((h<<5)-h);return avatarColors[Math.abs(h)%avatarColors.length];}
 function getInitials(n){return n.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);}
@@ -611,53 +725,18 @@ function onStudentNameInput(){
   const pinSection=document.getElementById('pin-section');
   const noMsg=document.getElementById('no-students-msg');
   noMsg.style.display='none';
-  if(name.length>=2){
-    pinSection.style.display='block';
-    pinEntry='';updatePinDots();
-  } else {
-    pinSection.style.display='none';
-  }
+  if(name.length>=2){pinSection.style.display='block';pinEntry='';updatePinDots();}else{pinSection.style.display='none';}
 }
 
 function populateStudentSelect(){
-  // Load students from Supabase for PIN validation
   const center=appState.center||'Windhoek';
-  dbGetStudents(center).then(function(rows){
-    appState.students=rows;
-  }).catch(function(){});
+  dbGetStudents(center).then(function(rows){appState.students=rows;}).catch(function(){});
 }
 
-function buildStudentDropdown(){
-  const sel=document.getElementById('s-name-select');
-  sel.innerHTML='<option value="">— Choose your name —</option>';
-  const noMsg=document.getElementById('no-students-msg');
-  if(!appState.students.length){noMsg.style.display='block';document.getElementById('pin-section').style.display='none';return;}
-  noMsg.style.display='none';
-  appState.students.forEach(s=>{
-    const opt=document.createElement('option');
-    opt.value=s.id;opt.textContent=s.name;
-    sel.appendChild(opt);
-  });
-  sel.onchange=function(){
-    pinEntry='';updatePinDots();
-    document.getElementById('pin-section').style.display=this.value?'block':'none';
-    document.getElementById('login-error').style.display='none';
-  };
-}
-
-function pinPress(d){
-  if(pinEntry.length>=4)return;
-  pinEntry+=d;
-  updatePinDots();
-  if(pinEntry.length===4) setTimeout(()=>studentPinLogin(),200);
-}
+function pinPress(d){if(pinEntry.length>=4)return;pinEntry+=d;updatePinDots();if(pinEntry.length===4)setTimeout(()=>studentPinLogin(),200);}
 function pinBack(){if(pinEntry.length>0){pinEntry=pinEntry.slice(0,-1);updatePinDots();}}
 function pinClear(){pinEntry='';updatePinDots();}
-function updatePinDots(){
-  for(let i=0;i<4;i++){
-    document.getElementById('pd'+i).classList.toggle('filled',i<pinEntry.length);
-  }
-}
+function updatePinDots(){for(let i=0;i<4;i++){document.getElementById('pd'+i).classList.toggle('filled',i<pinEntry.length);}}
 
 function studentPinLogin(){
   const err=document.getElementById('login-error');
@@ -666,81 +745,29 @@ function studentPinLogin(){
   noMsg.style.display='none';
   if(!nameInput){err.textContent='Please enter your name.';err.style.display='block';return;}
   if(pinEntry.length<4){err.textContent='Please enter your full 4-digit PIN.';err.style.display='block';return;}
-  // Load students if not already loaded
   const tryLogin=function(students){
-    const student=students.find(function(s){
-      return s.name.toLowerCase().trim()===nameInput||s.name.toLowerCase().trim().startsWith(nameInput);
-    });
-    if(!student){
-      noMsg.style.display='block';
-      err.textContent='Name not recognised. Please check your name.';err.style.display='block';
-      pinEntry='';updatePinDots();return;
-    }
-    if(pinEntry!==student.pin){
-      err.textContent='Incorrect PIN. Please try again.';err.style.display='block';
-      const card=document.querySelector('.login-card');card.classList.add('shake');
-      setTimeout(function(){card.classList.remove('shake');},400);
-      pinEntry='';updatePinDots();return;
-    }
-    err.style.display='none';
-    appState.currentStudent=student;
-    appState.conversationHistory=[];
-    startChatSession(student);
+    const student=students.find(function(s){return s.name.toLowerCase().trim()===nameInput||s.name.toLowerCase().trim().startsWith(nameInput);});
+    if(!student){noMsg.style.display='block';err.textContent='Name not recognised. Please check your name.';err.style.display='block';pinEntry='';updatePinDots();return;}
+    if(pinEntry!==student.pin){err.textContent='Incorrect PIN. Please try again.';err.style.display='block';const card=document.querySelector('.login-card');card.classList.add('shake');setTimeout(function(){card.classList.remove('shake');},400);pinEntry='';updatePinDots();return;}
+    err.style.display='none';appState.currentStudent=student;appState.conversationHistory=[];startChatSession(student);
   };
-  if(appState.students.length){
-    tryLogin(appState.students);
-  } else {
-    // Load from Supabase first
-    const center='Windhoek'; // load all centers
-    Promise.all([dbGetStudents('Windhoek'),dbGetStudents('Rehoboth')]).then(function(results){
-      appState.students=[...results[0],...results[1]];
-      tryLogin(appState.students);
-    }).catch(function(){
-      err.textContent='Could not connect. Please check your internet.';err.style.display='block';
-    });
-  }
+  if(appState.students.length){tryLogin(appState.students);}
+  else{Promise.all([dbGetStudents('Windhoek'),dbGetStudents('Rehoboth')]).then(function(results){appState.students=[...results[0],...results[1]];tryLogin(appState.students);}).catch(function(){err.textContent='Could not connect. Please check your internet.';err.style.display='block';});}
 }
 
-function saveStudents(){
-  // kept for compatibility — actual saving happens per-student in addStudent/removeStudent
-}
-function saveSessionNote(studentId, note){
-  try{
-    const key='metanoia_notes_'+studentId;
-    const existing=JSON.parse(localStorage.getItem(key)||'[]');
-    existing.push({date:new Date().toISOString(),note});
-    // Keep last 10 sessions only
-    if(existing.length>10)existing.splice(0,existing.length-10);
-    localStorage.setItem(key,JSON.stringify(existing));
-  }catch(e){console.warn('Could not save note:',e);}
-}
-function loadSessionNotes(studentId){
-  try{return JSON.parse(localStorage.getItem('metanoia_notes_'+studentId)||'[]');}
-  catch(e){return [];}
-}
-function clearSessionNotes(studentId){
-  try{localStorage.removeItem('metanoia_notes_'+studentId);}
-  catch(e){}
-}
+function saveStudents(){}
+function saveSessionNote(studentId,note){try{const key='metanoia_notes_'+studentId;const existing=JSON.parse(localStorage.getItem(key)||'[]');existing.push({date:new Date().toISOString(),note});if(existing.length>10)existing.splice(0,existing.length-10);localStorage.setItem(key,JSON.stringify(existing));}catch(e){console.warn('Could not save note:',e);}}
+function loadSessionNotes(studentId){try{return JSON.parse(localStorage.getItem('metanoia_notes_'+studentId)||'[]');}catch(e){return[];}}
+function clearSessionNotes(studentId){try{localStorage.removeItem('metanoia_notes_'+studentId);}catch(e){}}
+
 async function loadStudents(){
   try{
     const rows=await dbGetStudents(appState.center);
-    if(rows.length) appState.students=rows;
-    else {
-      // fallback to localStorage for migration
-      const saved=localStorage.getItem('metanoia_students');
-      if(saved){
-        const parsed=JSON.parse(saved);
-        if(Array.isArray(parsed)&&parsed.length){
-          appState.students=parsed;
-          // migrate to Supabase
-          for(const s of parsed) await dbSaveStudent(s,appState.center);
-          localStorage.removeItem('metanoia_students');
-        }
-      }
-    }
+    if(rows.length)appState.students=rows;
+    else{const saved=localStorage.getItem('metanoia_students');if(saved){const parsed=JSON.parse(saved);if(Array.isArray(parsed)&&parsed.length){appState.students=parsed;for(const s of parsed)await dbSaveStudent(s,appState.center);localStorage.removeItem('metanoia_students');}}}
   }catch(e){console.warn('Could not load students:',e);}
 }
+
 function doLogin(){
   const err=document.getElementById('login-error');err.style.display='none';
   if(appState.role==='tutor'){
@@ -748,13 +775,9 @@ function doLogin(){
     const password=document.getElementById('tutor-password').value.trim();
     const center=document.getElementById('tutor-center').value;
     if(!username||!password){err.textContent='Please enter your username and password.';err.style.display='block';return;}
-    const btn=document.getElementById('login-btn');
-    btn.textContent='Signing in...';btn.disabled=true;
-    fetch('/.netlify/functions/auth',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({username,password})
-    }).then(function(r){return r.json();}).then(function(data){
+    const btn=document.getElementById('login-btn');btn.textContent='Signing in...';btn.disabled=true;
+    fetch('/.netlify/functions/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password})})
+    .then(function(r){return r.json();}).then(function(data){
       btn.textContent='Continue →';btn.disabled=false;
       if(!data.success){err.textContent=data.error||'Invalid credentials.';err.style.display='block';return;}
       appState.tutorName='Tutor';appState.center=center;
@@ -762,13 +785,8 @@ function doLogin(){
       document.getElementById('dash-subtitle').textContent='Metanoia Academy · '+center;
       renderDashboard();show('dashboard-screen');
       loadStudents().then(function(){renderDashboard();});
-    }).catch(function(e){
-      btn.textContent='Continue →';btn.disabled=false;
-      err.textContent='Connection error. Please try again.';err.style.display='block';
-    });
-  } else {
-    studentPinLogin();
-  }
+    }).catch(function(e){btn.textContent='Continue →';btn.disabled=false;err.textContent='Connection error. Please try again.';err.style.display='block';});
+  }else{studentPinLogin();}
 }
 
 function renderDashboard(){
@@ -779,23 +797,23 @@ function renderDashboard(){
   document.getElementById('stat-today').textContent=appState.todayCount+active;
   document.getElementById('stat-nd').textContent=nd;
   const grid=document.getElementById('students-grid');grid.innerHTML='';
-  if(!appState.students.length){
-    grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--muted);font-size:13px;font-family:var(--mono)">No students yet. Click "+ Add student" to begin.</div>';
-    return;
-  }
+  if(!appState.students.length){grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--muted);font-size:13px;font-family:var(--mono)">No students yet. Click "+ Add student" to begin.</div>';return;}
   appState.students.forEach(function(s){
     const isActive=!!appState.activeSessions[s.id];
     const stats=getStudentStats(s.id);
     const card=document.createElement('div');
     card.className='student-card'+(isActive?' active-session':'');
-    const ndTags=(s.nd&&s.nd.length&&!s.nd.includes('None'))?s.nd.map(function(t){return '<span class="nd-tag">'+t+'</span>';}).join(''):'';
+    const ndTags=(s.nd&&s.nd.length&&!s.nd.includes('None'))?s.nd.map(function(t){return'<span class="nd-tag">'+t+'</span>';}).join(''):'';
     const timerHtml=isActive?'<div class="session-timer" id="timer-'+s.id+'">&#9203; Session active</div>':'';
+    // Cambridge badge for student card
+    const isCambri=s.platform&&s.platform.includes('Cambri');
+    const platformBadge=isCambri?'<span style="font-size:10px;background:rgba(78,205,196,0.1);color:var(--accent2);border:1px solid rgba(78,205,196,0.2);border-radius:4px;padding:1px 6px;margin-left:4px;font-family:var(--mono)">Cambridge</span>':'';
     card.innerHTML=
       '<div class="student-card-top">'
       +'<div class="student-avatar" style="background:'+s.color+'">'+getInitials(s.name)+'</div>'
       +'<div class="student-card-info"><h4>'
       +'<span class="traffic-light '+stats.status+'"></span>'
-      +s.name+'</h4><p>'+s.grade+' &middot; '+s.subject+'</p></div>'
+      +s.name+'</h4><p>'+s.grade+' &middot; '+s.subject+platformBadge+'</p></div>'
       +'</div>'
       +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">'
       +'<div class="status-badge '+(isActive?'online':'offline')+'"><span class="dot"></span>'+(isActive?'In session':'Available')+'</div>'
@@ -814,36 +832,17 @@ function renderDashboard(){
       +'<div class="student-card-actions"></div>';
     const actions=card.querySelector('.student-card-actions');
     const sid=s.id;
-    const startBtn=document.createElement('button');
-    startBtn.className='card-btn primary';
-    startBtn.textContent='Start session';
-    startBtn.onclick=function(){launchSession(sid);};
-    const reportBtn=document.createElement('button');
-    reportBtn.className='card-btn secondary';
-    reportBtn.textContent='Parent report';
-    reportBtn.onclick=function(){openParentReport(sid);};
-    const progressBtn=document.createElement('button');
-    progressBtn.className='card-btn';
-    progressBtn.style.cssText='background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.3);color:#f59e0b;font-size:11px;padding:6px 10px';
-    progressBtn.textContent='📊 Progress report';
-    progressBtn.onclick=function(){openProgressReport(sid);};
-    const removeBtn=document.createElement('button');
-    removeBtn.className='card-btn danger';
-    removeBtn.textContent='Remove';
-    removeBtn.onclick=function(){removeStudent(sid);};
-    actions.appendChild(startBtn);
-    actions.appendChild(reportBtn);
-    actions.appendChild(progressBtn);
-    actions.appendChild(removeBtn);
+    const startBtn=document.createElement('button');startBtn.className='card-btn primary';startBtn.textContent='Start session';startBtn.onclick=function(){launchSession(sid);};
+    const reportBtn=document.createElement('button');reportBtn.className='card-btn secondary';reportBtn.textContent='Parent report';reportBtn.onclick=function(){openParentReport(sid);};
+    const progressBtn=document.createElement('button');progressBtn.className='card-btn';progressBtn.style.cssText='background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.3);color:#f59e0b;font-size:11px;padding:6px 10px';progressBtn.textContent='📊 Progress report';progressBtn.onclick=function(){openProgressReport(sid);};
+    const removeBtn=document.createElement('button');removeBtn.className='card-btn danger';removeBtn.textContent='Remove';removeBtn.onclick=function(){removeStudent(sid);};
+    actions.appendChild(startBtn);actions.appendChild(reportBtn);actions.appendChild(progressBtn);actions.appendChild(removeBtn);
     grid.appendChild(card);
   });
   const log=document.getElementById('activity-log');
-  if(appState.activityLog.length){
-    log.innerHTML=appState.activityLog.slice().reverse().slice(0,8).map(function(a){
-      return '<div class="log-item"><div class="log-icon '+a.cls+'">'+a.icon+'</div><div class="log-text"><p>'+a.text+'</p><span>'+a.time+'</span></div></div>';
-    }).join('');
-  }
+  if(appState.activityLog.length){log.innerHTML=appState.activityLog.slice().reverse().slice(0,8).map(function(a){return'<div class="log-item"><div class="log-icon '+a.cls+'">'+a.icon+'</div><div class="log-text"><p>'+a.text+'</p><span>'+a.time+'</span></div></div>';}).join('');}
 }
+
 function launchSession(id){
   const s=appState.students.find(x=>x.id===id);if(!s)return;
   appState.currentStudent=s;appState.conversationHistory=[];
@@ -851,18 +850,11 @@ function launchSession(id){
     appState.activeSessions[id]={start:Date.now()};
     logActivity('green','🟢','Session started for '+s.name,'green');
     if(appState.sessionTimers[id])clearInterval(appState.sessionTimers[id]);
-    appState.sessionTimers[id]=setInterval(()=>{
-      const el=document.getElementById('timer-'+id);
-      if(el){const mins=Math.floor((Date.now()-appState.activeSessions[id].start)/60000);el.textContent='⏱ '+mins+'m active';}
-    },30000);
+    appState.sessionTimers[id]=setInterval(()=>{const el=document.getElementById('timer-'+id);if(el){const mins=Math.floor((Date.now()-appState.activeSessions[id].start)/60000);el.textContent='⏱ '+mins+'m active';}},30000);
   }
   startChatSession(s);
 }
-
-function logActivity(t,icon,text,cls){
-  const now=new Date();
-  appState.activityLog.push({t,icon,text,cls,time:now.toLocaleTimeString('en-ZA',{hour:'2-digit',minute:'2-digit'})});
-}
+function logActivity(t,icon,text,cls){const now=new Date();appState.activityLog.push({t,icon,text,cls,time:now.toLocaleTimeString('en-ZA',{hour:'2-digit',minute:'2-digit'})});}
 
 function startChatSession(s){
   document.getElementById('chat-title').textContent='Tutoring '+s.name;
@@ -878,6 +870,9 @@ function startChatSession(s){
   sendAI('Hello! Please greet the student warmly and begin the tutoring session.',true);
 }
 
+// ════════════════════════════════════════════════════════════
+// CURRICULUM CONTEXT — FULL (with Cambridge)
+// ════════════════════════════════════════════════════════════
 function getCurriculumContext(grade, subject, platform){
   const gradeNum=parseInt((grade.match(/\d+/)||['0'])[0]);
   const isGED=grade.includes('GED')||platform.includes('GED')||platform.includes('Essential');
@@ -887,99 +882,292 @@ function getCurriculumContext(grade, subject, platform){
 
   // ── ESSENTIAL EDUCATION / GED ──
   if(isGED||subject.includes('GED')){
-    // Full Essential Education curriculum embedded from student ILPs
-    const eeCurriculum = `
-ESSENTIAL EDUCATION — GED CURRICULUM (All Units and Lessons):
+    const eeCurriculum=`ESSENTIAL EDUCATION — GED CURRICULUM:
+MATHEMATICAL REASONING: Pre-GED (Whole Numbers, Factors/Multiples, Fractions, Decimals, Exponents/Roots, Measurement, Percents, Graphs/Charts) | GED Prep (Expressions/Equations/Inequalities, Two-Dimensional Geometry, Three-Dimensional Geometry, Equation of a Line, Statistics, Probability, Functions) | Advanced GED (Quadratic Equations, Data Distributions, Systems of Equations, Functions)
+REASONING THROUGH LANGUAGE ARTS — READING: Pre-GED (Vocabulary, Gaining Meaning from Text, Analysis and Application, Literary Works) | GED Prep (Advanced Vocabulary, Sequence and Development, Analysis and Synthesis) | Advanced GED (Inferences, Comparing Texts, Authors Perspective, Development of a Text)
+REASONING THROUGH LANGUAGE ARTS — WRITING: Pre-GED (Organization, Writing Basics) | GED Prep (Writing for a Purpose, Arguments, Writing Arguments) | Advanced GED (GED Extended Response, Evaluating Written Responses)
+REASONING THROUGH LANGUAGE ARTS — LANGUAGE: Pre-GED (Spelling, Capitalization, Basic Sentences) | GED Prep (Commas, Clear Language, Issues with Verbs) | Advanced GED (Effective Language, Advanced Punctuation, Constructing Sentences)
+SCIENCE: Pre-GED (Science Basics, Scientific Method) | GED Prep (Scientific Information, Designing an Experiment, Evaluating Scientific Investigations)
+SOCIAL STUDIES: GED Prep (Reading in Social Studies, Context and Point of View) | Advanced GED (Analyzing Events and Ideas, Working with Data, Reasoning in Social Studies)`;
+    if(subject.includes('Mathematical')||subject.includes('Math')){ctx='CURRICULUM — GED Mathematical Reasoning (Essential Education):\n'+eeCurriculum+'\nFocus: Mathematical Reasoning. 45 questions, 115 minutes. Ask which specific unit and lesson. Break problems into numbered steps.';}
+    else if(subject.includes('Language')||subject.includes('RLA')||subject.includes('Writing')||subject.includes('Reading')){ctx='CURRICULUM — GED Reasoning Through Language Arts (Essential Education):\n'+eeCurriculum+'\nFocus: RLA — Reading, Writing, and Language strands. 150 minutes including 45-minute essay.';}
+    else if(subject.includes('Science')){ctx='CURRICULUM — GED Science (Essential Education):\n'+eeCurriculum+'\nFocus: Science. 90 minutes, 34 questions. Scientific reasoning and data interpretation.';}
+    else if(subject.includes('Social Studies')){ctx='CURRICULUM — GED Social Studies (Essential Education):\n'+eeCurriculum+'\nFocus: Social Studies. 70 minutes, 35 questions. Document analysis and reasoning.';}
+  }
 
-MATHEMATICAL REASONING:
-Pre-GED: Whole Numbers and Operations (Adding, Subtracting, Multiplying, Dividing Whole Numbers, Number Lines, Patterns, Properties) | Factors and Multiples (GCF, LCM, Prime Factorization, Comparison Equations) | Fractions Rates and Ratios (Multiplying/Dividing/Adding/Subtracting Fractions, Ratios, Mixed Numbers) | Decimals (Introduction, Comparing, Adding/Subtracting, Multiplying/Dividing) | Exponents and Roots (Order of Operations, Calculator Use, Simplifying Exponents, Scientific Notation, Square Roots) | Measurement (American and Metric Units) | Percents (Working with Percents, Solving Percent Problems, Applications) | Graphs and Charts (Tables, Circle Graphs, Bar Graphs, Line Graphs, Scatter Plots)
-GED Prep: Expressions Equations and Inequalities (Integers, Linear Equations I, Inequalities, Rational Numbers) | Solving Linear Equations and Inequalities (Algebraic Expressions, Linear Equations II, Graphing Inequalities) | Two-Dimensional Geometry (Angle Pairs, Areas, Circles, Pythagorean Theorem, Congruence, Similarity, Scale Factor) | Three-Dimensional Geometry (Units, Volumes of Prisms/Cylinders/Pyramids/Cones, Rearranging Formulas, Density) | The Equation of a Line (Coordinate Plane, Slope-Intercept Form) | Basic Statistics (Measures of Center, Analyzing Relationships) | Probability (Basic and Compound Probability) | Understanding Functions (Function Basics, Properties of Functions)
-Advanced GED: Quadratic Equations (Square Roots, Factoring, Quadratic Formula) | Data Displays and Distributions (Histograms, Box Plots, Two-Way Tables, Scatter Plots, Linear Models) | Systems of Equations | Functions (Notation, Graphs, Rate of Change, Polynomials)
-
-REASONING THROUGH LANGUAGE ARTS — READING:
-Pre-GED: Intermediate Vocabulary (Linking Opinions, Precise Language, Context, Word Structure: Prefixes/Roots/Suffixes, Building Vocabulary) | Gaining Meaning from Text (Word Attack Skills, Main Ideas and Details, Summarizing and Paraphrasing) | Analysis and Application (Quoting from a Text, Applying Information, Structure and Meaning, Checking Reasoning, Analyzing Events and Ideas, Comparing Accounts, Graphics in Text) | Literary Works (Figurative Language, Themes and Details, Character Traits, Comparing Literary Works)
-GED Prep: Advanced Vocabulary (Complex Word Context, Advanced Affixes and Roots, Using Reference Materials) | Gaining Meaning from Words (Determining Word Meanings, Impact of a Word, Transitional Words) | Sequence and Development (Procedures and Processes, Central Ideas, Evaluating a Claim) | Analysis and Synthesis (Point of View, Conclusions and Generalizations, Synthesizing Data, Relationships in Text, Science and Technical Texts, Theme, Text Structure)
-Advanced GED: Inferences (Making Inferences, Inferences about Main Ideas, Evidence for Inferences) | Comparing Texts (Similar Topics, Different Genres and Formats) | Authors Perspective (Purpose and Point of View, Rhetorical Techniques, Comparing Authors Positions, Primary and Secondary Sources) | The Development of a Text (Central Idea, Theme, Events, Claim, Argument Structure, Evaluating Support, Following a Procedure)
-
-REASONING THROUGH LANGUAGE ARTS — WRITING:
-Pre-GED: Organization (Paragraph Organization, Organizing Written Works, Essay Prompts) | Writing Basics (Opinions and Reasons, Topics and Development, Linking Words, Conclusions, Essay Prompts)
-GED Prep: Writing for a Purpose (Style and Tone, Language and Purpose, Planning and Drafting History and Science Writing) | Arguments (Elements of Persuasion, Building an Argument, Fallacies, Evaluating Arguments, Comparing Arguments) | Writing Arguments (Claims and Counterclaims, Developing Arguments, Cohesion and Clarity, Conclusions)
-Advanced GED: GED Extended Response (Understanding the Prompt, Writing Process and Timing, Practice Essay) | Evaluating Written Responses (Multiple Essay Prompts on: Internet, Eye for an Eye, Obesity, Value of Education, Heroes, Important Inventions, Favorite Place, Free Time, Future Dreams)
-
-REASONING THROUGH LANGUAGE ARTS — LANGUAGE:
-Pre-GED: Basic Spelling (Spelling Patterns, Strategies, Possessives, Contractions) | Capitalization (Proper Nouns, First Words and Titles) | Basic Sentences (Subjects and Verbs, Sentence Structure, Punctuation, Verb Forms) | Building Sentences (Fragments and Run-ons, Joining Sentences)
-GED Prep: Commas (Beginning/Ending/Inessential Phrases, Series, Joining Sentences, Unneeded Commas) | Spelling (i before e Rule, Adding Endings) | Clear Language (Avoiding Shifts in Person, Using Pronouns, Misplaced Modifiers) | Issues with Verbs (Choosing Verb Tenses, Verbs in Special Cases) | Common Spelling Errors (Words That Sound Alike/Similar, Often Misspelled Words)
-Advanced GED: Effective Language (Parallelism, Cliches, Wordiness and Awkward Language) | Advanced Punctuation (Quotes and Titles, Colons and Semicolons, Dashes and Hyphens, Ellipses) | Constructing Sentences for Meaning (Using Phrases, Using Clauses, Advanced Colons and Semicolons)
-
-SCIENCE:
-Pre-GED: Science Basics (Language of Scientific Investigation, Science Tables and Diagrams, Science Graphs) | The Scientific Method (Introduction to Scientific Investigation, Recognizing and Evaluating Evidence, Working with Evidence, Reading Investigations)
-GED Prep: Scientific Information (Working with Textual Data, Drawing Conclusions from Scientific Text, Predicting and Inferring from Visual Data, Relationships in Data, Using Scientific Formulas) | Designing an Experiment (Elements of Experimental Design, Understanding Experimental Design, Forming and Refining a Hypothesis, Verifying Accuracy, Designing or Modifying an Experiment) | Evaluating Scientific Investigations (Evaluating Scientific Conclusions, Working Backward from Results, Evaluating an Investigation, Judging the Relevance of Data)
-
-SOCIAL STUDIES:
-GED Prep: Reading in Social Studies (Identifying Supporting Details, Conclusions and Inferences, Understanding Words in Context) | Understanding Context and Point of View (Historical Context and Point of View, Identifying Propaganda, Identifying Bias, Evaluating Credibility of an Author)
-Advanced GED: Analyzing Social Studies Events and Ideas (Analyzing Cause and Effect, Analyzing Events Processes and Ideas) | Working with Social Studies Data (Text and Visual Data, Communicating Data, Predicting Trends, Analyzing Relationships Between Variables, Calculating Central Tendency) | Reasoning in Social Studies (Recognizing Unsupported Claims, Telling Fact from Opinion, Comparing Opinions and Accounts)`;
-    if(subject.includes('Mathematical')||subject.includes('Math')){
-      ctx=`CURRICULUM CONTEXT — GED Mathematical Reasoning (Essential Education platform):
-${eeCurriculum}
-FOCUS FOR THIS SUBJECT: Mathematical Reasoning. Units progress from Pre-GED (Whole Numbers through Graphs) to GED Prep (Algebra, Geometry, Statistics, Functions) to Advanced GED (Quadratics, Systems, Functions).
-Exam: 45 questions, 115 minutes, calculator allowed Part 2.
-Tutoring approach: Ask which specific unit and lesson the student is on in Essential Education. Use the exact lesson names above. Break problems into numbered steps. Connect to real-world Namibian examples.`;
-    } else if(subject.includes('Language')||subject.includes('RLA')||subject.includes('Reasoning Through')||subject.includes('Writing')||subject.includes('Reading')){
-      ctx=`CURRICULUM CONTEXT — GED Reasoning Through Language Arts (Essential Education platform):
-${eeCurriculum}
-FOCUS FOR THIS SUBJECT: RLA covers three strands — Reading, Writing, and Language. Ask the student which strand and unit they are working on.
-Exam: 150 minutes. Reading comprehension, 45-minute Extended Response essay, grammar/language editing.
-Tutoring approach: For Writing — teach claim-evidence-reasoning structure. For Reading — help find evidence in texts. For Language — focus on grammar rules and sentence construction. Always use the exact lesson names from Essential Education above.`;
-    } else if(subject.includes('Science')){
-      ctx=`CURRICULUM CONTEXT — GED Science (Essential Education platform):
-${eeCurriculum}
-FOCUS FOR THIS SUBJECT: Science. Progresses from Science Basics and Scientific Method to Scientific Information, Designing Experiments, and Evaluating Investigations.
-Exam: 90 minutes, 34 questions. Heavy focus on reading scientific data, graphs, and experimental reasoning.
-Tutoring approach: Ask which specific Science unit and lesson the student is on. Teach scientific reasoning and data interpretation. Use Namibian ecosystem and environmental examples.`;
-    } else if(subject.includes('Social Studies')){
-      ctx=`CURRICULUM CONTEXT — GED Social Studies (Essential Education platform):
-${eeCurriculum}
-FOCUS FOR THIS SUBJECT: Social Studies. Covers reading comprehension in social studies, context and point of view, analyzing events, working with data, and reasoning.
-Exam: 70 minutes, 35 questions. Tests document analysis, cause-and-effect reasoning, data interpretation.
-Tutoring approach: Ask which Social Studies unit the student is working on. Teach document analysis. Connect US/world history concepts to Namibian history and government where possible.`;
+  // ── CAMBRIDGE / CAMBRILEARN ──
+  else if(isCambri){
+    // Determine level
+    let cambriLevel='Cambridge Primary';
+    let cambriDetail='';
+    if(gradeNum>=1&&gradeNum<=6){
+      cambriLevel='Cambridge Primary';
+      cambriDetail=`Cambridge Primary focuses on developing core skills in English, Mathematics, and Science through enquiry-based learning.
+Key pedagogical approach: Encourage curiosity, ask "why" and "how" questions. Use the Cambridge Learning Journey framework.
+Assessment: Cambridge Primary Progression Tests and Checkpoint assessments.`;
+    } else if(gradeNum>=7&&gradeNum<=9){
+      cambriLevel='Cambridge Lower Secondary';
+      cambriDetail=getCambriLowerSecondaryContext(subject);
+    } else if(gradeNum>=10&&gradeNum<=11){
+      cambriLevel='Cambridge IGCSE';
+      cambriDetail=getCambriIGCSEContext(subject);
+    } else if(gradeNum>=12){
+      cambriLevel='Cambridge AS & A Level';
+      cambriDetail=getCambriALevelContext(subject);
     }
+    ctx=`CURRICULUM CONTEXT — ${cambriLevel} (Cambrilearn platform):
+Level: ${cambriLevel} | Grade: ${gradeNum} | Subject: ${subject}
+
+${cambriDetail}
+
+CAMBRILEARN PLATFORM NOTES:
+- Students watch video lessons, complete assignments, and take online assessments
+- Each subject follows the official Cambridge International syllabus
+- Cambrilearn provides structured lesson plans aligned to Cambridge learning objectives
+
+TUTORING APPROACH for Cambridge:
+- Always ask the student which specific Cambridge unit/chapter/topic they are working on today
+- Use Cambridge command words: describe, explain, state, outline, suggest, analyse, evaluate, assess, justify, discuss
+- Teach students how Cambridge examiners award marks — structure of responses matters
+- For sciences: teach the method (PEEL — Point, Evidence, Explanation, Link)
+- For essays and extended writing: teach claim → evidence → analysis structure
+- For problem-solving subjects: show step-by-step working, as method marks are awarded
+- Remind students of common Cambridge exam mistakes and how to avoid them`;
   }
 
   // ── MOBYMAX ──
   else if(isMoby){
-    const mobyScienceCurriculum='\nMOBYMAX SCIENCE CURRICULUM — Grades 1-8:\n\nGRADE 1 SCIENCE:\nLife Science: Animals (What Do Animals Need, Classifying Animals) | Plants (What Do Plants Need, Parts of a Plant, Roots, Leaves) | Life Cycles (Living Things Grow and Change, Life Cycle of Frog/Butterfly/Bean Plant) | Heredity and Growth (Why Living Things Look Like Parents, How Behaviors Help Babies Survive) | Adaptations (Animal Adaptations, Plant Adaptations, Responding to Environments) | Plants and Animals Living Together (Plants and Animals Need Each Other, Food Chains)\nEarth Science: The Surface of the Earth (What Is Earth Made Of, Landforms and Bodies of Water) | How Does Earths Surface Change (Rocks, Soil, Weathering and Erosion) | Natural Resources (What Are Natural Resources, Pollution, Reducing Pollution) | Weather (What Is Weather, Rain Snow and Sleet, Measuring Weather) | The Water Cycle (What is the Water Cycle, Clouds) | Seasons (Four Seasons, Winter, Spring, Summer, Fall)\nPhysical Science: Matter (What is Matter, Five Senses, Measuring Matter, Solids Liquids and Gases) | Changes in Matter (Mixing Matter, Heating and Cooling, Changing Matter) | Movement Location and Forces (Movement, Location, Forces) | Magnets (What Are Magnets, North and South Poles) | Heat Sound and Light Energy (Energy, Heat, Sound, Light) | How Do People Use Energy (How We Use Energy, How Body Uses Energy)\nSpace: Patterns in the Sky (The Sun, Day and Night, The Night Sky)\n\nGRADE 2 SCIENCE:\nLife Science: Living and Nonliving Things (What Do Plants Need, What Do Animals Need) | Plants (Parts of a Plant, How Plants Spread Seeds, How Can We Group Plants, Plant Adaptations) | Animals (Vertebrates and Invertebrates, Types of Vertebrates, Types of Invertebrates, Animal Adaptations) | Plants and Animals Working Together (Diversity of Life, Relationships Between Living Things, Food Chains and Food Webs, How Food Webs Change) | Life Cycles (Living Things Grow and Change, Life Cycle of Plants and Animals) | Environments (What Is an Environment, How Do Environments Change) | Habitats (Forest, Wetland, Ocean, Desert Habitats)\nEarth Science: Water (Who Needs Water, How We Use Water, Fresh and Salt Water, States of Water, Water Cycle, Cleaning Water) | Rocks Minerals and Soil | Fossils (What Is a Fossil, What Can Fossils Teach Us, Fossils and Dinosaurs) | Changing Surface of Earth (Weathering and Erosion, How Surface Changes Quickly, Landforms) | Weather and Seasons (What Is Weather, Measuring Weather, Water Cycle, Extreme Weather, Four Seasons)\nPhysical Science: Matter (What is Matter, States of Matter, Changing States, Changing Matter, Mixtures) | Energy (What is Energy, Heat, Light, Sound) | Motion and Forces | Work and Simple Machines | Magnets\nSpace: Earth Moon Sun and Stars (The Sun, Night and Day, Seasons, Solar System)\n\nGRADE 3 SCIENCE:\nLife Science: Living and Nonliving Things (Cells, Plant and Animal Cells) | Heredity (Inherited Traits, Inherited vs Acquired Traits, Natural Selection) | Parts of Plants (What Do Plants Need, Parts of a Plant, Leaves Stems Roots) | Life Cycles of Plants (Pollination, Deciduous and Coniferous Trees, How Seeds Grow, Life Cycle of Plant, How Seeds Are Scattered) | Animal Needs and Adaptations (Physical and Behavioral Adaptations) | Classifying Vertebrates (Mammals, Birds, Fish, Reptiles, Amphibians) | Classifying Invertebrates (Arthropods, Worms, Mollusks, Aquatic Invertebrates) | Life Cycles of Animals (Butterfly, Frog, Mammals) | Ecosystems (Environments, Adaptations for Different Environments) | Examples of Ecosystems (Grassland, Desert, Tundra, Forests, Tropical Forests, Freshwater, Oceans) | Relationships in Ecosystems (Producers Consumers Decomposers, Food Chains, Food Webs) | Changing Environments | Extinct Species and Fossil Records\nEarth Science: Rocks Minerals and Soil (Minerals, Types of Rocks, Rock Cycle, Soil) | Earths Changing Surface (Layers of Earth, Landforms, Weathering, Erosion, Volcanoes, Earthquakes) | Natural Resources (Pollution, Renewable and Nonrenewable Resources, Reduce Reuse Recycle) | Weather (Atmosphere, Measuring Weather, Severe Storms, Weather Maps, Weather Patterns)\nPhysical Science: Matter (Properties, What Is Matter Made Of, States of Matter) | Measuring Matter (Mass, Volume, Density, Length) | How Does Matter Change (Physical and Chemical Changes, Mixtures and Solutions) | Forces and Motion (Position, Force, Speed, Gravity and Magnetism) | Simple Machines (Work, Simple Machines) | Energy (Potential and Kinetic Energy, Changing Energy Forms, How Energy Travels) | Sound Energy (How Sounds Are Made, How Sound Travels) | Light Energy (How Light Travels, Reflection and Refraction, Light and Colors) | Electrical Energy (Electric Charges, Currents and Circuits) | Thermal Energy\nSpace: Solar System (Solar System, Day and Night, Seasons, Phases of Moon, Patterns in Stars)\n\nGRADE 4 SCIENCE:\nLife Science: The Building Blocks of Life (Cells, Parts of the Cell) | Classifying Organisms (Classification System, Vertebrates, Invertebrates, Vascular and Nonvascular Plants) | Animal Adaptations (Heredity, What Are Adaptations, Physical Adaptations, Behavioral Adaptations, Extinction) | Parts of Plants (Photosynthesis, Parts of a Plant) | Plant Reproduction (Seeds and Flowers, How Seeds Are Made, Life Cycles of Plants) | Ecosystems (What Is an Ecosystem, Examples, Living Things, Producers Consumers Decomposers, Energy Flow) | Changes in Ecosystems (Balanced Ecosystem, Relationships, How Ecosystems Change, Human Impact) | The Human Body (Skeletal, Muscular, Respiratory, Circulatory, Digestive, Nervous Systems, Protecting the Body)\nEarth Science: Earths Water (Water Cycle, Severe Storms) | Weather and Earths Air (Atmosphere, Air Pressure, Landforms and Temperature, Air Masses, Fronts, Clouds) | Predicting and Measuring Weather (Air Pressure, Wind, Rain and Humidity, Tracking Weather, Climate) | Severe Storms (Hurricanes, Tornadoes) | Minerals Rocks and Soil (Minerals, Sedimentary Igneous Metamorphic Rocks, Rock Cycle, Soil, Fossils) | Earths Changing Surface (Layers of Earth, Weathering, Erosion, Volcanoes, Earthquakes) | Natural Resources (Fossil Fuels, Conservation)\nPhysical Science: Matter (States of Matter, Atoms Molecules Elements) | Measuring Matter (Mass, Volume, Density) | Mixtures and Solutions | Changes in Matter (Physical and Chemical Properties and Changes) | Energy (Kinetic and Potential) | Heat (Thermal Energy, How Heat Moves) | Electricity (Charges, Currents, Circuits) | Magnetism (Electromagnets) | Sound (Sound Waves, How Sound Travels) | Light (How Matter Affects Light, Lenses) | Forces and Motion (Motion, Force, Gravity, Friction) | Simple Machines (Lever, Wheel and Axle, Pulley, Inclined Plane, Wedge, Screw, Complex Machines)\nSpace: Patterns in the Sky (How Earth Moves, The Moon, Stars) | The Universe and Our Solar System (Parts of Universe, The Planets)\n\nGRADE 5 SCIENCE:\nLife Science: Classifying Organisms (Vertebrates, Invertebrates, Plants, Dichotomous Key) | Cells (What Are Cells, Parts of Cell, Cellular Respiration, Cells Working Together) | Circulatory System (Blood, Blood Vessels, The Heart) | Respiratory System | Digestive and Urinary Systems | Plants (Leaves, Stems and Roots, Plant Reproduction, Plant Growth) | Biomes (Land Biomes, Water Biomes) | Changes in Ecosystems (How Ecosystems Change, Restoration, Preservation) | Changes in Species (Heredity, Adaptations, Evolution)\nEarth Science: Water on Earth (Oceans, Fresh Water, Water Cycle, Clouds and Precipitation) | The Atmosphere and Weather (Atmosphere, Air Pressure, Air Movement, Air Masses) | Weather and Climate (Forecasting, Severe Weather, Climate) | Earths Structure and Plate Tectonics (Layers of Earth, Plate Tectonics, Earthquakes, Volcanoes) | Weathering and Erosion (Weathering, Erosion, Soil) | Rocks and Minerals (Minerals, Rock Cycle) | Natural Resources (Types, Energy Resources, Conservation)\nPhysical Science: Matter (Atoms Elements Molecules Compounds, Periodic Table, Physical and Chemical Properties) | State Changes Mixtures and Solutions | Physical and Chemical Changes (Chemical Reactions) | Forces and Motion (Motion Speed Velocity, Forces, Newtons Laws) | Simple Machines (Work and Power) | Sound (Sound Waves, How Sound Travels) | Light (Electromagnetic Radiation, Lenses) | Thermal Energy | Electricity (Charges, Currents, Circuits, Electromagnets)\nSpace: Our Solar System (The Sun, Planets, Earths Orbit, The Moon) | Beyond Our Solar System (Galaxies, Stars, Constellations)\n\nGRADE 6 SCIENCE:\nLife on Earth: Living Things, Evolution and Natural Selection, Classifying Living Things | Viruses Archaea and Bacteria (Viruses, Prokaryotes, Bacteria) | Protists and Fungi | Plants Part 1 (Introduction, Classification, Parts of a Plant) | Plants Part 2 (Life Cycles, Reproduction, Response to Environment, How Plants Are Beneficial) | Animals Part 1 (Introduction, Animal Bodies, Invertebrates, Vertebrates, Animal Movement, Getting Energy, Body Systems) | Animals Part 2 (Reproduction, Life Cycles, Animal Behavior)\nEarth Water and Atmosphere: Water on Earth (Importance of Water, Water Cycle, Surface Water, Groundwater) | Oceanography (Characteristics, Ocean Floor, Waves, Currents) | Earths Atmosphere (What Is Atmosphere, Layers, Heat Transfer, Wind) | Weather (Clouds, Air Masses, Severe Weather, Predicting Weather) | Climate (What Factors Affect Climate, Climate Change, Human Impact)\nSound and Light: Waves (Properties of Waves, When Waves Interact) | Sound (Properties of Sound, How We Hear, Technology and Sound) | Electromagnetic Waves (Electromagnetic Radiation, Spectrum, Technology) | Light (Light and Color, Mirrors and Lenses, How We See, Technology)\n\nGRADE 7 SCIENCE:\nHuman Body Systems: Introduction (From Cells to Systems, Organ Systems Working Together, Homeostasis) | Skeletal and Muscular Systems | Circulatory and Respiratory Systems (Lymphatic System, Cardiovascular System) | Digestive and Excretory Systems (Food as Nutrients, Digestive System, Excretory System) | Nervous and Endocrine Systems (Two Parts of Nervous System, How Neurons Send Messages, Sensory Information, Endocrine System) | Reproductive System | Immune System (Infectious Diseases, Body Defenses, Immunity, Noninfectious Diseases)\nEcology and Environment: Introduction (Organisms and Environment, Changing Populations, Interactions Between Organisms, Energy Transfer, Matter Cycles) | Biomes and Ecosystems (Biomes, Aquatic Ecosystems, Biogeography, Biodiversity) | Earth and Its Resources (How Earth Supports Life, Natural Resources, Managing Resources) | Environmental Issues (Humans and Environment, Air Pollution, Water Pollution, Ocean Issues, Waste and Recycling, Land Use, Human Population Growth) | Energy Use and Conservation (Nonrenewable and Renewable Energy Sources)\nEarths Surface and Structure: Introduction (Topography, Landforms, Maps and Globes) | Weathering Erosion and Deposition (Weathering, Erosion, Types of Erosion and Deposition) | Minerals Rocks and Soil | History of Earth (Geologic Time, Eras, Relative and Absolute Dating, Fossil Record) | Earths Structure (Earth System, Earths Layers) | Plate Tectonics (Continental Drift, Theory of Plate Tectonics, Earths Changing Crust) | Volcanoes and Earthquakes\nMotion Forces and Energy: Motion (What Is Motion, Speed Velocity Acceleration) | Forces (What Is Force, Newtons Laws of Motion, Momentum, Fluids and Pressure) | Work and Machines (Work and Power, Simple Machines) | Energy (Kinetic and Potential Energy, Types of Energy, Transformation and Conservation) | Thermal Energy (What Is Thermal Energy, Heat Transfer, How Materials Respond to Heat) | Electricity (Electric Charge, Currents, Circuits, Electricity in Daily Life) | Magnetism and Electromagnetism\n\nGRADE 8 SCIENCE:\nCells and Heredity: Cells (What Are Cells, Chemistry of Cells, Parts of Cell, Structure and Function) | Cell Processes (Photosynthesis and Cellular Respiration, Exchanging Materials, Cell Division) | Heredity (Genes and Heredity, Punnett Squares, Patterns of Inheritance) | Reproduction (Chromosomes, Meiosis, Sexual and Asexual Reproduction) | Human Genetics (Sex-Linked Genes, Genetic Disorders, Biotechnology) | DNA (What is DNA, Replication, How Proteins Are Made)\nSpace Science: Earth Moon and Sun (Objects in Night Sky, The Moon, Earths Patterns, Moons Patterns, Gravity and Orbits) | The Universe (What Is Universe, Measuring Universe, Formation, Classifying Stars, Life Cycle of Stars) | The Solar System (Historical Models, Our Solar System, The Sun, Inner and Outer Planets, Other Objects) | Space Exploration\nChemistry: Matter (What Is Matter, How Is Matter Measured, What Is Matter Made Of, How Does Matter Change) | States of Matter (Solids Liquids Gases, Changing States) | Atoms and Periodic Table (Atoms, Periodic Table, Metals, Nonmetals, Radioactive Elements) | Atomic Bonds (Ionic Bonds, Covalent Bonds, Metallic Bonds) | Chemical Reactions (Chemical Changes, Process of Chemical Reaction, Chemical Equations) | Organic Chemistry (Introduction, Organic Compounds) | Nuclear Reactions | Solutions Acids and Bases\nScience Technology and Engineering: Introduction to Science (Scientific Investigations, Scientific Knowledge) | Scientific Measurement and Data (Measurement, How Scientists Use Math, Tables and Graphs, Models and Simulations) | Technology and Engineering\n';
-    const mobySsCurriculum='\nMOBYMAX SOCIAL STUDIES CURRICULUM — Grades 1-8:\n\nGRADE 1 SOCIAL STUDIES:\nPeople Living Together: Cultures Customs and Beliefs (Culture, Customs, Sharing Culture, Beliefs, Respecting Other Cultures) | Culture in Our Communities (What Is a Community, Culture in Communities) | The Salad Bowl (Culture in the United States)\nMarkets: Needs and Wants (Making Choices) | Goods and Services | Jobs (Producers and Consumers, Factories, Skills) | Buying and Trading (How Money Moves) | Industry (Resources)\nThe Places We Live: Our Earth (Continents, Oceans) | Our Country and States (USA, Symbols)\nGovernment: Our Leaders (Three Levels of Government, Government Services, Rights, Voting) | Being Good Citizens (Rules, Laws, What Is a Citizen)\nChanging People and Places: Past Present and Future (First Americans, Starting a New Country) | Heroes from the Past | Inventions that Changed the World (Transportation, Communication)\nSkills: Citizenship Skills | Map and Globe Skills (Cardinal Directions, Map Key) | Geography Skills | Graphs Charts and Diagrams | Economic and Financial Skills\n\nGRADE 2 SOCIAL STUDIES:\nThen and Now: Changing People and Places (How People and Places Change, Learning About History, Traditions) | Inventing a New World (New Tools, Changing Transportation and Communication)\nThe Land Around Us: Using Maps (What Maps Tell Us, Using a Map, Map Grid) | Landforms (Continents and Oceans, Landforms, Regions of USA)\nGovernment: Citizenship | Levels of Government (What Is Government, Local State Federal Government, Choosing Leaders) | One World Many Nations (Different Governments, Nations Working Together)\nResources and Environment: Natural Resources (Land and Water, Conserving Resources) | Weather and Climate | Farming (Past and Today, Climate and Weather Effect, Farm to Table)\nThe Market: Producers and Consumers (Goods and Services, How Goods Are Made, Industry) | Work and Money (Needs and Wants, Buying) | Scarcity | Trading\nHeroes and Influential People: Inventors, Scientists and Explorers, Traits of a Hero\nSharing the Way We Live: What Is Culture, Sharing Culture\nSkills: Citizenship Skills (Symbols, Holidays, Pledge) | Map and Globe Skills | Geography Skills | Graphs Charts and Diagrams | Economic and Financial Skills (Money, Budgeting, Saving) | Study Skills (Cause and Effect, Compare and Contrast, Sequence)\n\nGRADE 3 SOCIAL STUDIES:\nCultures and Communities: Exploring Culture (What Is Culture, Cultural Regions, Holidays, Heritage) | Communities (Urban Suburban Rural, Changing Communities)\nGeography: World Geography (Continents and Oceans, Four Hemispheres, Absolute and Relative Locations) | Earths Geographical Features (Landforms, How Landforms Change, Importance of Water, Living on the Land, Human-Made Features) | Weather and Climate (How Climate Affects the Way We Live) | The Environment (Natural Resources, How People Affect Environment, Protecting Resources, Natural Disasters) | Exploring Regions (Geographic Regions of USA, Regions Around the World, Ecosystems)\nEconomics: Working Together (Producers and Consumers, Trade) | Resources (Three Kinds of Resources, Businesses and Industries) | Earning Saving and Spending (Work and Money, Making Economic Decisions)\nGovernment and Citizenship: Government (What Is Government, Levels, Three Branches) | Citizenship (Being a Good Citizen, Rights and Responsibilities, Laws and Consequences)\nHistory: Early America (American Indians, European Explorers and Settlers) | A New Nation (Americas Independence, Growing Country, The Civil War)\nSkills: Citizenship Skills | Map and Globe Skills (Latitude and Longitude) | Graphs Charts and Diagrams | Economic and Financial Skills (Advertising, Entrepreneurs) | Study Skills (Cause and Effect, Primary and Secondary Sources, Main Idea)\n\nGRADE 4 SOCIAL STUDIES:\nUS Geography: Introduction (The United States, Neighbors) | Physical Geography (Landforms, Natural Resources, Climates) | Human Geography (American People, Where Americans Live)\nRegions of the US: Introduction to Regions | Northeast (Geography Climate Resources, History and Modern Times) | Southeast (Geography Climate Resources, History and Modern Times) | Midwest (Geography Climate Resources, History and Modern Times) | Southwest (Geography Climate Resources) | West (Geography Climate Resources)\nUS History: Early History (Early America, European Exploration and Colonization) | Building a Nation (American Independence, Growing Nation) | The Civil War and Economic Changes | America in 20th Century (World Wars, Cold War, Modern History)\nThe US Economy: Introduction to Economics (What Is Economy, Parts, Types) | Money and Businesses | Trade and Globalization | Earning Saving and Spending\nUS Government: Our Democracy (Introduction, Founding, Citizens Rights) | How Does Government Work (Three Branches, State and Local Governments)\nSkills: Map Skills (Globe, Political Map, Physical Map, Latitude and Longitude) | Graphs Charts and Diagrams | Study Skills (Classify, Cause and Effect, Primary and Secondary Sources)\n\nGRADE 5 SOCIAL STUDIES:\nGeography: Geography of USA (Introduction, Landform Regions, Bodies of Water) | Human Geography (Where Americans Live, Americans and the Environment)\nEconomics: Introduction to Economics, Business, US and World Economy, Personal Finance\nGovernment: Introduction to US Government, Three Branches, Levels, Rights and Responsibilities\nHistory Early America: The First Americans (Ancient Civilizations, American Indians) | European Explorers (Age of Exploration, Spanish Expeditions, Columbian Exchange) | European Colonies (New Spain, English Colonies, Pilgrims and Puritans, French and Dutch Colonies) | British Colonies (Thirteen Colonies, Colonial Life, Slavery, French and Indian War)\nHistory A New Nation: Road to Independence (New Taxes, Rebellion) | American Independence and Revolutionary War (Declaring Independence, America Goes to War) | A New Government (Creating the Constitution, Ratification) | Growth Conflict and Change | Moving West\nHistory Civil War and Reconstruction: Buildup to Civil War | The Civil War | Reconstruction\nHistory Expansion and Industry: Expanding West (Mining, Ranching, Transcontinental Railroad, Homesteaders) | Expanding Overseas | Innovation Industry and Immigration (New Inventions, Changing Transportation, Immigration)\nHistory Progressive Era through WWII: Progressive Era (Labor Reform, Womens Rights) | World War I | Roaring Twenties and Great Depression (New Deal) | World War II Parts 1 and 2\nHistory America after WWII: Postwar Years | The Cold War | A Changing Nation (Civil Rights Movement) | Recent American History (Modern Challenges, War on Terror)\n\n\nGRADE 6 SOCIAL STUDIES — WORLD GEOGRAPHY:\nIntroduction to Geography of Earth: Our Planet (Introduction to Earth, Earth Science) | Earths Land and Water (Earths Land, Earths Water) | Weather Climate and Ecosystems (Climate Regions and Ecosystems around the World) | People and the Environment (Natural Resources, Land Use and Pollution) | Earths Population (Population Distribution and Density, Changing Populations) | Regions (Political Region, Cultural and Economic Regions)\nThe United States and Canada: The United States (Geography, US History Parts 1 and 2, USA in 21st Century) | Canada (Geography, Canadian History, Canadian Government, Modern Canada)\nMexico Central America and the Caribbean: Mexico (Geography, Mexican History, Modern Mexico) | Central America and the Caribbean (Geography, History, Governments, 21st Century)\nSouth America: Northern South America | Countries of the Andes | The Southern Cone | Brazil (Geography, Brazilian History, Modern Brazil)\nEurope: Western Europe (Geography, History, Governments and Economies) | Eastern Europe (Geography, History, Governments and Economies)\nRussia Southern Caucasus and Central Asia: Russia (Geography, Early Russia, Soviet Union and Russian Federation, Modern Russia) | Southern Caucasus and Central Asia\nAfrica: North Africa (Geography, History, 21st Century) | West and Central Africa | East and Southern Africa\nSouthwest Asia: Mesopotamian Region | Arabian Peninsula | Iran | Turkey and Cyprus\nSouth and Southeast Asia: South Asia | Southeast Asia\nEast Asia: China Taiwan and Mongolia | Japan | North Korea and South Korea\nAustralia and Pacific Islands | Antarctica\nGovernment and Citizenship: Introduction to Government, The US Government, American Citizenship\nEconomics: Introduction to Economics, Economies around the World, Business Industries and Trade, Personal Finances\nCulture and Religion: Exploring Culture, World Religions\nSkills: Map Skills (Resource Map, Population Density Map, Elevation Maps, Time Zone Map, Latitude and Longitude, Cartogram, Thematic Map) | Citizenship Skills (United Nations)\n\nGRADE 7 SOCIAL STUDIES — WORLD HISTORY:\nEarly Humans and First Civilizations: Prehistory (Uncovering Prehistory, First People, Paleolithic Era) | Migration Agriculture and Civilization (Migration and Adaptation, Agricultural Revolution, Cities and Civilizations)\nAncient Civilizations in Fertile Crescent: Early Civilizations (Sumer, Early and Later Mesopotamian Empires, Phoenicians and Lydians) | Ancient Egyptians (Government Society and Culture) | Ancient Egyptians and Kingdom of Kush (Trade Conflict, Kingdom of Kush) | Ancient Israelites\nAfrican Civilizations: Early West African Civilizations (African Geography, Ghana Empire, Mali and Songhai Empires) | Life in West African Empires (Social Structure, West African Culture) | Kush Aksum and East African City-States\nAncient India: The Vedic Age (Indus Valley, Indo-Aryan Civilization) | Hinduism Jainism and Buddhism | Maurya and Gupta Empires\nAncient and Imperial China: Ancient China (Huang River, Shang Dynasty, Zhou Dynasty, Religion and Philosophy) | Chinese Empire (Qin Dynasty, Han Dynasty, Silk Road) | China in Middle Ages (Tang and Song Dynasties, Mongol Empire, Ming and Qing Dynasties)\nJapan: Ancient Classical and Medieval Japan (Geography, Heian Period, Feudal Japan)\nAncient Greeks: Introduction (Early Cultures, Ancient Greek Society, Spartan Oligarchy, Athenian Democracy) | War and Conquest (Greeks at War, Macedonian Empire) | Ancient Greek Culture (Religion, Art and Architecture, Scholarly Work)\nAncient Romans: History of Roman Republic (Early Roman History, Roman Republic, War and End of Republic) | History of Roman Empire (Rise and Decline and Fall) | Life in Ancient Rome (Social Structure, Roman Culture, Roman Innovations)\n\nGRADE 8 SOCIAL STUDIES — WORLD HISTORY:\nByzantine Empire: History, Great Schism, Life in Byzantine Empire, Influence\nEarly Islamic Civilizations: Islam and Islamic Empires (Islam, Arab Muslim Empire, Other Muslim Empires) | Islamic Innovations and Culture (Life in Arab Muslim Empires, Islamic Innovations, Islamic Culture)\nCivilizations in the Americas: Olmecs Maya and Aztecs (Mesoamericas Early Inhabitants, The Maya, The Aztecs) | The Inca Empire (Rule, Incan Society) | North American Indians (Early Cultures, Eastern Woodlands and Great Plains, West and North)\nEurope during Middle Ages: Early Middle Ages (Europes Land, Migration Period, Charlemagne, Viking Invasions, Feudalism) | Life During High Middle Ages (Farming Trade Towns, Medieval Culture) | Medieval Holy Wars (The Crusades, Religious Conflict in Spain) | Power Struggles (Holy Roman Empire, Norman Invasion, Magna Carta) | Late Middle Ages (Hundred Years War, Black Death)\nRenaissance and Reformation: The Renaissance (Changing Times in Europe, Renaissance Ideas Spread, Renaissance Culture) | The Reformation (Challenges the Church, Counter-Reformation, Religion Divides Europe)\nEuropean Colonization of the Americas: Exploration Conquest and Economic Changes (Age of Exploration, Spanish Conquests) | European Colonies in the Americas (Spanish, Portuguese, North American Colonization, Colonization and Slavery)\nMonarchies and Revolutions: Monarchies in Early Modern Europe (Spanish, French, Russian, English Monarchies) | Scientific Revolution and Enlightenment | Age of Revolution (American Revolution, French Revolution)\nMoving Toward a Modern World: Nationalism and Imperialism (Growing Nationalism, Age of Imperialism, Struggles for Independence) | Industrial Revolutions (Industrial Revolution, Changing Economic Ideas) | World War I and World War II (WWI, Interwar Period, WWII) | World after WWII (Cold War, Changing World, Modern Economy, Environment)\n';
     if(subject.includes('Math')){
-      const mathTopics={0:'Counting to 20, number recognition, basic shapes, patterns',1:'Addition and subtraction to 20, place value to 100, measurement basics, 2D shapes',2:'Addition/subtraction to 1000, place value, introduction to multiplication, fractions as equal parts',3:'Multiplication and division facts, fractions on number lines, area and perimeter, telling time',4:'Multi-digit multiplication, long division, equivalent fractions, decimals to hundredths, angles',5:'Fractions (add/subtract/multiply), decimals, volume, coordinate planes, algebraic patterns',6:'Ratios and proportional relationships, negative numbers, expressions and equations, statistics',7:'Proportional relationships, linear equations, geometry (scale drawings, circles), probability',8:'Linear functions, systems of equations, Pythagorean theorem, transformations, statistics'};
-      const topicList=mathTopics[Math.min(gradeNum,8)]||mathTopics[7];
-      ctx='CURRICULUM CONTEXT — MobyMax Mathematics (Grade '+gradeNum+'):\nKey topics at this level: '+topicList+'.\nMobyMax approach: Adaptive skill-based modules with placement tests, instruction videos, and practice problems.\nTutoring focus: Ask which specific MobyMax skill or module the student is on. Celebrate module completions.';
+      const mathTopics={0:'Counting, number recognition, basic shapes',1:'Addition/subtraction to 20, place value to 100',2:'Addition/subtraction to 1000, introduction to multiplication',3:'Multiplication and division facts, fractions, area and perimeter',4:'Multi-digit multiplication, long division, equivalent fractions, decimals',5:'Fractions (add/subtract/multiply), decimals, volume, coordinate planes',6:'Ratios, negative numbers, expressions and equations, statistics',7:'Proportional relationships, linear equations, geometry, probability',8:'Linear functions, systems of equations, Pythagorean theorem, transformations'};
+      ctx='CURRICULUM — MobyMax Mathematics (Grade '+gradeNum+'):\nTopics: '+(mathTopics[Math.min(gradeNum,8)]||mathTopics[7])+'\nAsk which specific MobyMax skill or module. Celebrate module completions.';
     } else if(subject.includes('English')||subject.includes('Language')||subject.includes('Reading')){
-      const elaTopics={0:'Phonics, sight words, print concepts',1:'Phonics, sight words, simple sentences, reading fluency',2:'Phonics patterns, fluency, main idea, story elements, basic grammar',3:'Reading comprehension strategies, vocabulary, grammar, writing sentences',4:'Inferencing, summarising, figurative language, paragraph writing',5:'Text structure, author purpose, theme, multi-paragraph essays',6:'Analysing arguments, citing evidence, informational writing',7:'Literary analysis, research writing, grammar',8:'Rhetorical analysis, argumentative writing, advanced grammar'};
-      const topicList=elaTopics[Math.min(gradeNum,8)]||elaTopics[7];
-      ctx='CURRICULUM CONTEXT — MobyMax English/Language Arts (Grade '+gradeNum+'):\nKey topics: '+topicList+'.\nMobyMax approach: Adaptive reading and writing modules.\nTutoring focus: Ask what passage or writing task the student is working on. Help find evidence in text.';
+      ctx='CURRICULUM — MobyMax English/Language Arts (Grade '+gradeNum+'):\nAsk what passage or writing task the student is working on. Help find evidence in text.';
     } else if(subject.includes('Science')){
-      ctx='CURRICULUM CONTEXT — MobyMax Science (Grade '+gradeNum+'):\n'+mobyScienceCurriculum+'\nTutoring focus: Ask which specific Science unit and lesson the student is on in MobyMax. Use exact lesson names above. Connect to real-world Namibian examples.';
+      ctx='CURRICULUM — MobyMax Science (Grade '+gradeNum+'):\nAsk which specific Science unit and lesson. Connect to real-world Namibian examples.';
     } else if(subject.includes('Social Studies')){
-      ctx='CURRICULUM CONTEXT — MobyMax Social Studies (Grade '+gradeNum+'):\n'+mobySsCurriculum+'\nTutoring focus: Ask which specific Social Studies unit and lesson the student is on in MobyMax. Use exact lesson names above.';
+      ctx='CURRICULUM — MobyMax Social Studies (Grade '+gradeNum+'):\nAsk which specific Social Studies unit and lesson.';
     }
   }
-  // ── CAMBRILEARN ──
-  else if(isCambri){
-    ctx=`CURRICULUM CONTEXT — Cambrilearn (Cambridge International Curriculum):
-Cambrilearn follows the Cambridge International curriculum (IGCSE and A-Level). Students watch video lessons, complete assignments, and take assessments online.
-Grade 8-9 typically: Cambridge Lower Secondary — core subjects with Cambridge-style assessments.
-Grade 10-11 typically: IGCSE subjects — each subject has a syllabus with specific topics, coursework, and exam preparation.
-Grade 12: Cambridge A-Level or equivalent.
-Tutoring focus: Ask the student which Cambridge subject and which specific syllabus topic they are working on in Cambrilearn today. Use Cambridge command words (describe, explain, analyse, evaluate, assess) when guiding answers. Help students understand mark schemes and how Cambridge examiners award marks.`;
-  }
 
-  // ── GENERAL K-12 ──
+  // ── GENERAL / INDEPENDENT ──
   else {
-    ctx=`CURRICULUM CONTEXT — Grade ${gradeNum} ${subject}:
-Tutoring approach: Follow the Namibian curriculum scope for this grade. Ask the student what chapter, unit, or topic they are currently studying. Use their textbook language and terminology.`;
+    ctx=`CURRICULUM CONTEXT — Grade ${gradeNum} ${subject}:\nTutoring approach: Follow the Namibian curriculum scope. Ask the student what chapter, unit, or topic they are currently studying.`;
   }
 
   return ctx;
+}
+
+// ── CAMBRIDGE LOWER SECONDARY SUBJECT CONTEXTS ──
+function getCambriLowerSecondaryContext(subject){
+  const s=subject.toLowerCase();
+  if(s.includes('english as a first')||s.includes('first language')){
+    return `CAMBRIDGE LOWER SECONDARY ENGLISH AS A FIRST LANGUAGE:
+Strands: Reading (comprehension, inference, language analysis), Writing (creative writing, informative/analytical writing), Speaking & Listening
+Key skills: Understanding explicit and implicit meaning | Analysing language and structural choices | Writing for different purposes and audiences | Planning and drafting written responses
+Common question types: Short answer comprehension | Language analysis (effect of words/phrases) | Extended writing tasks
+Exam tips: Always quote from the text when answering language questions. For extended writing, plan structure first. PEEL paragraphs for analytical writing.`;
+  }
+  if(s.includes('english as a second')||s.includes('second language')){
+    return `CAMBRIDGE LOWER SECONDARY ENGLISH AS A SECOND LANGUAGE:
+Strands: Reading, Writing, Listening, Speaking
+Key skills: Understanding main ideas and details | Reading for gist and specific information | Formal and informal writing | Grammar in context
+Focus areas: Vocabulary development | Sentence construction | Writing emails, reports, and narratives | Listening for key information
+Exam tips: Read questions before reading the text. Use context clues for unknown vocabulary. In writing, plan before you start.`;
+  }
+  if(s.includes('math')){
+    return `CAMBRIDGE LOWER SECONDARY MATHEMATICS:
+Strands: Number | Algebra | Geometry and Measure | Statistics and Probability
+Grade 7 topics: Integers and directed numbers | Fractions, decimals, percentages | Ratio and proportion | Algebraic expressions | Angles and shapes | Data handling
+Grade 8 topics: Powers and roots | Linear equations | Sequences | Area and volume | Probability
+Grade 9 topics: Indices | Simultaneous equations | Quadratics (intro) | Circle theorems | Statistics
+Exam approach: Show all working. Method marks are awarded. Write units in answers. Check answers make sense in context.`;
+  }
+  if(s.includes('science')){
+    return `CAMBRIDGE LOWER SECONDARY SCIENCE:
+Strands: Biology | Chemistry | Physics | Scientific Enquiry
+Biology topics: Cells and organisms | Living processes | Ecosystems and adaptation | Reproduction and genetics
+Chemistry topics: States of matter | Elements, compounds, mixtures | Acids and alkalis | Chemical reactions | Periodic table
+Physics topics: Forces and motion | Energy | Electricity and magnetism | Waves and light | Space
+Scientific Enquiry: Planning experiments | Collecting and recording data | Drawing conclusions | Evaluating methods
+Exam approach: Use correct scientific terminology. For "explain" questions, give reason + effect. For experiments, use FAIR TEST principles.`;
+  }
+  if(s.includes('history')){
+    return `CAMBRIDGE LOWER SECONDARY HISTORY:
+Key themes: Depth studies in significant historical periods | Source analysis and evaluation | Cause and consequence | Change and continuity
+Skills: Analysing primary and secondary sources | Understanding historical perspectives | Constructing evidence-based arguments
+Exam approach: For source questions, use OPCVL (Origin, Purpose, Content, Value, Limitation). Always support claims with evidence.`;
+  }
+  if(s.includes('geography')){
+    return `CAMBRIDGE LOWER SECONDARY GEOGRAPHY:
+Themes: Physical geography (landforms, water, climate) | Human geography (population, settlements, economic activity) | Environmental geography
+Skills: Map reading and interpretation | Data analysis | Fieldwork techniques | Explaining geographical processes
+Exam approach: Use geographical terminology precisely. For "explain" questions, describe the process step by step.`;
+  }
+  if(s.includes('global perspectives')){
+    return `CAMBRIDGE LOWER SECONDARY GLOBAL PERSPECTIVES:
+Skills: Research | Analysis | Evaluation | Reflection | Collaboration | Communication
+Key concepts: Multiple perspectives on global issues | Critical thinking | Understanding local, national, and global connections
+Topics: Poverty and inequality | Environment | Conflict and peace | Health | Technology and society
+Assessment: Portfolio-based and written reports. Teach students to represent and evaluate multiple perspectives, not just their own.`;
+  }
+  if(s.includes('ict')||s.includes('digital')||s.includes('computer')){
+    return `CAMBRIDGE LOWER SECONDARY ICT / DIGITAL LITERACY:
+Topics: Digital devices and systems | Networks and the internet | Data handling and databases | Programming and algorithms | Cybersecurity and digital citizenship | Presentation and communication
+Skills: Practical ICT tasks | Understanding how systems work | Programming logic
+Exam approach: Practical skills are tested alongside theory. Explain processes step by step.`;
+  }
+  return `CAMBRIDGE LOWER SECONDARY — ${subject}:
+Ask the student which specific unit and lesson they are working on in Cambrilearn today.
+Use Cambridge command words: describe, explain, state, identify, suggest, analyse.
+Teach to the Cambridge learning objectives for this subject.`;
+}
+
+// ── CAMBRIDGE IGCSE SUBJECT CONTEXTS ──
+function getCambriIGCSEContext(subject){
+  const s=subject.toLowerCase();
+  if(s.includes('english as a first')){
+    return `CAMBRIDGE IGCSE ENGLISH AS A FIRST LANGUAGE (Syllabus 0500/0990):
+Paper 1: Reading — directed writing and composition (2 hours)
+Paper 2: Reading — reading passages (1 hour 45 min) OR coursework
+Key skills: Directed writing (transforming a text for a specific purpose and audience) | Summary writing (identifying and condensing key points) | Comprehension (explicit and implicit meaning) | Language analysis (commenting on writer's craft and effect) | Composition (narrative or descriptive writing)
+Mark scheme priorities: Directed writing — purpose, audience, register, content; Summary — accurate identification of relevant points (no quotation marks!); Language analysis — identify technique + quote + explain effect; Composition — structure, vocabulary, style
+Common mistakes: Over-quoting in summaries | Not adapting register in directed writing | Superficial language analysis ("this word makes it more interesting")`;
+  }
+  if(s.includes('english as a second')){
+    return `CAMBRIDGE IGCSE ENGLISH AS A SECOND LANGUAGE (Syllabus 0510/0511):
+Components: Reading and Writing | Listening | Speaking
+Reading tasks: Note-taking | Summary writing | Gap-fill | Multiple choice
+Writing tasks: Email/letter | Report | Article | Informal writing
+Key skills: Skimming and scanning | Identifying key information | Formal and informal register | Accurate grammar and vocabulary
+Exam tips: Read all questions before reading the text. Keep notes brief and in your own words. Check register — formal vs informal. Aim for accuracy over complexity.`;
+  }
+  if(s.includes('math')){
+    return `CAMBRIDGE IGCSE MATHEMATICS (Syllabus 0580):
+Tiers: Core (grades C-G) and Extended (grades A*-E)
+Topics: Number (fractions, percentages, standard form, surds) | Algebra (equations, inequalities, functions, sequences) | Coordinate geometry (straight lines, curves) | Geometry (angles, constructions, similarity, Pythagoras, trigonometry) | Mensuration (area, volume, arc length, sector area) | Trigonometry (sine/cosine rule, bearings) | Matrices and transformations | Probability and statistics (Venn diagrams, histograms, cumulative frequency, box plots)
+Paper structure: Paper 1 (non-calculator, 1hr) | Paper 2 (calculator, 1hr 30min) — for Core. Extended adds Papers 3 and 4.
+Exam tips: Always show working — method marks available. If stuck, substitute numbers. Label diagrams. Check units.`;
+  }
+  if(s.includes('additional math')){
+    return `CAMBRIDGE IGCSE ADDITIONAL MATHEMATICS (Syllabus 0606):
+Topics: Functions | Quadratic functions | Equations, inequalities, and graphs | Indices and surds | Factors and polynomials | Simultaneous equations | Logarithmic and exponential functions | Straight line graphs | Circular measure | Trigonometry | Permutations and combinations | Binomial theorem | Differentiation | Integration | Kinematics
+Exam tips: Additional Maths is harder than standard IGCSE Maths. All working must be shown. Proofs require clear logical steps. Practice sketching functions.`;
+  }
+  if(s.includes('biology')){
+    return `CAMBRIDGE IGCSE BIOLOGY (Syllabus 0610):
+Topics: Characteristics of living organisms | Cells | Biological molecules | Enzymes | Plant nutrition (photosynthesis) | Animal nutrition | Transport in plants | Transport in animals (heart, blood, lymph) | Pathogens and immunity | Gas exchange | Respiration | Excretion | Coordination and response (nervous system, hormones) | Homeostasis | Reproduction | Inheritance and genetics | Variation and selection | Organisms and their environment | Human influences on ecosystems | Biotechnology
+Paper structure: Paper 1 (multiple choice) | Paper 2 (theory) | Paper 3 (theory, extended) | Paper 6 (alternative to practical)
+Exam tips: Use correct scientific terminology. "Explain" = give reason + result. Diagrams must be neat and labelled. For genetics questions, always draw a Punnett square.`;
+  }
+  if(s.includes('chemistry')){
+    return `CAMBRIDGE IGCSE CHEMISTRY (Syllabus 0620):
+Topics: Particulate nature of matter | Experimental techniques | Atoms, elements, compounds | Stoichiometry | Electricity and chemistry | Chemical energetics | Chemical reactions (rates, reversibility, redox) | Acids, bases, and salts | The Periodic Table | Metals | Air and water | Organic chemistry
+Paper structure: Paper 1 (multiple choice) | Paper 2 (theory) | Paper 3 (extended theory) | Paper 6 (alternative to practical)
+Exam tips: Always balance equations. Definitions must be precise. For electrolysis, state which electrode and why. Organic chemistry — learn functional groups and their reactions.`;
+  }
+  if(s.includes('physics')){
+    return `CAMBRIDGE IGCSE PHYSICS (Syllabus 0625):
+Topics: Motion | Forces and momentum | Energy, work, power | Pressure | Thermal physics (heat capacity, latent heat, gas laws) | Waves (light, sound, EM spectrum) | Electricity (circuits, resistance, power) | Magnetism and electromagnetism | Atomic physics (radioactivity, nuclear reactions)
+Paper structure: Paper 1 (multiple choice) | Paper 2 (theory) | Paper 3 (extended theory) | Paper 6 (alternative to practical)
+Key equations: v=u+at | F=ma | W=Fd | P=IV | V=IR | KE=½mv²
+Exam tips: Include units in every answer. Rearrange formulae carefully. For graphs, draw line of best fit — not dot-to-dot. Significant figures matter.`;
+  }
+  if(s.includes('business')){
+    return `CAMBRIDGE IGCSE BUSINESS STUDIES (Syllabus 0450):
+Topics: Business activity and types | Business ownership (sole trader, partnership, limited company) | Business objectives and stakeholders | Business finance (revenue, costs, profit, break-even) | Marketing (4Ps, market research, segmentation) | Human resources (motivation, organisational structure, recruitment) | Operations management (production methods, quality, location) | External environment (economic factors, ethical issues, globalisation)
+Paper structure: Paper 1 (short answer) | Paper 2 (case study — structured questions and extended writing)
+Exam tips: Application marks require you to refer to the business in the question. Evaluation means giving a justified judgement. Learn to "weigh up" advantages and disadvantages.`;
+  }
+  if(s.includes('economics')){
+    return `CAMBRIDGE IGCSE ECONOMICS (Syllabus 0455):
+Topics: Basic economic problem | Allocation of resources | Microeconomics (demand, supply, price elasticity, market failure) | Macroeconomics (GDP, inflation, unemployment, balance of payments) | Economic development
+Key diagrams: Supply and demand curves | Production possibility curves | AD/AS curves
+Exam tips: Always explain diagrams with words. Use correct economic terminology. For evaluate questions, give both sides + a justified conclusion. "Define" questions — give the precise economic meaning.`;
+  }
+  if(s.includes('accounting')){
+    return `CAMBRIDGE IGCSE ACCOUNTING (Syllabus 0452):
+Topics: Introduction to accounting | Double entry bookkeeping | Books of prime entry | Ledgers and trial balance | Financial statements (income statement, balance sheet) | Cash flow | Depreciation | Accounts payable/receivable | Inventory valuation | Partnerships | Manufacturing accounts | Ratio analysis
+Exam tips: Debits and credits — asset/expense accounts increase with debit; liability/equity/revenue increase with credit. Every transaction has two equal and opposite entries. Always balance T-accounts. Present financial statements in correct format.`;
+  }
+  if(s.includes('computer science')){
+    return `CAMBRIDGE IGCSE COMPUTER SCIENCE (Syllabus 0478/0984):
+Topics: Data representation (binary, hex, ASCII) | Data storage and compression | Networks (topologies, protocols, security) | The internet | Hardware (CPU, memory, I/O devices) | Operating systems | Programming concepts (variables, loops, functions, arrays) | Algorithms (sorting, searching, pseudocode, flowcharts) | Database concepts | Boolean logic and logic gates | Systems analysis and design | Security and ethics
+Programming: Cambridge uses pseudocode — learn the standard Cambridge pseudocode notation. Trace tables are commonly tested.
+Exam tips: For algorithm questions, trace through step by step. For network questions, know protocols and their purposes. Programming requires exact syntax.`;
+  }
+  if(s.includes('history')){
+    return `CAMBRIDGE IGCSE HISTORY (Syllabus 0470):
+Structure: Core content (19th-20th century) + Depth studies
+Common topics: WWI — causes, events, aftermath | Rise of dictators (Hitler, Stalin, Mussolini) | WWII — causes and events | Cold War | Decolonisation | UN and international relations
+Skills: Source analysis (utility, reliability, cross-referencing) | Essay writing (argument, evidence, evaluation)
+Exam tips: For source questions — always say WHY a source is useful/not useful. For essays — intro with clear argument, paragraphs with evidence, conclusion with judgement. Avoid narrative — always analyse.`;
+  }
+  if(s.includes('geography')){
+    return `CAMBRIDGE IGCSE GEOGRAPHY (Syllabus 0460):
+Topics: Population and settlement | The natural environment (rivers, coasts, weather, tectonic hazards) | Economic development and resources | Environmental management
+Case studies: You must know real-world examples — one for each theme
+Skills: Map work and OS maps | Graph interpretation | Photo analysis | Fieldwork questions
+Exam tips: Case studies must have specific names, places, dates, data. Generic answers lose marks. "Explain" means give a process. Use geographical terminology precisely.`;
+  }
+  if(s.includes('psychology')){
+    return `CAMBRIDGE IGCSE PSYCHOLOGY (Syllabus 0478):
+Topics: Core studies in cognitive, developmental, social, and biological psychology | Research methods | Key psychological themes
+Skills: Describing studies | Evaluating methodology | Applying psychology to everyday situations
+Exam tips: For each study — know the aim, method, results, and conclusion. For "evaluate" — consider sample size, reliability, validity, ethics. Apply studies to new scenarios.`;
+  }
+  if(s.includes('global perspectives')){
+    return `CAMBRIDGE IGCSE GLOBAL PERSPECTIVES (Syllabus 0457):
+Components: Written examination (two essays) | Team project | Individual report
+Skills: Research and evaluation | Analysis of perspectives | Construction of argument | Reflection
+Topics: Topics drawn from global issues — students select and research specific issues
+Exam tips: Always present multiple perspectives (personal, local, national, global). Evaluate sources for reliability and bias. Conclusions must be supported by evidence, not just opinion.`;
+  }
+  return `CAMBRIDGE IGCSE — ${subject}:
+Ask the student which specific syllabus topic and paper they are preparing for.
+Use Cambridge command words and teach mark scheme awareness.
+Structure responses using Cambridge's PEEL or point-evidence-analysis framework.`;
+}
+
+// ── CAMBRIDGE AS/A LEVEL CONTEXTS ──
+function getCambriALevelContext(subject){
+  const s=subject.toLowerCase();
+  if(s.includes('math')){
+    return `CAMBRIDGE AS & A LEVEL MATHEMATICS (Syllabus 9709):
+AS Level: Pure Mathematics 1 (algebra, functions, coordinate geometry, trigonometry, calculus) | Mechanics 1 OR Statistics 1
+A Level: Pure Mathematics 2 and 3 (further calculus, complex numbers, differential equations) | Further applied options
+Key skills: Proof and rigorous reasoning | Differentiation and integration (standard and chain/product/quotient rules) | Series and sequences | Vectors | Statistical distributions (normal, binomial, Poisson)
+Exam tips: Show complete working — method marks apply. Proofs must be logically complete. Sketch graphs to check answers. Significant figures: 3SF unless stated.`;
+  }
+  if(s.includes('biology')){
+    return `CAMBRIDGE AS & A LEVEL BIOLOGY (Syllabus 9700):
+Topics: Cell structure | Biological molecules | Enzymes | Cell membranes and transport | Cell and nuclear division | Genetic information (DNA, protein synthesis) | Transport in plants and animals | Gas exchange | Immunity | Homeostasis | Coordination (nervous and hormonal) | Inheritance | Ecology | Evolution | Applications of genetics and biotechnology
+Paper structure: Paper 1 (MCQ) | Paper 2 (structured data questions) | Paper 3 (advanced theory) | Paper 4 (practical)
+Exam tips: Use precise biological language. "Describe" = what happens. "Explain" = why it happens. "Evaluate" = weigh evidence both ways. Diagrams must be large, clear, labelled with lines not arrows.`;
+  }
+  if(s.includes('chemistry')){
+    return `CAMBRIDGE AS & A LEVEL CHEMISTRY (Syllabus 9701):
+Topics: Atomic structure | Chemical bonding | States of matter | Energetics | Electrochemistry | Equilibria | Reaction kinetics | Periodicity | Groups (I, VII, transition metals) | Organic chemistry (alkanes, alkenes, halogenoalkanes, alcohols, carbonyls, acids, amines, polymers, analysis)
+Key skills: Balanced equations including ionic equations | Mechanism arrows in organic chemistry | Enthalpy cycle calculations (Hess's Law) | Equilibrium constant expressions
+Exam tips: Always state conditions for organic reactions (reagent, solvent, temperature). Mechanisms require correct curly arrow technique. Define terms precisely.`;
+  }
+  if(s.includes('physics')){
+    return `CAMBRIDGE AS & A LEVEL PHYSICS (Syllabus 9702):
+Topics: Physical quantities and units | Kinematics | Dynamics (Newton's laws) | Forces | Work, energy, and power | Deformation of solids | Waves | Superposition | Electricity | DC circuits | Electronics | Magnetic fields | Electromagnetic induction | Quantum physics | Nuclear physics | Medical physics | Gravitational and electric fields | Capacitance | Oscillations | Astrophysics
+Key skills: Deriving equations from first principles | Experimental error analysis | Graph analysis (gradient, intercept) | Unit conversions
+Exam tips: Define quantities precisely. Distinguish between scalar and vector. In experiments — identify systematic and random errors. Practical paper — draw conclusions from data with uncertainty.`;
+  }
+  if(s.includes('economics')){
+    return `CAMBRIDGE AS & A LEVEL ECONOMICS (Syllabus 9708):
+Micro: Demand and supply | Elasticity | Market structures (perfect competition, monopoly, oligopoly) | Market failure | Government intervention
+Macro: National income | Money and banking | Inflation | Unemployment | Balance of payments | Exchange rates | Economic development | Globalisation
+Skills: Diagram drawing and analysis | Essay writing with evaluation | Data response questions
+Exam tips: Every micro answer needs a diagram. Every macro answer should reference relevant theory. Essays: point, diagram, explain, evaluate. Evaluation requires a justified conclusion.`;
+  }
+  return `CAMBRIDGE AS & A LEVEL — ${subject}:
+Ask which specific topic and paper component the student is preparing for.
+At A Level, emphasis is on analysis, evaluation, and synthesis — not just recall.
+Use Cambridge command words precisely: analyse, evaluate, assess, justify, discuss, examine.
+Teach students to construct extended arguments with evidence and counter-argument.`;
 }
 
 function buildSystemPrompt(s){
@@ -1009,7 +1197,8 @@ TUTORING RULES:
 - Gently redirect if the student goes off-topic.
 - Keep responses concise — short paragraphs, numbered steps when helpful.
 - At natural pause points, summarise what was covered and suggest one specific thing to practise next.
-- Always ask the student what they are working on today if they haven't told you yet.\n- VISUAL SUPPORT: When a student struggles with a visual concept (cycles, systems, diagrams, processes, anatomy), add [SUGGEST_VISUAL] at the end of your response to trigger automatic visual help.`;
+- Always ask the student what they are working on today if they haven't told you yet.
+- VISUAL SUPPORT: When a student struggles with a visual concept (cycles, systems, diagrams, processes, anatomy), add [SUGGEST_VISUAL] at the end of your response to trigger automatic visual help.`;
 }
 
 function formatMsg(t){return t.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\*(.*?)\*/g,'<em>$1</em>').replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br/>');}
@@ -1019,554 +1208,186 @@ function addMessage(role,rawContent){
   div.innerHTML='<div class="msg-avatar">'+(role==='ai'?'🧠':'👤')+'</div><div class="msg-bubble"><p>'+formatMsg(rawContent)+'</p></div>';
   if(role==='ai'){
     const bubble=div.querySelector('.msg-bubble');
-    const speakBtn=document.createElement('button');
-    speakBtn.className='speak-btn';
-    speakBtn.textContent='🔊';
-    speakBtn.title='Read aloud';
+    const speakBtn=document.createElement('button');speakBtn.className='speak-btn';speakBtn.textContent='🔊';speakBtn.title='Read aloud';
     const captured=rawContent;
-    speakBtn.onclick=function(){
-      if(speakBtn.classList.contains('speaking')){
-        window.speechSynthesis.cancel();
-      } else {
-        speakText(captured,speakBtn);
-      }
-    };
-    bubble.appendChild(speakBtn);
-    autoSpeak(rawContent);
+    speakBtn.onclick=function(){if(speakBtn.classList.contains('speaking')){window.speechSynthesis.cancel();}else{speakText(captured,speakBtn);}};
+    bubble.appendChild(speakBtn);autoSpeak(rawContent);
   }
   msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
 }
-function showTyping(){
-  const msgs=document.getElementById('messages');
-  const div=document.createElement('div');div.className='msg ai';div.id='typing-ind';
-  div.innerHTML='<div class="msg-avatar">🧠</div><div class="msg-bubble"><div class="typing"><span></span><span></span><span></span></div></div>';
-  msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
-}
+function showTyping(){const msgs=document.getElementById('messages');const div=document.createElement('div');div.className='msg ai';div.id='typing-ind';div.innerHTML='<div class="msg-avatar">🧠</div><div class="msg-bubble"><div class="typing"><span></span><span></span><span></span></div></div>';msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;}
 function removeTyping(){const el=document.getElementById('typing-ind');if(el)el.remove();}
 
 // ── VISUAL AND VIDEO SUPPORT ──
-
-// Khan Academy URL mapping by topic keywords
-function getKhanUrl(topic, grade){
-  const t = topic.toLowerCase();
-  const g = parseInt((grade||'').match(/\d+/)||[5]) || 5;
-  if(t.includes('food chain')||t.includes('food web')) return 'https://www.khanacademy.org/science/ms-biology/x17d61cc3b56c56e4:matter-and-energy-in-ecosystems/x17d61cc3b56c56e4:food-chains-and-food-webs/v/food-chains-and-food-webs';
-  if(t.includes('water cycle')) return 'https://www.khanacademy.org/science/ms-biology/x17d61cc3b56c56e4:biotic-and-abiotic-factors/x17d61cc3b56c56e4:the-water-cycle/v/the-water-cycle';
-  if(t.includes('photosynthesis')) return 'https://www.khanacademy.org/science/ms-biology/x17d61cc3b56c56e4:matter-and-energy-in-ecosystems/x17d61cc3b56c56e4:photosynthesis/v/photosynthesis';
-  if(t.includes('cell')||t.includes('cells')) return 'https://www.khanacademy.org/science/ms-biology/x17d61cc3b56c56e4:cells/x17d61cc3b56c56e4:intro-to-cells/v/introduction-to-cells';
-  if(t.includes('dna')) return 'https://www.khanacademy.org/science/ms-biology/x17d61cc3b56c56e4:heredity-genetics/x17d61cc3b56c56e4:dna/v/dna';
-  if(t.includes('fraction')) return 'https://www.khanacademy.org/math/cc-'+g+'th-grade-math/x2256d1d8f1b38a9b:fractions/cc-'+g+'th-fractions-intro/v/fraction-basics';
-  if(t.includes('algebra')||t.includes('equation')) return 'https://www.khanacademy.org/math/algebra/x2f8bb11595b61c86:foundation-algebra/x2f8bb11595b61c86:intro-equations/v/variables-expressions-and-equations';
-  if(t.includes('geometry')||t.includes('area')||t.includes('perimeter')) return 'https://www.khanacademy.org/math/geometry';
-  if(t.includes('volcano')||t.includes('earthquake')) return 'https://www.khanacademy.org/science/ms-earth-space-science/x0f02f37fd0d5cf3b:earth-materials-and-systems/x0f02f37fd0d5cf3b:plate-tectonics/v/plates-and-their-movement';
-  if(t.includes('solar system')||t.includes('planet')) return 'https://www.khanacademy.org/science/ms-earth-space-science/x0f02f37fd0d5cf3b:earth-in-space/x0f02f37fd0d5cf3b:our-solar-system/v/the-solar-system';
-  if(t.includes('evolution')||t.includes('adaptation')) return 'https://www.khanacademy.org/science/ms-biology/x17d61cc3b56c56e4:natural-selection/x17d61cc3b56c56e4:natural-selection-and-evolution/v/natural-selection-and-the-rock-pocket-mouse';
-  if(t.includes('civil war')) return 'https://www.khanacademy.org/humanities/us-history/civil-war-era';
-  if(t.includes('world war')||t.includes('wwi')||t.includes('wwii')) return 'https://www.khanacademy.org/humanities/world-history/euro-hist';
-  if(t.includes('percent')||t.includes('percentage')) return 'https://www.khanacademy.org/math/pre-algebra/pre-algebra-ratios-rates/pre-algebra-percent-word-problems/v/solving-percent-problems';
-  if(t.includes('multiplication')) return 'https://www.khanacademy.org/math/cc-third-grade-math/intro-to-multiplication/v/multiplication-as-equal-groups';
-  if(t.includes('division')) return 'https://www.khanacademy.org/math/cc-third-grade-math/intro-to-division/v/introduction-to-division';
-  if(t.includes('reading')||t.includes('comprehension')) return 'https://www.khanacademy.org/ela/cc-'+g+'th-grade-reading-vocab';
-  if(t.includes('essay')||t.includes('writing')) return 'https://www.khanacademy.org/ela/cc-'+g+'th-grade-reading-vocab/x3a585dd2:informational-reading-foundations';
-  if(t.includes('roman')||t.includes('rome')) return 'https://www.khanacademy.org/humanities/world-history/ancient-medieval/roman/v/roman-history-overview';
-  if(t.includes('greek')||t.includes('greece')) return 'https://www.khanacademy.org/humanities/world-history/ancient-medieval/ancient-greece/v/ancient-greece';
-  if(t.includes('egypt')) return 'https://www.khanacademy.org/humanities/world-history/ancient-medieval/ancient-egypt-hittites/v/ancient-egypt';
-  if(t.includes('islam')||t.includes('muslim')) return 'https://www.khanacademy.org/humanities/world-history/medieval-times/islamv/v/origin-of-islam';
-  // Default - Khan Academy search
+function getKhanUrl(topic,grade){
+  const t=topic.toLowerCase();const g=parseInt((grade||'').match(/\d+/)||[5])||5;
+  if(t.includes('food chain')||t.includes('food web'))return 'https://www.khanacademy.org/science/ms-biology/x17d61cc3b56c56e4:matter-and-energy-in-ecosystems/x17d61cc3b56c56e4:food-chains-and-food-webs/v/food-chains-and-food-webs';
+  if(t.includes('water cycle'))return 'https://www.khanacademy.org/science/ms-biology/x17d61cc3b56c56e4:biotic-and-abiotic-factors/x17d61cc3b56c56e4:the-water-cycle/v/the-water-cycle';
+  if(t.includes('photosynthesis'))return 'https://www.khanacademy.org/science/ms-biology/x17d61cc3b56c56e4:matter-and-energy-in-ecosystems/x17d61cc3b56c56e4:photosynthesis/v/photosynthesis';
+  if(t.includes('cell'))return 'https://www.khanacademy.org/science/ms-biology/x17d61cc3b56c56e4:cells/x17d61cc3b56c56e4:intro-to-cells/v/introduction-to-cells';
+  if(t.includes('fraction'))return 'https://www.khanacademy.org/math/cc-'+g+'th-grade-math/x2256d1d8f1b38a9b:fractions/cc-'+g+'th-fractions-intro/v/fraction-basics';
+  if(t.includes('algebra')||t.includes('equation'))return 'https://www.khanacademy.org/math/algebra/x2f8bb11595b61c86:foundation-algebra/x2f8bb11595b61c86:intro-equations/v/variables-expressions-and-equations';
+  if(t.includes('volcano')||t.includes('earthquake'))return 'https://www.khanacademy.org/science/ms-earth-space-science/x0f02f37fd0d5cf3b:earth-materials-and-systems/x0f02f37fd0d5cf3b:plate-tectonics/v/plates-and-their-movement';
+  if(t.includes('solar system'))return 'https://www.khanacademy.org/science/ms-earth-space-science/x0f02f37fd0d5cf3b:earth-in-space/x0f02f37fd0d5cf3b:our-solar-system/v/the-solar-system';
+  if(t.includes('evolution'))return 'https://www.khanacademy.org/science/ms-biology/x17d61cc3b56c56e4:natural-selection/x17d61cc3b56c56e4:natural-selection-and-evolution/v/natural-selection-and-the-rock-pocket-mouse';
+  if(t.includes('percent'))return 'https://www.khanacademy.org/math/pre-algebra/pre-algebra-ratios-rates/pre-algebra-percent-word-problems/v/solving-percent-problems';
   return 'https://www.khanacademy.org/search?search_again=1&page_search_query='+encodeURIComponent(topic);
 }
-
-// YouTube search query builder
-function getYouTubeSearchQuery(topic, grade, subject){
-  const g = grade||'';
-  const gradeStr = g.includes('GED') ? 'GED' : g;
-  let query = topic + ' ' + gradeStr + ' ' + (subject||'');
-  // Add educational qualifiers
-  if(parseInt((g.match(/\d+/)||[0])[0]) <= 6) query += ' for kids explained';
-  else query += ' lesson explained';
-  return query.trim();
-}
-
-// Get YouTube video ID for common topics
-// Using reliable educational channel videos
+function getYouTubeSearchQuery(topic,grade,subject){const g=grade||'';const gradeStr=g.includes('GED')?'GED':g;let query=topic+' '+gradeStr+' '+(subject||'');if(parseInt((g.match(/\d+/)||[0])[0])<=6)query+=' for kids explained';else query+=' lesson explained';return query.trim();}
 function getYouTubeVideoId(topic){
-  const t = topic.toLowerCase();
-  // Crash Course Kids and educational channels - verified IDs
-  if(t.includes('food chain')||t.includes('food web')) return 'ByV3MtnTOcI';
-  if(t.includes('water cycle')) return 'ncORPosDrjI';
-  if(t.includes('photosynthesis')) return 'sQK3Yr4Sc_k';
-  if(t.includes('cell')&&!t.includes('excel')) return '8IlzKri08kU';
-  if(t.includes('dna')) return 'AhsIF-cmoQQ';
-  if(t.includes('plate tectonic')) return 'ryrXAGY1dmE';
-  if(t.includes('volcano')) return 'LQwZwKS4s9E';
-  if(t.includes('earthquake')) return 'ryrXAGY1dmE';
-  if(t.includes('solar system')) return '92t1BR33tF0';
-  if(t.includes('fraction')) return 'c4MBHHd2goc';
-  if(t.includes('multiplication')) return 'mvOkMYCygps';
-  if(t.includes('division')) return 'gHTH6PKfpRk';
-  if(t.includes('algebra')||t.includes('equation')) return 'NybHckSEQBI';
-  if(t.includes('evolution')||t.includes('natural selection')) return 'P3GagfbA2vo';
-  if(t.includes('civil war')) return 'Afsm3uotLhU';
-  if(t.includes('world war 2')||t.includes('wwii')) return 'DwKPFT-RioU';
-  if(t.includes('world war 1')||t.includes('wwi')) return 'dHSQAEam2yc';
-  if(t.includes('digestive')) return 'Bg4SyXb4b9Q';
-  if(t.includes('nervous system')) return 'aet_oxqCPfQ';
-  if(t.includes('circulatory')||t.includes('heart')) return 'CWFyxn0qDEU';
-  if(t.includes('ecosystem')) return 'fPxQDScFBHM';
-  if(t.includes('rock cycle')) return 'rKhBmkCPFgs';
-  if(t.includes('climate change')) return 'G4H1N_yXBiA';
-  if(t.includes('roman')||t.includes('rome')) return 'oPmgBxmhP1Q';
-  if(t.includes('greek')||t.includes('greece')) return 'X15JHaEGM1o';
-  if(t.includes('egypt')) return 'hO1tzmi1V5g';
-  if(t.includes('percent')) return 'rR95Cbcjzus';
-  if(t.includes('human body')) return 'Bg4SyXb4b9Q';
-  if(t.includes('adaptation')) return 'OoOQRlFxKZA';
-  if(t.includes('heredity')||t.includes('genetics')) return 'CBezq1fFUEA';
+  const t=topic.toLowerCase();
+  if(t.includes('food chain')||t.includes('food web'))return 'ByV3MtnTOcI';
+  if(t.includes('water cycle'))return 'ncORPosDrjI';
+  if(t.includes('photosynthesis'))return 'sQK3Yr4Sc_k';
+  if(t.includes('cell')&&!t.includes('excel'))return '8IlzKri08kU';
+  if(t.includes('dna'))return 'AhsIF-cmoQQ';
+  if(t.includes('plate tectonic'))return 'ryrXAGY1dmE';
+  if(t.includes('volcano'))return 'LQwZwKS4s9E';
+  if(t.includes('solar system'))return '92t1BR33tF0';
+  if(t.includes('fraction'))return 'c4MBHHd2goc';
+  if(t.includes('algebra')||t.includes('equation'))return 'NybHckSEQBI';
+  if(t.includes('evolution'))return 'P3GagfbA2vo';
+  if(t.includes('civil war'))return 'Afsm3uotLhU';
+  if(t.includes('digestive'))return 'Bg4SyXb4b9Q';
+  if(t.includes('nervous system'))return 'aet_oxqCPfQ';
+  if(t.includes('circulatory')||t.includes('heart'))return 'CWFyxn0qDEU';
+  if(t.includes('ecosystem'))return 'fPxQDScFBHM';
+  if(t.includes('rock cycle'))return 'rKhBmkCPFgs';
+  if(t.includes('percent'))return 'rR95Cbcjzus';
+  if(t.includes('roman'))return 'oPmgBxmhP1Q';
+  if(t.includes('greek'))return 'X15JHaEGM1o';
+  if(t.includes('egypt'))return 'hO1tzmi1V5g';
+  if(t.includes('heredity')||t.includes('genetics'))return 'CBezq1fFUEA';
   return null;
 }
-
-// Add a video card to the chat
-function addVideoToChat(topic, grade, subject){
-  const msgs = document.getElementById('messages');
-  const videoId = getYouTubeVideoId(topic);
-  const khanUrl = getKhanUrl(topic, grade);
-  const searchQuery = getYouTubeSearchQuery(topic, grade, subject);
-  const youtubeSearchUrl = 'https://www.youtube.com/results?search_query='+encodeURIComponent(searchQuery);
-  const youtubeWatchUrl = videoId ? 'https://www.youtube.com/watch?v='+videoId : youtubeSearchUrl;
-  const thumbnailUrl = videoId ? 'https://img.youtube.com/vi/'+videoId+'/hqdefault.jpg' : null;
-
-  const div = document.createElement('div');
-  div.className = 'msg ai';
-  div.style.animation = 'fadeUp 0.3s ease';
-
-  let html = '<div class="msg-avatar">🎬</div><div class="msg-bubble">';
-  html += '<p style="font-size:13px;color:var(--muted);margin-bottom:8px">Here are some visual resources to help:</p>';
-
-  if(videoId && thumbnailUrl){
-    html += '<a href="'+youtubeWatchUrl+'" target="_blank" style="display:block;position:relative;border-radius:12px;overflow:hidden;margin-bottom:10px;text-decoration:none;max-width:420px">';
-    html += '<img src="'+thumbnailUrl+'" style="width:100%;display:block;border-radius:12px;" alt="'+topic+' video">';
-    html += '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3);border-radius:12px">';
-    html += '<div style="width:60px;height:60px;background:rgba(255,0,0,0.9);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px">▶</div></div>';
-    html += '<div style="background:var(--surface2);padding:8px 12px;font-size:12px;color:var(--muted);font-family:var(--mono)">▶ YouTube — '+topic+' (tap to watch)</div>';
-    html += '</a>';
-  }
-
-  html += '<div class="visual-row">';
-  if(!videoId){
-    html += '<a href="'+youtubeSearchUrl+'" target="_blank" class="khan-link">▶ Search YouTube: '+topic+'</a>';
-  }
-  html += '<a href="'+khanUrl+'" target="_blank" class="khan-link">📚 Khan Academy — '+topic+'</a>';
-  html += '</div>';
-  html += '</div>';
-
-  div.innerHTML = html;
-  msgs.appendChild(div);
-  msgs.scrollTop = msgs.scrollHeight;
+function addVideoToChat(topic,grade,subject){
+  const msgs=document.getElementById('messages');const videoId=getYouTubeVideoId(topic);const khanUrl=getKhanUrl(topic,grade);const searchQuery=getYouTubeSearchQuery(topic,grade,subject);const youtubeSearchUrl='https://www.youtube.com/results?search_query='+encodeURIComponent(searchQuery);const youtubeWatchUrl=videoId?'https://www.youtube.com/watch?v='+videoId:youtubeSearchUrl;const thumbnailUrl=videoId?'https://img.youtube.com/vi/'+videoId+'/hqdefault.jpg':null;
+  const div=document.createElement('div');div.className='msg ai';div.style.animation='fadeUp 0.3s ease';
+  let html='<div class="msg-avatar">🎬</div><div class="msg-bubble"><p style="font-size:13px;color:var(--muted);margin-bottom:8px">Here are some visual resources to help:</p>';
+  if(videoId&&thumbnailUrl){html+='<a href="'+youtubeWatchUrl+'" target="_blank" style="display:block;position:relative;border-radius:12px;overflow:hidden;margin-bottom:10px;text-decoration:none;max-width:420px"><img src="'+thumbnailUrl+'" style="width:100%;display:block;border-radius:12px;" alt="'+topic+' video"><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3);border-radius:12px"><div style="width:60px;height:60px;background:rgba(255,0,0,0.9);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px">▶</div></div><div style="background:var(--surface2);padding:8px 12px;font-size:12px;color:var(--muted);font-family:var(--mono)">▶ YouTube — '+topic+' (tap to watch)</div></a>';}
+  html+='<div class="visual-row">';if(!videoId){html+='<a href="'+youtubeSearchUrl+'" target="_blank" class="khan-link">▶ Search YouTube: '+topic+'</a>';}
+  html+='<a href="'+khanUrl+'" target="_blank" class="khan-link">📚 Khan Academy — '+topic+'</a></div></div>';
+  div.innerHTML=html;msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
 }
-
-// Generate ASCII/text diagram for common concepts
 function getDiagram(topic){
-  const t = topic.toLowerCase();
-  if(t.includes('food chain')||t.includes('food web')){
-    return `FOOD CHAIN DIAGRAM:
-☀️ Sun (Energy Source)
-    ↓
-🌿 Producers (Plants) — make their own food
-    ↓
-🐛 Primary Consumers (Herbivores) — eat plants
-    ↓
-🐸 Secondary Consumers (Carnivores) — eat herbivores
-    ↓
-🦅 Tertiary Consumers (Top Predators)
-    ↓
-🍄 Decomposers (Fungi/Bacteria) — break down dead matter`;
-  }
-  if(t.includes('water cycle')){
-    return `WATER CYCLE DIAGRAM:
-☁️ Cloud Formation (Condensation)
-↙ ↓ ↘
-🌧️ Precipitation    ❄️ Snow
-↓                      ↓
-💧 Runoff ————→ 🏞️ Collection (Lakes/Oceans)
-                        ↓
-              🌡️ Evaporation ↑
-              🌿 Transpiration ↑
-                        ↑
-              ——— back to clouds ———`;
-  }
-  if(t.includes('cell')){
-    return `ANIMAL CELL DIAGRAM:
-┌─────────────────────────┐
-│   🔵 Cell Membrane      │
-│  ┌──────────────────┐   │
-│  │  🧠 Nucleus      │   │
-│  │  (DNA/Genes)     │   │
-│  └──────────────────┘   │
-│  ⚡ Mitochondria         │
-│  (Energy production)    │
-│  🔬 Ribosomes           │
-│  (Protein making)       │
-└─────────────────────────┘`;
-  }
-  if(t.includes('solar system')||t.includes('planet')){
-    return `SOLAR SYSTEM:
-☀️ Sun
- • 🔴 Mercury (closest)
- • 🟡 Venus
- • 🔵 Earth ← We are here
- • 🔴 Mars
- • 🟠 Jupiter (largest)
- • 🪐 Saturn (rings)
- • 🔵 Uranus
- • 🔵 Neptune (farthest)`;
-  }
-  if(t.includes('rock cycle')){
-    return `ROCK CYCLE:
-🌋 Magma/Lava
-    ↓ (cools)
-🪨 Igneous Rock
-    ↓ (weathering/erosion)
-🏔️ Sediment
-    ↓ (pressure/layers)
-🪨 Sedimentary Rock
-    ↓ (heat/pressure)
-🪨 Metamorphic Rock
-    ↓ (melts)
-🌋 Back to Magma`;
-  }
-  if(t.includes('plant') || t.includes('photosynthesis')){
-    return `PHOTOSYNTHESIS:
-☀️ Sunlight
-    +
-💧 Water (roots absorb)
-    +
-💨 CO₂ (leaves absorb)
-    ↓
-🌿 Chlorophyll in leaves
-    ↓
-🍬 Glucose (food/energy)
-    +
-💨 Oxygen (released)`;
-  }
-  if(t.includes('plate tectonic')||t.includes('earthquake')||t.includes('volcano')){
-    return `PLATE TECTONICS:
-🏔️ Continental Plate ←→ 🌊 Oceanic Plate
-
-Types of Boundaries:
-→ ← Convergent (plates collide → mountains/volcanoes)
-← → Divergent (plates apart → new crust)
-↕ ↕ Transform (plates slide → earthquakes)
-
-🌋 Volcanoes form at convergent/divergent boundaries
-💥 Earthquakes occur along fault lines`;
-  }
+  const t=topic.toLowerCase();
+  if(t.includes('food chain')||t.includes('food web'))return '☀️ Sun (Energy Source)\n    ↓\n🌿 Producers (Plants)\n    ↓\n🐛 Primary Consumers (Herbivores)\n    ↓\n🐸 Secondary Consumers (Carnivores)\n    ↓\n🦅 Tertiary Consumers (Top Predators)\n    ↓\n🍄 Decomposers';
+  if(t.includes('water cycle'))return '☁️ Cloud Formation (Condensation)\n↙ ↓ ↘\n🌧️ Precipitation  ❄️ Snow\n↓                ↓\n💧 Runoff ———→ 🏞️ Collection (Lakes/Oceans)\n                 ↓\n       🌡️ Evaporation ↑\n       🌿 Transpiration ↑';
+  if(t.includes('cell'))return '┌─────────────────────────┐\n│   🔵 Cell Membrane      │\n│  ┌──────────────────┐   │\n│  │  🧠 Nucleus      │   │\n│  └──────────────────┘   │\n│  ⚡ Mitochondria         │\n│  🔬 Ribosomes           │\n└─────────────────────────┘';
+  if(t.includes('solar system'))return '☀️ Sun\n • 🔴 Mercury\n • 🟡 Venus\n • 🔵 Earth ← We are here\n • 🔴 Mars\n • 🟠 Jupiter (largest)\n • 🪐 Saturn (rings)\n • 🔵 Uranus\n • 🔵 Neptune';
+  if(t.includes('rock cycle'))return '🌋 Magma/Lava\n    ↓ (cools)\n🪨 Igneous Rock\n    ↓ (weathering)\n🏔️ Sediment\n    ↓ (pressure)\n🪨 Sedimentary Rock\n    ↓ (heat+pressure)\n🪨 Metamorphic Rock\n    ↓ (melts)\n🌋 Back to Magma';
+  if(t.includes('photosynthesis'))return '☀️ Sunlight\n    +\n💧 Water (roots) + 💨 CO₂ (leaves)\n    ↓\n🌿 Chlorophyll\n    ↓\n🍬 Glucose (energy) + 💨 Oxygen';
+  if(t.includes('plate tectonic')||t.includes('earthquake')||t.includes('volcano'))return '🏔️ Continental Plate ←→ 🌊 Oceanic Plate\n\n→ ← Convergent → mountains/volcanoes\n← → Divergent → new ocean floor\n↕ ↕ Transform → earthquakes';
   return null;
 }
-
 function addDiagramToChat(topic){
-  const diagram = getDiagram(topic);
-  if(!diagram) return false;
-  const msgs = document.getElementById('messages');
-  const div = document.createElement('div');
-  div.className = 'msg ai';
-  div.style.animation = 'fadeUp 0.3s ease';
-  div.innerHTML = '<div class="msg-avatar">📊</div><div class="msg-bubble"><p style="font-size:12px;color:var(--muted);margin-bottom:6px">Visual diagram:</p><div class="diagram-box">'+diagram.split('<').join('&lt;').split('>').join('&gt;').split('\n').join('<br/>')+'</div></div>';
-  msgs.appendChild(div);
-  msgs.scrollTop = msgs.scrollHeight;
-  return true;
+  const diagram=getDiagram(topic);if(!diagram)return false;
+  const msgs=document.getElementById('messages');const div=document.createElement('div');div.className='msg ai';div.style.animation='fadeUp 0.3s ease';
+  div.innerHTML='<div class="msg-avatar">📊</div><div class="msg-bubble"><p style="font-size:12px;color:var(--muted);margin-bottom:6px">Visual diagram:</p><div class="diagram-box">'+diagram.split('<').join('&lt;').split('>').join('&gt;').split('\n').join('<br/>')+'</div></div>';
+  msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;return true;
 }
-
-// Detect topic from conversation for auto-suggest
 function detectTopicFromMessage(msg){
-  const keywords = ['food chain','food web','water cycle','photosynthesis','cell','dna','volcano','earthquake','solar system','planet','fraction','multiplication','division','algebra','equation','ecosystem','evolution','adaptation','civil war','world war','rock cycle','plate tectonic','human body','digestive','nervous','circulatory','percent','roman','greek','egypt','islam'];
-  const m = msg.toLowerCase();
-  for(const kw of keywords){
-    if(m.includes(kw)) return kw;
-  }
-  return null;
+  const keywords=['food chain','food web','water cycle','photosynthesis','cell','dna','volcano','earthquake','solar system','planet','fraction','multiplication','division','algebra','equation','ecosystem','evolution','adaptation','civil war','world war','rock cycle','plate tectonic','human body','digestive','nervous','circulatory','percent','roman','greek','egypt','islam'];
+  const m=msg.toLowerCase();for(const kw of keywords){if(m.includes(kw))return kw;}return null;
 }
-
 function requestVisual(){
-  const s = appState.currentStudent;
-  if(!s){return;}
-  // Try to detect topic from last few messages
-  const recentMsgs = appState.conversationHistory.slice(-4).map(m=>m.content).join(' ');
-  const topic = detectTopicFromMessage(recentMsgs) || (s.topic||s.subject||'');
-  if(!topic){
-    addMessage('ai','What topic would you like a video or diagram for? Type the topic and I will find resources for you.');
-    return;
-  }
-  const diagramAdded = addDiagramToChat(topic);
-  addVideoToChat(topic, s.grade, s.subject);
-  if(!diagramAdded){
-    logActivity('purple','🎬',s.name+' requested visual for: '+topic,'purple');
-  }
+  const s=appState.currentStudent;if(!s)return;
+  const recentMsgs=appState.conversationHistory.slice(-4).map(m=>m.content).join(' ');
+  const topic=detectTopicFromMessage(recentMsgs)||(s.topic||s.subject||'');
+  if(!topic){addMessage('ai','What topic would you like a video or diagram for? Type the topic and I will find resources for you.');return;}
+  addDiagramToChat(topic);addVideoToChat(topic,s.grade,s.subject);
 }
 
 async function sendAI(userMsg,isGreeting=false){
   if(!isGreeting)appState.conversationHistory.push({role:'user',content:userMsg});
-  appState.isLoading=true;
-  const btn=document.getElementById('send-btn');if(btn)btn.disabled=true;
-  showTyping();
-  const s=appState.currentStudent;
-  const messages=isGreeting?[{role:'user',content:userMsg}]:[...appState.conversationHistory];
+  appState.isLoading=true;const btn=document.getElementById('send-btn');if(btn)btn.disabled=true;showTyping();
+  const s=appState.currentStudent;const messages=isGreeting?[{role:'user',content:userMsg}]:[...appState.conversationHistory];
   try{
-    const res=await fetch('/.netlify/functions/chat',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({messages,system:buildSystemPrompt(s)})
-    });
+    const res=await fetch('/.netlify/functions/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages,system:buildSystemPrompt(s)})});
     const data=await res.json();removeTyping();
     if(!res.ok){addMessage('ai','Sorry, there was an issue: '+(data.error?.message||'Unknown error'));}
     else{
-      let reply=data.content[0].text;
-      const suggestVisual=reply.includes('[SUGGEST_VISUAL]');
-      reply=reply.replace('[SUGGEST_VISUAL]','').trim();
-      appState.conversationHistory.push({role:'assistant',content:reply});
-      addMessage('ai',reply);
-      if(suggestVisual&&s){
-        const topic=detectTopicFromMessage(reply)||s.topic||s.subject||'';
-        if(topic){
-          setTimeout(function(){
-            addDiagramToChat(topic);
-            addVideoToChat(topic,s.grade,s.subject);
-          },800);
-        }
-      }
+      let reply=data.content[0].text;const suggestVisual=reply.includes('[SUGGEST_VISUAL]');reply=reply.replace('[SUGGEST_VISUAL]','').trim();
+      appState.conversationHistory.push({role:'assistant',content:reply});addMessage('ai',reply);
+      if(suggestVisual&&s){const topic=detectTopicFromMessage(reply)||s.topic||s.subject||'';if(topic){setTimeout(function(){addDiagramToChat(topic);addVideoToChat(topic,s.grade,s.subject);},800);}}
       if(s&&appState.activeSessions[s.id])logActivity('purple','💬',s.name+' — AI responded','purple');
     }
   }catch(e){removeTyping();addMessage('ai','Connection error: '+e.message);}
   appState.isLoading=false;if(btn)btn.disabled=false;
 }
 
-// ── TEXT TO SPEECH (ElevenLabs) ──
-let ttsEnabled=true;
-let currentAudio=null;
-let recognition=null;
-let isListening=false;
-
+// ── TEXT TO SPEECH ──
+let ttsEnabled=true;let currentAudio=null;let recognition=null;let isListening=false;
 function toggleMute(){
-  ttsEnabled=!ttsEnabled;
-  const btn=document.getElementById('mute-btn');
-  if(btn){
-    btn.textContent=ttsEnabled?'🔊 Audio on':'🔇 Audio off';
-    btn.classList.toggle('muted',!ttsEnabled);
-  }
-  if(!ttsEnabled&&currentAudio){
-    currentAudio.pause();currentAudio=null;
-    document.querySelectorAll('.speak-btn').forEach(b=>{b.classList.remove('speaking');b.textContent='🔊';});
-  }
+  ttsEnabled=!ttsEnabled;const btn=document.getElementById('mute-btn');
+  if(btn){btn.textContent=ttsEnabled?'🔊 Audio on':'🔇 Audio off';btn.classList.toggle('muted',!ttsEnabled);}
+  if(!ttsEnabled&&currentAudio){currentAudio.pause();currentAudio=null;document.querySelectorAll('.speak-btn').forEach(b=>{b.classList.remove('speaking');b.textContent='🔊';});}
 }
-
-function stripMarkdown(text){
-  return text
-    .replace(/\*\*(.*?)\*\*/g,'$1')
-    .replace(/\*(.*?)\*/g,'$1')
-    .replace(/#{1,6}\s/g,'')
-    .replace(/`(.*?)`/g,'$1')
-    .replace(/<[^>]+>/g,'')
-    .trim();
-}
-
-async function speakText(text, btnEl){
-  // Stop any current audio
+function stripMarkdown(text){return text.replace(/\*\*(.*?)\*\*/g,'$1').replace(/\*(.*?)\*/g,'$1').replace(/#{1,6}\s/g,'').replace(/`(.*?)`/g,'$1').replace(/<[^>]+>/g,'').trim();}
+async function speakText(text,btnEl){
   if(currentAudio){currentAudio.pause();currentAudio=null;}
   document.querySelectorAll('.speak-btn').forEach(b=>{b.classList.remove('speaking');b.textContent='🔊';});
   if(btnEl){btnEl.classList.add('speaking');btnEl.textContent='⏳';}
-  // Split long text at sentence boundaries, speak first 1000 chars
-  const stripped=stripMarkdown(text);
-  const clean=stripped.length>1000 ? stripped.slice(0,stripped.lastIndexOf('.',1000)+1)||stripped.slice(0,1000) : stripped;
-  console.log('[TTS] Calling ElevenLabs for:', clean.slice(0,50));
+  const stripped=stripMarkdown(text);const clean=stripped.length>1000?stripped.slice(0,stripped.lastIndexOf('.',1000)+1)||stripped.slice(0,1000):stripped;
   try{
-    const res=await fetch('/.netlify/functions/tts',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({text:clean})
-    });
-    console.log('[TTS] Response status:', res.status, 'Content-Type:', res.headers.get('content-type'));
-    if(!res.ok){
-      const errText=await res.text();
-      console.error('[TTS] Error response:', errText);
-      throw new Error('TTS failed: '+res.status+' '+errText);
-    }
-    const blob=await res.blob();
-    console.log('[TTS] Got audio blob, size:', blob.size, 'type:', blob.type);
-    if(blob.size < 100){
-      console.error('[TTS] Blob too small, likely not audio');
-      throw new Error('Invalid audio response');
-    }
-    const url=URL.createObjectURL(blob);
-    const audio=new Audio(url);
-    currentAudio=audio;
-    if(btnEl){btnEl.textContent='⏹';}
+    const res=await fetch('/.netlify/functions/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:clean})});
+    if(!res.ok){throw new Error('TTS failed: '+res.status);}
+    const blob=await res.blob();if(blob.size<100)throw new Error('Invalid audio');
+    const url=URL.createObjectURL(blob);const audio=new Audio(url);currentAudio=audio;
+    if(btnEl)btnEl.textContent='⏹';
     audio.onended=function(){currentAudio=null;if(btnEl){btnEl.classList.remove('speaking');btnEl.textContent='🔊';}URL.revokeObjectURL(url);};
-    audio.onerror=function(e){
-      console.error('[TTS] Audio playback error:', e);
-      currentAudio=null;if(btnEl){btnEl.classList.remove('speaking');btnEl.textContent='🔊';}
-      fallbackSpeak(clean,btnEl);
-    };
-    audio.play().then(()=>console.log('[TTS] Playing!')).catch(e=>{console.error('[TTS] Play error:',e);fallbackSpeak(clean,btnEl);});
-  }catch(e){
-    console.error('[TTS] Exception:', e.message);
-    if(btnEl){btnEl.classList.remove('speaking');btnEl.textContent='🔊';}
-    fallbackSpeak(clean,btnEl);
-  }
+    audio.onerror=function(){currentAudio=null;if(btnEl){btnEl.classList.remove('speaking');btnEl.textContent='🔊';}fallbackSpeak(clean,btnEl);};
+    audio.play().catch(e=>{fallbackSpeak(clean,btnEl);});
+  }catch(e){if(btnEl){btnEl.classList.remove('speaking');btnEl.textContent='🔊';}fallbackSpeak(clean,btnEl);}
 }
-
-function fallbackSpeak(text,btnEl){
-  if(!window.speechSynthesis)return;
-  const utter=new SpeechSynthesisUtterance(text);
-  utter.rate=0.9;utter.pitch=1;
-  const voices=window.speechSynthesis.getVoices();
-  const v=voices.find(v=>v.lang.startsWith('en')&&v.name.toLowerCase().includes('female'))||voices.find(v=>v.lang.startsWith('en'))||voices[0];
-  if(v)utter.voice=v;
-  if(btnEl){utter.onend=function(){btnEl.classList.remove('speaking');btnEl.textContent='🔊';};}
-  window.speechSynthesis.speak(utter);
-}
-
-function autoSpeak(text){
-  if(!ttsEnabled)return;
-  setTimeout(function(){speakText(text,null);},300);
-}
+function fallbackSpeak(text,btnEl){if(!window.speechSynthesis)return;const utter=new SpeechSynthesisUtterance(text);utter.rate=0.9;utter.pitch=1;const voices=window.speechSynthesis.getVoices();const v=voices.find(v=>v.lang.startsWith('en')&&v.name.toLowerCase().includes('female'))||voices.find(v=>v.lang.startsWith('en'))||voices[0];if(v)utter.voice=v;if(btnEl){utter.onend=function(){btnEl.classList.remove('speaking');btnEl.textContent='🔊';};}window.speechSynthesis.speak(utter);}
+function autoSpeak(text){if(!ttsEnabled)return;setTimeout(function(){speakText(text,null);},300);}
 
 // ── VOICE INPUT ──
 function toggleVoice(){
-  if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){
-    alert('Voice input is not supported in this browser. Please use Chrome.');
-    return;
-  }
+  if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){alert('Voice input not supported. Please use Chrome.');return;}
   if(isListening){stopVoice();return;}
   const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
-  recognition=new SpeechRecognition();
-  recognition.continuous=false;
-  recognition.interimResults=true;
-  recognition.lang='en-ZA';
-  const micBtn=document.getElementById('mic-btn');
-  const input=document.getElementById('user-input');
-  recognition.onstart=function(){
-    isListening=true;
-    if(micBtn){micBtn.classList.add('listening');micBtn.textContent='⏹';}
-    if(input)input.placeholder='Listening... speak now';
-  };
-  recognition.onresult=function(e){
-    let transcript='';
-    for(let i=e.resultIndex;i<e.results.length;i++){transcript+=e.results[i][0].transcript;}
-    if(input){input.value=transcript;autoResize(input);}
-  };
-  recognition.onend=function(){
-    isListening=false;
-    if(micBtn){micBtn.classList.remove('listening');micBtn.textContent='🎤';}
-    if(input)input.placeholder='Type or speak your question...';
-    // Auto-send if we got something
-    const text=input?input.value.trim():'';
-    if(text){setTimeout(function(){sendMessage();},300);}
-  };
-  recognition.onerror=function(e){
-    isListening=false;
-    if(micBtn){micBtn.classList.remove('listening');micBtn.textContent='🎤';}
-    if(input)input.placeholder='Type or speak your question...';
-    if(e.error==='not-allowed')alert('Microphone access was denied. Please allow microphone access in your browser settings.');
-  };
+  recognition=new SpeechRecognition();recognition.continuous=false;recognition.interimResults=true;recognition.lang='en-ZA';
+  const micBtn=document.getElementById('mic-btn');const input=document.getElementById('user-input');
+  recognition.onstart=function(){isListening=true;if(micBtn){micBtn.classList.add('listening');micBtn.textContent='⏹';}if(input)input.placeholder='Listening... speak now';};
+  recognition.onresult=function(e){let transcript='';for(let i=e.resultIndex;i<e.results.length;i++){transcript+=e.results[i][0].transcript;}if(input){input.value=transcript;autoResize(input);}};
+  recognition.onend=function(){isListening=false;if(micBtn){micBtn.classList.remove('listening');micBtn.textContent='🎤';}if(input)input.placeholder='Type or speak your question...';const text=input?input.value.trim():'';if(text){setTimeout(function(){sendMessage();},300);}};
+  recognition.onerror=function(e){isListening=false;if(micBtn){micBtn.classList.remove('listening');micBtn.textContent='🎤';}if(input)input.placeholder='Type or speak your question...';if(e.error==='not-allowed')alert('Microphone access denied. Please allow microphone access in your browser settings.');};
   recognition.start();
 }
+function stopVoice(){if(recognition)recognition.stop();isListening=false;const micBtn=document.getElementById('mic-btn');if(micBtn){micBtn.classList.remove('listening');micBtn.textContent='🎤';}}
 
-function stopVoice(){
-  if(recognition)recognition.stop();
-  isListening=false;
-  const micBtn=document.getElementById('mic-btn');
-  if(micBtn){micBtn.classList.remove('listening');micBtn.textContent='🎤';}
-}
-
-function sendMessage(){
-  if(appState.isLoading)return;
-  const input=document.getElementById('user-input');
-  const text=input.value.trim();if(!text)return;
-  input.value='';input.style.height='auto';
-  addMessage('user',text);sendAI(text);
-}
+function sendMessage(){if(appState.isLoading)return;const input=document.getElementById('user-input');const text=input.value.trim();if(!text)return;input.value='';input.style.height='auto';addMessage('user',text);sendAI(text);}
 function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}
 function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,140)+'px';}
 
 let currentParentReport='';
 function openParentReport(studentId){
-  const s=appState.students.find(x=>x.id===studentId);
-  if(!s){alert('Student not found.');return;}
-  const notes=loadSessionNotes(studentId);
-  if(!notes.length){
-    alert('No session notes found for '+s.name+' yet. Complete at least one tutoring session first.');
-    return;
-  }
+  const s=appState.students.find(x=>x.id===studentId);if(!s){alert('Student not found.');return;}
+  const notes=loadSessionNotes(studentId);if(!notes.length){alert('No session notes found for '+s.name+' yet. Complete at least one tutoring session first.');return;}
   const combinedNotes=notes.map((n,i)=>'SESSION '+(i+1)+' ('+new Date(n.date).toLocaleDateString('en-ZA')+')\n'+n.note).join('\n\n---\n\n');
   document.getElementById('parent-modal-overlay').classList.add('open');
   document.getElementById('parent-meta').textContent=s.name+' · '+s.grade+' · Week ending '+new Date().toLocaleDateString('en-ZA');
   document.getElementById('parent-body').innerHTML='<div class="generating"><span>Generating parent report</span><span class="gen-dots"><span>.</span><span>.</span><span>.</span></span></div>';
   currentParentReport='';
-  // Pull ND hub observations for this student from localStorage
   let ndSection='';
-  try{
-    const ndRaw=localStorage.getItem('metanoia_nd_notes');
-    console.log('ND notes raw:', ndRaw);
-    const ndNotes=JSON.parse(ndRaw||'[]');
-    console.log('ND notes parsed:', ndNotes.length, 'entries');
-    console.log('Looking for student:', s.name.toLowerCase().trim());
-    const studentNdNotes=ndNotes.filter(n=>{
-      console.log('Comparing:', JSON.stringify(n.student.toLowerCase().trim()), 'vs', JSON.stringify(s.name.toLowerCase().trim()));
-      return n.student.toLowerCase().trim()===s.name.toLowerCase().trim();
-    });
-    console.log('Matched ND notes:', studentNdNotes.length);
-    if(studentNdNotes.length){
-      ndSection='\n\nND HUB OBSERVATIONS:\n'+studentNdNotes.slice(0,5).map(n=>
-        n.date+' '+n.time+': '+n.text+(n.tags.length?' ['+n.tags.join(', ')+']':'')
-      ).join('\n');
-    }
-  }catch(e){console.error('ND notes error:',e);}
-
-  fetch('/.netlify/functions/parentreport',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      studentName:s.name,grade:s.grade,subject:s.subject,
-      platform:s.platform,sessionNotes:combinedNotes+ndSection,
-      centerName:appState.center,tutorName:appState.tutorName
-    })
-  }).then(r=>r.json()).then(data=>{
-    if(!data.content){document.getElementById('parent-body').innerHTML='<div class="notes-content">Error: '+(data.error?.message||'Unknown error')+'</div>';return;}
-    currentParentReport=data.content[0].text;
-    document.getElementById('parent-body').innerHTML='<div class="notes-content">'+currentParentReport.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>';
-    if(s&&s.id) markParentReportSent(s.id);
-    renderDashboard();
-  }).catch(e=>{document.getElementById('parent-body').innerHTML='<div class="notes-content">Error: '+e.message+'</div>';});
+  try{const ndNotes=JSON.parse(localStorage.getItem('metanoia_nd_notes')||'[]');const studentNdNotes=ndNotes.filter(n=>n.student.toLowerCase().trim()===s.name.toLowerCase().trim());if(studentNdNotes.length){ndSection='\n\nND HUB OBSERVATIONS:\n'+studentNdNotes.slice(0,5).map(n=>n.date+' '+n.time+': '+n.text+(n.tags.length?' ['+n.tags.join(', ')+']':'')).join('\n');}}catch(e){}
+  fetch('/.netlify/functions/parentreport',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({studentName:s.name,grade:s.grade,subject:s.subject,platform:s.platform,sessionNotes:combinedNotes+ndSection,centerName:appState.center,tutorName:appState.tutorName})})
+  .then(r=>r.json()).then(data=>{if(!data.content){document.getElementById('parent-body').innerHTML='<div class="notes-content">Error: '+(data.error?.message||'Unknown error')+'</div>';return;}currentParentReport=data.content[0].text;document.getElementById('parent-body').innerHTML='<div class="notes-content">'+currentParentReport.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>';if(s&&s.id)markParentReportSent(s.id);renderDashboard();})
+  .catch(e=>{document.getElementById('parent-body').innerHTML='<div class="notes-content">Error: '+e.message+'</div>';});
 }
-function downloadParentReport(){
-  if(!currentParentReport){alert('Report not ready yet.');return;}
-  const blob=new Blob([currentParentReport],{type:'text/plain'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='parent-report-'+new Date().toISOString().slice(0,10)+'.txt';
-  a.click();
-}
-function copyParentReport(){
-  if(!currentParentReport){alert('Report not ready yet.');return;}
-  navigator.clipboard.writeText(currentParentReport).then(()=>alert('Copied! You can now paste it into WhatsApp or email.')).catch(()=>alert('Could not copy. Please use Download instead.'));
-}
+function downloadParentReport(){if(!currentParentReport){alert('Report not ready yet.');return;}const blob=new Blob([currentParentReport],{type:'text/plain'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='parent-report-'+new Date().toISOString().slice(0,10)+'.txt';a.click();}
+function copyParentReport(){if(!currentParentReport){alert('Report not ready yet.');return;}navigator.clipboard.writeText(currentParentReport).then(()=>alert('Copied! You can now paste it into WhatsApp or email.')).catch(()=>alert('Could not copy. Please use Download instead.'));}
 function closeParentModal(){document.getElementById('parent-modal-overlay').classList.remove('open');currentParentReport='';}
 
 function endSession(){
-  const s=appState.currentStudent;
-  const history=[...appState.conversationHistory];
-  let mins=0;
-  if(s&&appState.activeSessions[s.id]){
-    mins=Math.floor((Date.now()-appState.activeSessions[s.id].start)/60000);
-    delete appState.activeSessions[s.id];
-    if(appState.sessionTimers[s.id]){clearInterval(appState.sessionTimers[s.id]);delete appState.sessionTimers[s.id];}
-    logActivity('green','✅',s.name+' session ended · '+mins+'m','green');
-    appState.todayCount++;
-  }
-  if(s) saveSessionStat(s.id, mins, s.subject);
+  const s=appState.currentStudent;const history=[...appState.conversationHistory];let mins=0;
+  if(s&&appState.activeSessions[s.id]){mins=Math.floor((Date.now()-appState.activeSessions[s.id].start)/60000);delete appState.activeSessions[s.id];if(appState.sessionTimers[s.id]){clearInterval(appState.sessionTimers[s.id]);delete appState.sessionTimers[s.id];}logActivity('green','✅',s.name+' session ended · '+mins+'m','green');appState.todayCount++;}
+  if(s)saveSessionStat(s.id,mins,s.subject);
   appState.currentStudent=null;appState.conversationHistory=[];
-  if(appState.role==='tutor'){renderDashboard();show('dashboard-screen');}
-  else{pinEntry='';updatePinDots();show('login-screen');}
-  if(s&&history.length>1) generateSessionNotes(s,mins,history);
+  if(appState.role==='tutor'){renderDashboard();show('dashboard-screen');}else{pinEntry='';updatePinDots();show('login-screen');}
+  if(s&&history.length>1)generateSessionNotes(s,mins,history);
 }
 
 let currentNotes='';
@@ -1576,236 +1397,78 @@ async function generateSessionNotes(s,mins,history){
   document.getElementById('notes-body').innerHTML='<div class="generating"><span>Generating session notes</span><span class="gen-dots"><span>.</span><span>.</span><span>.</span></span></div>';
   currentNotes='';
   try{
-    const res=await fetch('/.netlify/functions/summary',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        studentName:s.name,grade:s.grade,subject:s.subject,
-        platform:s.platform,duration:mins,conversation:history
-      })
-    });
+    const res=await fetch('/.netlify/functions/summary',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({studentName:s.name,grade:s.grade,subject:s.subject,platform:s.platform,duration:mins,conversation:history})});
     const data=await res.json();
-    if(!res.ok||!data.content){
-      document.getElementById('notes-body').innerHTML='<div class="notes-content">Could not generate notes: '+(data.error?.message||'Unknown error')+'</div>';
-      return;
-    }
-    currentNotes=data.content[0].text;
-    document.getElementById('notes-body').innerHTML='<div class="notes-content">'+currentNotes.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>';
+    if(!res.ok||!data.content){document.getElementById('notes-body').innerHTML='<div class="notes-content">Could not generate notes: '+(data.error?.message||'Unknown error')+'</div>';return;}
+    currentNotes=data.content[0].text;document.getElementById('notes-body').innerHTML='<div class="notes-content">'+currentNotes.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>';
     if(s&&s.id){saveSessionNote(s.id,currentNotes);dbSaveNote(s.id,currentNotes,appState.center);}
-  }catch(e){
-    document.getElementById('notes-body').innerHTML='<div class="notes-content">Error generating notes: '+e.message+'</div>';
-  }
+  }catch(e){document.getElementById('notes-body').innerHTML='<div class="notes-content">Error generating notes: '+e.message+'</div>';}
 }
+function downloadNotes(){if(!currentNotes){alert('Notes not ready yet.');return;}const blob=new Blob([currentNotes],{type:'text/plain'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='session-notes-'+new Date().toISOString().slice(0,10)+'.txt';a.click();}
+function closeNotesModal(){document.getElementById('notes-modal-overlay').classList.remove('open');currentNotes='';}
 
-function downloadNotes(){
-  if(!currentNotes){alert('Notes not ready yet.');return;}
-  const blob=new Blob([currentNotes],{type:'text/plain'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='session-notes-'+new Date().toISOString().slice(0,10)+'.txt';
-  a.click();
+function doLogout(){appState={role:'tutor',apiKey:'',tutorName:'',center:'Windhoek',students:[],activeSessions:{},sessionTimers:{},todayCount:0,activityLog:[],currentStudent:null,conversationHistory:[],isLoading:false};show('login-screen');}
+function openAddModal(){
+  // Pre-populate subject dropdown based on current defaults
+  populateSubjectDropdown(document.getElementById('m-grade').value, document.getElementById('m-platform').value, null);
+  document.getElementById('add-modal').classList.add('open');
 }
-
-function closeNotesModal(){
-  document.getElementById('notes-modal-overlay').classList.remove('open');
-  currentNotes='';
-}
-
-function doLogout(){
-  appState={role:'tutor',apiKey:'',tutorName:'',center:'Windhoek',students:[],activeSessions:{},sessionTimers:{},todayCount:0,activityLog:[],currentStudent:null,conversationHistory:[],isLoading:false};
-  show('login-screen');
-}
-
-function openAddModal(){document.getElementById('add-modal').classList.add('open');}
 function closeAddModal(){
   document.getElementById('add-modal').classList.remove('open');
   document.querySelectorAll('#add-modal .nd-chip').forEach(c=>{c.classList.remove('selected');c.querySelector('input').checked=false;});
-  document.getElementById('m-name').value='';
-  document.getElementById('m-pin').value='';
-  document.getElementById('m-topic').value='';
+  document.getElementById('m-name').value='';document.getElementById('m-pin').value='';document.getElementById('m-topic').value='';
 }
-
 function addStudent(){
-  const name=document.getElementById('m-name').value.trim();
-  const pin=document.getElementById('m-pin').value.trim();
-  if(!name){alert('Please enter a student name.');return;}
-  if(!pin||!/^\d{4}$/.test(pin)){alert('Please enter a 4-digit PIN number.');return;}
-  const chips=document.querySelectorAll('#add-modal .nd-chip.selected');
-  const nd=Array.from(chips).map(c=>c.querySelector('input').value);
-  const s={
-    id:'s'+Date.now(),name,pin,
-    grade:document.getElementById('m-grade').value,
-    subject:document.getElementById('m-subject').value,
-    platform:document.getElementById('m-platform').value,
-    topic:document.getElementById('m-topic').value.trim(),
-    nd:nd.length?nd:['None'],
-    color:getColor(name)
-  };
-  appState.students.push(s);
-  dbSaveStudent(s,appState.center).then(()=>console.log('Student saved to cloud'));
-  logActivity('gold','➕',name+' added to roster','gold');
-  closeAddModal();renderDashboard();
+  const name=document.getElementById('m-name').value.trim();const pin=document.getElementById('m-pin').value.trim();
+  if(!name){alert('Please enter a student name.');return;}if(!pin||!/^\d{4}$/.test(pin)){alert('Please enter a 4-digit PIN number.');return;}
+  const chips=document.querySelectorAll('#add-modal .nd-chip.selected');const nd=Array.from(chips).map(c=>c.querySelector('input').value);
+  const s={id:'s'+Date.now(),name,pin,grade:document.getElementById('m-grade').value,subject:document.getElementById('m-subject').value,platform:document.getElementById('m-platform').value,topic:document.getElementById('m-topic').value.trim(),nd:nd.length?nd:['None'],color:getColor(name)};
+  appState.students.push(s);dbSaveStudent(s,appState.center).then(()=>console.log('Student saved to cloud'));
+  logActivity('gold','➕',name+' added to roster','gold');closeAddModal();renderDashboard();
 }
-
 function removeStudent(id){
   if(!confirm('Remove this student from the roster?'))return;
-  const s=appState.students.find(x=>x.id===id);
-  appState.students=appState.students.filter(x=>x.id!==id);
+  const s=appState.students.find(x=>x.id===id);appState.students=appState.students.filter(x=>x.id!==id);
   if(appState.activeSessions[id]){delete appState.activeSessions[id];if(appState.sessionTimers[id]){clearInterval(appState.sessionTimers[id]);delete appState.sessionTimers[id];}}
-  if(s){logActivity('gold','🗑️',s.name+' removed from roster','gold');dbDeleteStudent(id);}
-  renderDashboard();
+  if(s){logActivity('gold','🗑️',s.name+' removed from roster','gold');dbDeleteStudent(id);}renderDashboard();
 }
 
 // ── PROGRESS REPORT ──
-let currentProgressReport = '';
-let currentProgressStudent = null;
-
+let currentProgressReport='';let currentProgressStudent=null;
 async function openProgressReport(sid){
-  const s = appState.students.find(x=>x.id===sid);
-  if(!s) return;
-  currentProgressStudent = s;
-  currentProgressReport = '';
-
-  // Show modal
+  const s=appState.students.find(x=>x.id===sid);if(!s)return;
+  currentProgressStudent=s;currentProgressReport='';
   document.getElementById('progress-modal-overlay').style.display='flex';
-  document.getElementById('progress-meta').textContent = s.name + ' — Week of ' + getWeekLabel();
-  document.getElementById('progress-body').innerHTML = '<div class="generating"><span>Generating progress report</span><span class="gen-dots"><span>.</span><span>.</span><span>.</span></span></div>';
-
-  // Get stats and notes
-  const stats = getStudentStats(sid);
-  let notes = '';
-  try {
-    const dbNotes = await dbGetNotes(sid);
-    notes = dbNotes.map(n=>n.note).join(' | ');
-  } catch(e) {}
-
-  // Also try localStorage notes
-  if(!notes) {
-    try {
-      const localKey = 'metanoia_notes_' + sid;
-      const localNotes = JSON.parse(localStorage.getItem(localKey) || '[]');
-      notes = localNotes.slice(-5).map(n=>n.note||n).join(' | ');
-    } catch(e) {}
-  }
-
-  // Get total mins from stats
-  let totalMins = 0;
-  try {
-    const statsKey = 'metanoia_stats_' + sid;
-    const weekKey = getWeekKey();
-    const stored = JSON.parse(localStorage.getItem(statsKey) || '{}');
-    const weekData = stored[weekKey];
-    if(weekData && weekData.sessions) {
-      totalMins = weekData.sessions.reduce((a,b)=>a+(b.duration||0), 0);
-    }
-  } catch(e) {}
-
-  try {
-    const res = await fetch('/.netlify/functions/progressreport', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({
-        student: s,
-        stats: {...stats, totalMins},
-        notes: notes,
-        weekLabel: getWeekLabel()
-      })
-    });
-    const data = await res.json();
-    if(data.report) {
-      currentProgressReport = data.report;
-      document.getElementById('progress-body').textContent = data.report;
-    } else {
-      document.getElementById('progress-body').textContent = 'Could not generate report. Please try again.';
-    }
-  } catch(e) {
-    document.getElementById('progress-body').textContent = 'Connection error. Please check your internet and try again.';
-  }
+  document.getElementById('progress-meta').textContent=s.name+' — Week of '+getWeekLabel();
+  document.getElementById('progress-body').innerHTML='<div class="generating"><span>Generating progress report</span><span class="gen-dots"><span>.</span><span>.</span><span>.</span></span></div>';
+  const stats=getStudentStats(sid);let notes='';
+  try{const dbNotes=await dbGetNotes(sid);notes=dbNotes.map(n=>n.note).join(' | ');}catch(e){}
+  if(!notes){try{const localNotes=JSON.parse(localStorage.getItem('metanoia_notes_'+sid)||'[]');notes=localNotes.slice(-5).map(n=>n.note||n).join(' | ');}catch(e){}}
+  let totalMins=0;
+  try{const stored=JSON.parse(localStorage.getItem('metanoia_stats_'+sid)||'{}');const weekData=stored[getWeekKey()];if(weekData&&weekData.sessions){totalMins=weekData.sessions.reduce((a,b)=>a+(b.duration||0),0);}}catch(e){}
+  try{
+    const res=await fetch('/.netlify/functions/progressreport',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({student:s,stats:{...stats,totalMins},notes,weekLabel:getWeekLabel()})});
+    const data=await res.json();
+    if(data.report){currentProgressReport=data.report;document.getElementById('progress-body').textContent=data.report;}
+    else{document.getElementById('progress-body').textContent='Could not generate report. Please try again.';}
+  }catch(e){document.getElementById('progress-body').textContent='Connection error. Please check your internet and try again.';}
 }
-
-function getWeekLabel(){
-  const now = new Date();
-  const start = new Date(now);
-  start.setDate(now.getDate() - now.getDay() + 1);
-  const end = new Date(start);
-  end.setDate(start.getDate() + 6);
-  const fmt = d => d.toLocaleDateString('en-ZA', {day:'numeric', month:'short'});
-  return fmt(start) + ' – ' + fmt(end) + ', ' + now.getFullYear();
-}
-
-function closeProgressModal(){
-  document.getElementById('progress-modal-overlay').style.display='none';
-}
-
-function copyProgressReport(){
-  if(!currentProgressReport) return;
-  navigator.clipboard.writeText(currentProgressReport).then(()=>{
-    const btn = event.target;
-    btn.textContent='✓ Copied!';
-    setTimeout(()=>{btn.textContent='📋 Copy';}, 2000);
-  });
-}
-
+function getWeekLabel(){const now=new Date();const start=new Date(now);start.setDate(now.getDate()-now.getDay()+1);const end=new Date(start);end.setDate(start.getDate()+6);const fmt=d=>d.toLocaleDateString('en-ZA',{day:'numeric',month:'short'});return fmt(start)+' – '+fmt(end)+', '+now.getFullYear();}
+function closeProgressModal(){document.getElementById('progress-modal-overlay').style.display='none';}
+function copyProgressReport(){if(!currentProgressReport)return;navigator.clipboard.writeText(currentProgressReport).then(()=>{const btn=event.target;btn.textContent='✓ Copied!';setTimeout(()=>{btn.textContent='📋 Copy';},2000);});}
 function downloadProgressPDF(){
-  if(!currentProgressReport || !currentProgressStudent) return;
-  const s = currentProgressStudent;
-  const week = getWeekLabel();
-
-  // Build a styled HTML page and print to PDF
-  const html = `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Segoe UI', Arial, sans-serif; color: #1a1a2e; background: #fff; padding: 40px; }
-  .header { background: linear-gradient(135deg, #7b6ef6, #10b981); color: white; padding: 24px 32px; border-radius: 12px; margin-bottom: 24px; }
-  .header h1 { font-size: 22px; margin-bottom: 4px; }
-  .header p { font-size: 13px; opacity: 0.85; }
-  .meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
-  .meta-card { background: #f8f9ff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px; }
-  .meta-card label { font-size: 10px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px; }
-  .meta-card strong { font-size: 14px; color: #1a1a2e; }
-  .report-body { background: #f8f9ff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; white-space: pre-wrap; font-size: 13px; line-height: 1.8; color: #374151; }
-  .footer { margin-top: 24px; text-align: center; font-size: 11px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 16px; }
-  .logo { font-size: 13px; font-weight: bold; margin-bottom: 4px; }
-  @media print { body { padding: 20px; } }
-</style>
-</head>
-<body>
-<div class="header">
-  <h1>Weekly Progress Report</h1>
-  <p>Metanoia Academy · ${week}</p>
-</div>
-<div class="meta-grid">
-  <div class="meta-card"><label>Student</label><strong>${s.name}</strong></div>
-  <div class="meta-card"><label>Grade</label><strong>${s.grade}</strong></div>
-  <div class="meta-card"><label>Subject</label><strong>${s.subject}</strong></div>
-  <div class="meta-card"><label>Platform</label><strong>${s.platform}</strong></div>
-  <div class="meta-card"><label>Current Topic</label><strong>${s.topic||'General'}</strong></div>
-  <div class="meta-card"><label>Center</label><strong>${appState.center||'Metanoia Academy'}</strong></div>
-</div>
-<div class="report-body">${currentProgressReport.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
-<div class="footer">
-  <div class="logo">Metanoia Academy — AI Tutor Platform</div>
-  <div>metanoia-learn.com · Confidential — For parent/guardian use only</div>
-</div>
-</body>
-</html>`;
-
-  const win = window.open('', '_blank');
-  win.document.write(html);
-  win.document.close();
-  setTimeout(()=>{ win.print(); }, 500);
+  if(!currentProgressReport||!currentProgressStudent)return;
+  const s=currentProgressStudent;const week=getWeekLabel();
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI',Arial,sans-serif;color:#1a1a2e;background:#fff;padding:40px}.header{background:linear-gradient(135deg,#7b6ef6,#10b981);color:white;padding:24px 32px;border-radius:12px;margin-bottom:24px}.header h1{font-size:22px;margin-bottom:4px}.header p{font-size:13px;opacity:0.85}.meta-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}.meta-card{background:#f8f9ff;border:1px solid #e5e7eb;border-radius:10px;padding:14px}.meta-card label{font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px}.meta-card strong{font-size:14px;color:#1a1a2e}.report-body{background:#f8f9ff;border:1px solid #e5e7eb;border-radius:12px;padding:24px;white-space:pre-wrap;font-size:13px;line-height:1.8;color:#374151}.footer{margin-top:24px;text-align:center;font-size:11px;color:#9ca3af;border-top:1px solid #e5e7eb;padding-top:16px}</style></head><body><div class="header"><h1>Weekly Progress Report</h1><p>Metanoia Academy · ${week}</p></div><div class="meta-grid"><div class="meta-card"><label>Student</label><strong>${s.name}</strong></div><div class="meta-card"><label>Grade</label><strong>${s.grade}</strong></div><div class="meta-card"><label>Subject</label><strong>${s.subject}</strong></div><div class="meta-card"><label>Platform</label><strong>${s.platform}</strong></div><div class="meta-card"><label>Topic</label><strong>${s.topic||'General'}</strong></div><div class="meta-card"><label>Center</label><strong>${appState.center||'Metanoia Academy'}</strong></div></div><div class="report-body">${currentProgressReport.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div><div class="footer"><div>Metanoia Academy — AI Tutor Platform</div><div>metanoia-learn.com · Confidential — For parent/guardian use only</div></div></body></html>`;
+  const win=window.open('','_blank');win.document.write(html);win.document.close();setTimeout(()=>{win.print();},500);
 }
+async function showStudentProgressReport(){const s=appState.currentStudent;if(!s)return;await openProgressReport(s.id);}
 
-// Allow student to view their own progress report at end of session
-async function showStudentProgressReport(){
-  const s = appState.currentStudent;
-  if(!s) return;
-  await openProgressReport(s.id);
-}
-
+// ── INIT ──
+// Populate subject dropdown on page load with defaults
+document.addEventListener('DOMContentLoaded', function(){
+  populateSubjectDropdown('GED Preparation', 'Essential Education (GED)', null);
+});
 </script>
 </body>
 </html>
