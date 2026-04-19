@@ -175,6 +175,57 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var
 </style>
 </head>
 <body>
+<!-- LOGIN SCREEN -->
+<div id="nd-login-screen" style="
+  position:fixed;inset:0;background:#0f1117;display:flex;align-items:center;
+  justify-content:center;z-index:9999;flex-direction:column;gap:1rem;padding:1.5rem;
+">
+  <div style="text-align:center;margin-bottom:1rem">
+    <div style="font-size:2.5rem;margin-bottom:0.5rem">🌟</div>
+    <h1 style="color:#fff;font-size:1.4rem;font-family:sans-serif;margin:0">Metanoia <span style="color:#7b6ef6">ND Hub</span></h1>
+    <p style="color:#6b7280;font-size:0.85rem;margin-top:0.4rem;font-family:sans-serif">Please log in to continue</p>
+  </div>
+
+  <div style="background:#1e2030;border:1px solid #2d3148;border-radius:16px;padding:1.5rem;width:100%;max-width:360px">
+    <div style="margin-bottom:1rem">
+      <label style="color:#a5b4fc;font-size:0.8rem;font-family:sans-serif;display:block;margin-bottom:0.4rem">YOUR NAME</label>
+      <input id="nd-name-input" type="text" placeholder="Type your first name..."
+        autocomplete="off"
+        style="width:100%;padding:0.75rem;border-radius:10px;border:1px solid #374151;
+               background:#0f1117;color:#fff;font-size:1rem;font-family:sans-serif;box-sizing:border-box"
+        oninput="ndNameInput()"/>
+    </div>
+
+    <div id="nd-pin-section" style="display:none">
+      <label style="color:#a5b4fc;font-size:0.8rem;font-family:sans-serif;display:block;margin-bottom:0.4rem">YOUR PIN</label>
+      <div style="display:flex;gap:0.5rem;justify-content:center;margin-bottom:1rem">
+        <div class="nd-dot" id="ndd0" style="width:14px;height:14px;border-radius:50%;background:#374151;border:2px solid #4b5563"></div>
+        <div class="nd-dot" id="ndd1" style="width:14px;height:14px;border-radius:50%;background:#374151;border:2px solid #4b5563"></div>
+        <div class="nd-dot" id="ndd2" style="width:14px;height:14px;border-radius:50%;background:#374151;border:2px solid #4b5563"></div>
+        <div class="nd-dot" id="ndd3" style="width:14px;height:14px;border-radius:50%;background:#374151;border:2px solid #4b5563"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;margin-bottom:0.75rem">
+        <button onclick="ndPin('1')" style="padding:1rem;border-radius:10px;border:1px solid #374151;background:#252840;color:#fff;font-size:1.2rem;cursor:pointer">1</button>
+        <button onclick="ndPin('2')" style="padding:1rem;border-radius:10px;border:1px solid #374151;background:#252840;color:#fff;font-size:1.2rem;cursor:pointer">2</button>
+        <button onclick="ndPin('3')" style="padding:1rem;border-radius:10px;border:1px solid #374151;background:#252840;color:#fff;font-size:1.2rem;cursor:pointer">3</button>
+        <button onclick="ndPin('4')" style="padding:1rem;border-radius:10px;border:1px solid #374151;background:#252840;color:#fff;font-size:1.2rem;cursor:pointer">4</button>
+        <button onclick="ndPin('5')" style="padding:1rem;border-radius:10px;border:1px solid #374151;background:#252840;color:#fff;font-size:1.2rem;cursor:pointer">5</button>
+        <button onclick="ndPin('6')" style="padding:1rem;border-radius:10px;border:1px solid #374151;background:#252840;color:#fff;font-size:1.2rem;cursor:pointer">6</button>
+        <button onclick="ndPin('7')" style="padding:1rem;border-radius:10px;border:1px solid #374151;background:#252840;color:#fff;font-size:1.2rem;cursor:pointer">7</button>
+        <button onclick="ndPin('8')" style="padding:1rem;border-radius:10px;border:1px solid #374151;background:#252840;color:#fff;font-size:1.2rem;cursor:pointer">8</button>
+        <button onclick="ndPin('9')" style="padding:1rem;border-radius:10px;border:1px solid #374151;background:#252840;color:#fff;font-size:1.2rem;cursor:pointer">9</button>
+        <button onclick="ndPin('clear')" style="padding:1rem;border-radius:10px;border:1px solid #374151;background:#1a1d2e;color:#9ca3af;font-size:0.85rem;cursor:pointer">CLR</button>
+        <button onclick="ndPin('0')" style="padding:1rem;border-radius:10px;border:1px solid #374151;background:#252840;color:#fff;font-size:1.2rem;cursor:pointer">0</button>
+        <button onclick="ndPin('back')" style="padding:1rem;border-radius:10px;border:1px solid #374151;background:#1a1d2e;color:#9ca3af;font-size:1rem;cursor:pointer">⌫</button>
+      </div>
+    </div>
+
+    <div id="nd-login-error" style="display:none;color:#f87171;font-size:0.85rem;font-family:sans-serif;text-align:center;margin-bottom:0.75rem"></div>
+    <div id="nd-login-loading" style="display:none;color:#a5b4fc;font-size:0.85rem;font-family:sans-serif;text-align:center;margin-bottom:0.75rem">Checking...</div>
+  </div>
+</div>
+
+
 
 <!-- CHECK-IN SCREEN -->
 <div id="checkin-screen" class="screen active">
@@ -352,6 +403,156 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var
 </div>
 
 <script>
+// ── SUPABASE + ND HUB LOGIN ──
+const SUPA_URL='https://ptvfbmuqgefncwkzrvxt.supabase.co';
+const SUPA_KEY='sb_publishable_eb-wpepxwtA1yyOyQ0bMCA_WimPKTZH';
+
+async function supaFetch(path, method='GET', body=null){
+  const opts={method,headers:{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':'return=representation'}};
+  if(body) opts.body=JSON.stringify(body);
+  const res=await fetch(SUPA_URL+'/rest/v1/'+path,opts);
+  if(!res.ok){const err=await res.text();throw new Error('Supabase error: '+err);}
+  const text=await res.text();
+  return text?JSON.parse(text):[];
+}
+
+async function dbGetStudents(center){
+  try{
+    const rows=await supaFetch('students?center=eq.'+encodeURIComponent(center)+'&order=name.asc');
+    return rows.map(r=>({...r,nd:r.nd||[]}));
+  }catch(e){console.error('dbGetStudents:',e);return[];}
+}
+
+async function dbSaveStudent(s,center){
+  try{
+    await supaFetch('students','POST',{...s,center,nd:s.nd||[]});
+  }catch(e){
+    // Try update if already exists
+    try{await supaFetch('students?id=eq.'+s.id,'PATCH',{...s,center,nd:s.nd||[]});}
+    catch(e2){console.error('dbSaveStudent:',e2);}
+  }
+}
+
+async function dbDeleteStudent(id){
+  try{await supaFetch('students?id=eq.'+id,'DELETE');}
+  catch(e){console.error('dbDeleteStudent:',e);}
+}
+
+async function dbSaveSessionStat(studentId,durationMins,subject,center){
+  try{await supaFetch('session_stats','POST',{student_id:studentId,duration_mins:durationMins,subject,center});}
+  catch(e){console.error('dbSaveSessionStat:',e);}
+}
+
+async function dbGetSessionStats(studentId){
+  try{
+    const weekAgo=new Date();weekAgo.setDate(weekAgo.getDate()-7);
+    const rows=await supaFetch('session_stats?student_id=eq.'+studentId+'&created_at=gte.'+weekAgo.toISOString()+'&order=created_at.desc');
+    return rows;
+  }catch(e){console.error('dbGetSessionStats:',e);return[];}
+}
+
+async function dbSaveNote(studentId,note,center){
+  try{await supaFetch('session_notes','POST',{student_id:studentId,note,center});}
+  catch(e){console.error('dbSaveNote:',e);}
+}
+
+async function dbGetNotes(studentId){
+  try{
+    const weekAgo=new Date();weekAgo.setDate(weekAgo.getDate()-7);
+    const rows=await supaFetch('session_notes?student_id=eq.'+studentId+'&created_at=gte.'+weekAgo.toISOString()+'&order=created_at.desc');
+    return rows;
+  }catch(e){console.error('dbGetNotes:',e);return[];}
+}
+
+async function dbSaveNdObservation(studentName,note,tags,center){
+  try{await supaFetch('nd_observations','POST',{student_name:studentName,note,tags,center});}
+  catch(e){console.error('dbSaveNdObservation:',e);}
+}
+
+async function dbGetNdObservations(studentName){
+  try{
+    const weekAgo=new Date();weekAgo.setDate(weekAgo.getDate()-7);
+    const rows=await supaFetch('nd_observations?student_name=eq.'+encodeURIComponent(studentName)+'&created_at=gte.'+weekAgo.toISOString()+'&order=created_at.desc');
+    return rows;
+  }catch(e){console.error('dbGetNdObservations:',e);return[];}
+}
+
+let appState={
+  role:'tutor',apiKey:'',tutorName:'',center:'Windhoek',
+  students:[],activeSessions:{},sessionTimers:{},
+  todayCount:0,activityLog:[],
+  currentStudent:null,conversationHistory:[],isLoading:false
+};
+
+function getWeekKey(){
+  const now=new Date();
+  const day=now.getDay();
+  const monday=new Date(now);
+  monday.setDate(now.getDate()-(day===0?6:day-1));
+  return monday.toISOString().slice(0,10);
+}
+
+let ndPinEntry = '';
+let ndStudent = null;
+
+function ndUpdateDots(){
+  for(let i=0;i<4;i++){
+    const d=document.getElementById('ndd'+i);
+    if(d) d.style.background = i<ndPinEntry.length ? '#7b6ef6' : '#374151';
+  }
+}
+
+function ndNameInput(){
+  const name=document.getElementById('nd-name-input').value.trim();
+  const pinSec=document.getElementById('nd-pin-section');
+  ndPinEntry='';ndUpdateDots();
+  pinSec.style.display = name.length>=2 ? 'block' : 'none';
+}
+
+function ndPin(val){
+  const err=document.getElementById('nd-login-error');
+  err.style.display='none';
+  if(val==='clear'){ndPinEntry='';ndUpdateDots();return;}
+  if(val==='back'){ndPinEntry=ndPinEntry.slice(0,-1);ndUpdateDots();return;}
+  if(ndPinEntry.length>=4) return;
+  ndPinEntry+=val;
+  ndUpdateDots();
+  if(ndPinEntry.length===4) ndDoLogin();
+}
+
+function ndDoLogin(){
+  const nameInput=document.getElementById('nd-name-input').value.trim().toLowerCase();
+  const err=document.getElementById('nd-login-error');
+  const loading=document.getElementById('nd-login-loading');
+  err.style.display='none';
+  loading.style.display='block';
+
+  Promise.all([dbGetStudents('Windhoek'),dbGetStudents('Rehoboth')]).then(function(results){
+    loading.style.display='none';
+    const students=[...results[0],...results[1]];
+    const student=students.find(function(s){
+      return s.name.toLowerCase().trim()===nameInput||s.name.toLowerCase().trim().startsWith(nameInput);
+    });
+    if(!student){
+      err.textContent='Name not recognised. Please check your name.';
+      err.style.display='block';ndPinEntry='';ndUpdateDots();return;
+    }
+    if(ndPinEntry!==student.pin){
+      err.textContent='Incorrect PIN. Please try again.';
+      err.style.display='block';ndPinEntry='';ndUpdateDots();return;
+    }
+    ndStudent=student;
+    document.getElementById('nd-login-screen').style.display='none';
+    // Set student name in hub if element exists
+    const nameEl=document.getElementById('student-name-display');
+    if(nameEl) nameEl.textContent=student.name;
+  }).catch(function(){
+    loading.style.display='none';
+    err.textContent='Connection error. Please check your internet.';
+    err.style.display='block';ndPinEntry='';ndUpdateDots();
+  });
+}
+
 let state={name:'',mood:'😊',moodName:'Good',focus:5};
 let timerInterval=null,timerSeconds=0,timerTotal=0,timerRunning=false,timerPhase='focus',pomodoroRound=0,pomodoroMode={focus:25,rest:5,rounds:4};
 let scheduleItems=[
