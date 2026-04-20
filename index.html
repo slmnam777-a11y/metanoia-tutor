@@ -354,20 +354,35 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
     <div class="field-row">
       <div class="field"><label>Grade / Level</label>
         <select id="m-grade" onchange="onModalGradeChange()">
-          <option>Early Years A</option>
-          <option>Early Years B</option>
-          <option>Primary Stage 1</option>
-          <option>Primary Stage 2</option>
-          <option>Primary Stage 3</option>
-          <option>Primary Stage 4</option>
-          <option>Primary Stage 5</option>
-          <option selected>Primary Stage 6</option>
-          <option>Foundation I</option>
-          <option>Foundation II</option>
-          <option>International GCSE (CAIE)</option>
-          <option>AS Level (CAIE)</option>
-          <option>A Level (CAIE)</option>
-          <option>GED Preparation</option>
+          <optgroup label="── GED ──">
+            <option>GED Preparation</option>
+          </optgroup>
+          <optgroup label="── MobyMax ──">
+            <option>Grade R</option>
+            <option>Grade 1</option>
+            <option>Grade 2</option>
+            <option>Grade 3</option>
+            <option>Grade 4</option>
+            <option>Grade 5</option>
+            <option>Grade 6</option>
+            <option>Grade 7</option>
+            <option>Grade 8</option>
+          </optgroup>
+          <optgroup label="── Cambrilearn ──">
+            <option>Early Years A</option>
+            <option>Early Years B</option>
+            <option>Primary Stage 1</option>
+            <option>Primary Stage 2</option>
+            <option>Primary Stage 3</option>
+            <option>Primary Stage 4</option>
+            <option>Primary Stage 5</option>
+            <option selected>Primary Stage 6</option>
+            <option>Foundation I</option>
+            <option>Foundation II</option>
+            <option>International GCSE (CAIE)</option>
+            <option>AS Level (CAIE)</option>
+            <option>A Level (CAIE)</option>
+          </optgroup>
         </select>
       </div>
       <div class="field"><label>Platform</label>
