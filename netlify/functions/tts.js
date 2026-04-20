@@ -19,67 +19,32 @@ exports.handler = async function(event) {
 
   try {
     const { text } = JSON.parse(event.body);
-    const apiKey = process.env.ELEVENLABS_API_KEY;
 
+    const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
       return {
         statusCode: 500,
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-        body: JSON.stringify({ error: 'ElevenLabs API key not configured.' })
+        body: JSON.stringify({ error: 'OpenAI API key not configured.' })
       };
     }
 
-    // First get available voices to find one we can use
-    const voicesResult = await new Promise((resolve, reject) => {
-      const req = https.request({
-        hostname: 'api.elevenlabs.io',
-        path: '/v1/voices',
-        method: 'GET',
-        headers: {
-          'xi-api-key': apiKey,
-          'Accept': 'application/json'
-        }
-      }, (res) => {
-        let data = '';
-        res.on('data', chunk => data += chunk);
-        res.on('end', () => resolve({ status: res.statusCode, body: data }));
-      });
-      req.on('error', reject);
-      req.end();
-    });
-
-    let voiceId = 'EXAVITQu4vr4xnSDxMaL'; // Sarah - default fallback
-    
-    if (voicesResult.status === 200) {
-      const voicesData = JSON.parse(voicesResult.body);
-      const voices = voicesData.voices || [];
-      // Prefer a female voice
-      const femaleVoice = voices.find(v => 
-        v.labels && (v.labels.gender === 'female') && v.voice_id
-      ) || voices[0];
-      if (femaleVoice) voiceId = femaleVoice.voice_id;
-    }
-
     const payload = JSON.stringify({
-      text: text.slice(0, 1000),
-      model_id: 'eleven_turbo_v2_5',
-      voice_settings: {
-        stability: 0.5,
-        similarity_boost: 0.75,
-        style: 0.2,
-        use_speaker_boost: true
-      }
+      model: 'tts-1',
+      input: text.slice(0, 4096),
+      voice: 'nova',        // warm, clear female voice — great for tutoring
+      response_format: 'mp3',
+      speed: 0.95           // slightly slower = easier to follow for students
     });
 
     const result = await new Promise((resolve, reject) => {
       const req = https.request({
-        hostname: 'api.elevenlabs.io',
-        path: `/v1/text-to-speech/${voiceId}`,
+        hostname: 'api.openai.com',
+        path: '/v1/audio/speech',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'xi-api-key': apiKey,
-          'Accept': 'audio/mpeg',
+          'Authorization': 'Bearer ' + apiKey,
           'Content-Length': Buffer.byteLength(payload)
         }
       }, (res) => {
@@ -100,7 +65,7 @@ exports.handler = async function(event) {
       return {
         statusCode: result.status,
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-        body: JSON.stringify({ error: 'ElevenLabs error: ' + result.body.toString() })
+        body: JSON.stringify({ error: 'OpenAI TTS error: ' + result.body.toString() })
       };
     }
 
