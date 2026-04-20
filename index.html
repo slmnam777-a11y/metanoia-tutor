@@ -322,7 +322,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
       </div>
     </div>
     <div class="header-actions">
-      <span id="subject-pill" class="subject-pill">Subject</span>
+      <span id="subject-pill" class="subject-pill" onclick="openSubjectSwitcher()" title="Change subject" style="cursor:pointer">Subject ✏️</span>
       <a href="/nd-hub.html" target="_blank" class="mute-btn" style="text-decoration:none;background:rgba(16,185,129,0.12);border-color:rgba(16,185,129,0.3);color:#10b981;font-size:12px">🌟 ND Hub</a>
       <button class="mute-btn" id="mute-btn" onclick="toggleMute()">🔊 Audio on</button>
       <button class="mute-btn" style="background:rgba(245,158,11,0.12);border-color:rgba(245,158,11,0.3);color:#f59e0b;font-size:12px" onclick="showStudentProgressReport()">📊 My Progress</button>
@@ -1474,7 +1474,27 @@ function copyProgressReport(){if(!currentProgressReport)return;navigator.clipboa
 function downloadProgressPDF(){
   if(!currentProgressReport||!currentProgressStudent)return;
   const s=currentProgressStudent;const week=getWeekLabel();
-  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI',Arial,sans-serif;color:#1a1a2e;background:#fff;padding:40px}.header{background:linear-gradient(135deg,#7b6ef6,#10b981);color:white;padding:24px 32px;border-radius:12px;margin-bottom:24px}.header h1{font-size:22px;margin-bottom:4px}.header p{font-size:13px;opacity:0.85}.meta-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}.meta-card{background:#f8f9ff;border:1px solid #e5e7eb;border-radius:10px;padding:14px}.meta-card label{font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px}.meta-card strong{font-size:14px;color:#1a1a2e}.report-body{background:#f8f9ff;border:1px solid #e5e7eb;border-radius:12px;padding:24px;white-space:pre-wrap;font-size:13px;line-height:1.8;color:#374151}.footer{margin-top:24px;text-align:center;font-size:11px;color:#9ca3af;border-top:1px solid #e5e7eb;padding-top:16px}</style></head><body><div class="header"><h1>Weekly Progress Report</h1><p>Metanoia Academy · ${week}</p></div><div class="meta-grid"><div class="meta-card"><label>Student</label><strong>${s.name}</strong></div><div class="meta-card"><label>Grade</label><strong>${s.grade}</strong></div><div class="meta-card"><label>Subject</label><strong>${s.subject}</strong></div><div class="meta-card"><label>Platform</label><strong>${s.platform}</strong></div><div class="meta-card"><label>Topic</label><strong>${s.topic||'General'}</strong></div><div class="meta-card"><label>Center</label><strong>${appState.center||'Metanoia Academy'}</strong></div></div><div class="report-body">${currentProgressReport.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div><div class="footer"><div>Metanoia Academy — AI Tutor Platform</div><div>metanoia-learn.com · Confidential — For parent/guardian use only</div></div></body></html>`;
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI',Arial,sans-serif;color:#1a1a2e;background:#fff;padding:40px}.header{background:linear-gradient(135deg,#7b6ef6,#10b981);color:white;padding:24px 32px;border-radius:12px;margin-bottom:24px}.header h1{font-size:22px;margin-bottom:4px}.header p{font-size:13px;opacity:0.85}.meta-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}.meta-card{background:#f8f9ff;border:1px solid #e5e7eb;border-radius:10px;padding:14px}.meta-card label{font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px}.meta-card strong{font-size:14px;color:#1a1a2e}.report-body{background:#f8f9ff;border:1px solid #e5e7eb;border-radius:12px;padding:24px;white-space:pre-wrap;font-size:13px;line-height:1.8;color:#374151}.footer{margin-top:24px;text-align:center;font-size:11px;color:#9ca3af;border-top:1px solid #e5e7eb;padding-top:16px}</style></head><body><div class="header"><h1>Weekly Progress Report</h1><p>Metanoia Academy · ${week}</p></div><div class="meta-grid"><div class="meta-card"><label>Student</label><strong>${s.name}</strong></div><div class="meta-card"><label>Grade</label><strong>${s.grade}</strong></div><div class="meta-card"><label>Subject</label><strong>${s.subject}</strong></div><div class="meta-card"><label>Platform</label><strong>${s.platform}</strong></div><div class="meta-card"><label>Topic</label><strong>${s.topic||'General'}</strong></div><div class="meta-card"><label>Center</label><strong>${appState.center||'Metanoia Academy'}</strong></div></div><div class="report-body">${currentProgressReport.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div><div class="footer"><div>Metanoia Academy — AI Tutor Platform</div><div>metanoia-learn.com · Confidential — For parent/guardian use only</div></div>
+<!-- SUBJECT SWITCHER MODAL -->
+<div class="modal-overlay" id="subject-switcher-overlay">
+  <div class="modal" style="max-width:360px">
+    <h3>🔀 Switch Subject</h3>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:1.25rem;font-family:var(--mono)">Choose a new subject — session continues</p>
+    <div class="field">
+      <label>Subject</label>
+      <select id="switcher-subject"></select>
+    </div>
+    <div class="field">
+      <label>New topic / unit (optional)</label>
+      <input type="text" id="switcher-topic" placeholder="e.g. Chapter 4, Fractions..."/>
+    </div>
+    <div class="modal-footer">
+      <button class="cancel" onclick="closeSubjectSwitcher()">Cancel</button>
+      <button class="confirm" onclick="confirmSubjectSwitch()">Switch ✓</button>
+    </div>
+  </div>
+</div>
+</body></html>`;
   const win=window.open('','_blank');win.document.write(html);win.document.close();setTimeout(()=>{win.print();},500);
 }
 async function showStudentProgressReport(){const s=appState.currentStudent;if(!s)return;await openProgressReport(s.id);}
@@ -1484,6 +1504,77 @@ async function showStudentProgressReport(){const s=appState.currentStudent;if(!s
 document.addEventListener('DOMContentLoaded', function(){
   populateSubjectDropdown('GED Preparation', 'Essential Education (GED)', null);
 });
+
+// ── SUBJECT SWITCHER ──
+function openSubjectSwitcher(){
+  const s = appState.currentStudent;
+  if(!s) return;
+  // Populate subject dropdown based on current platform
+  const subjects = getSubjectsForContext(s.grade, s.platform);
+  const sel = document.getElementById('switcher-subject');
+  sel.innerHTML = '';
+  subjects.forEach(function(subj){
+    const opt = document.createElement('option');
+    opt.value = subj; opt.textContent = subj;
+    if(subj === s.subject) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  document.getElementById('switcher-topic').value = s.topic || '';
+  document.getElementById('subject-switcher-overlay').classList.add('open');
+}
+
+function closeSubjectSwitcher(){
+  document.getElementById('subject-switcher-overlay').classList.remove('open');
+}
+
+function confirmSubjectSwitch(){
+  const s = appState.currentStudent;
+  if(!s) return;
+  const newSubject = document.getElementById('switcher-subject').value;
+  const newTopic = document.getElementById('switcher-topic').value.trim();
+  const oldSubject = s.subject;
+
+  // Update student object
+  s.subject = newSubject;
+  s.topic = newTopic;
+
+  // Update chat header
+  document.getElementById('chat-sub').textContent = s.grade + ' · ' + newSubject;
+  document.getElementById('subject-pill').textContent = newSubject.split('(')[0].trim() + ' ✏️';
+
+  closeSubjectSwitcher();
+
+  // Log it
+  logActivity('gold', '🔀', s.name + ' switched to ' + newSubject, 'gold');
+
+  // Notify AI of the switch in the conversation
+  const switchMsg = 'The student has just switched subject to: ' + newSubject
+    + (newTopic ? ' — topic: ' + newTopic : '')
+    + '. Please acknowledge the switch warmly and ask what they would like to work on in ' + newSubject + ' today.';
+  appState.conversationHistory = [];  // fresh context for new subject
+  sendAI(switchMsg, true);
+}
+
 </script>
+
+<!-- SUBJECT SWITCHER MODAL -->
+<div class="modal-overlay" id="subject-switcher-overlay">
+  <div class="modal" style="max-width:360px">
+    <h3>🔀 Switch Subject</h3>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:1.25rem;font-family:var(--mono)">Choose a new subject — session continues</p>
+    <div class="field">
+      <label>Subject</label>
+      <select id="switcher-subject"></select>
+    </div>
+    <div class="field">
+      <label>New topic / unit (optional)</label>
+      <input type="text" id="switcher-topic" placeholder="e.g. Chapter 4, Fractions..."/>
+    </div>
+    <div class="modal-footer">
+      <button class="cancel" onclick="closeSubjectSwitcher()">Cancel</button>
+      <button class="confirm" onclick="confirmSubjectSwitch()">Switch ✓</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
